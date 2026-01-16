@@ -9,8 +9,10 @@ import yaml
 class LocalLLMConfig:
     provider: str
     model: str
-    base_url: str
-    timeout: int = 30
+    model_path: str
+    n_ctx: int = 4096
+    n_threads: int = 4
+    temperature: float = 0.3
 
 @dataclass
 class ExternalToolConfig:
@@ -86,10 +88,12 @@ class ConfigManager:
         """创建默认配置文件"""
         default_config = {
             "local_llm": {
-                "provider": "ollama",
-                "model": "qwen3:8b",
-                "base_url": "http://localhost:11434",
-                "timeout": 30
+                "provider": "llama-cpp",
+                "model": "Qwen3-8B-Q5_K_M.gguf",
+                "model_path": ".models/qwen/Qwen3-8B-Q5_K_M.gguf",
+                "n_ctx": 4096,
+                "n_threads": 4,
+                "temperature": 0.3
             },
             "external_tools": [
                 {

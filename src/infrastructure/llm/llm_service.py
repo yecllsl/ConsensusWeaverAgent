@@ -1,8 +1,8 @@
 from typing import Any, Dict, List
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_community.chat_models import ChatOllama
-from langchain_community.llms import Ollama
+from langchain_community.chat_models import ChatLlamaCpp
+from langchain_community.llms import LlamaCpp
 
 from src.infrastructure.config.config_manager import ConfigManager
 from src.infrastructure.logging.logger import get_logger
@@ -20,24 +20,24 @@ class LLMService:
         """初始化LLM连接"""
         try:
             # 初始化基础LLM
-            self.llm = Ollama(
-                base_url=self.config.base_url,
-                model=self.config.model,
-                timeout=self.config.timeout,
-                temperature=0.3
+            self.llm = LlamaCpp(
+                model_path=self.config.model_path,
+                n_ctx=self.config.n_ctx,
+                n_threads=self.config.n_threads,
+                temperature=self.config.temperature
             )
             
             # 初始化聊天LLM
-            self.chat_llm = ChatOllama(
-                base_url=self.config.base_url,
-                model=self.config.model,
-                timeout=self.config.timeout,
-                temperature=0.3
+            self.chat_llm = ChatLlamaCpp(
+                model_path=self.config.model_path,
+                n_ctx=self.config.n_ctx,
+                n_threads=self.config.n_threads,
+                temperature=self.config.temperature
             )
             
-            self.logger.info(f"成功连接到本地LLM服务: {self.config.model}")
+            self.logger.info(f"成功加载本地模型: {self.config.model}")
         except Exception as e:
-            self.logger.error(f"连接本地LLM服务失败: {e}")
+            self.logger.error(f"加载本地模型失败: {e}")
             raise
 
     def generate_response(self, prompt: str) -> str:

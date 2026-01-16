@@ -72,3 +72,5 @@ ehthumbs.db
 *.bak
 *.old
 *.orig
+
+.models/
