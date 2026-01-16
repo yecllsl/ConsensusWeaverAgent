@@ -5,11 +5,11 @@ name = "consensusweaveragent"
 version = "0.1.0"
 description = "智能问答协调终端应用"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" },
+    { name = "Colin", email = "yecllsl@outlook.com" },
 ]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -19,8 +19,8 @@ classifiers = [
 dependencies = [
     "click>=8.1.7",
     "pyyaml>=6.0.2",
-    "langchain>=0.1.35",
-    "langchain-community>=0.0.37",
+    "langchain>=1.2.0",
+    "langchain-community>=0.4.0",
     "ollama>=0.3.3",
     "nltk>=3.8.1",
     "scikit-learn>=1.5.0",
@@ -58,6 +58,7 @@ no_implicit_optional = true
 
 # Pytest configuration
 [tool.pytest.ini_options]
+pythonpath = "."
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"

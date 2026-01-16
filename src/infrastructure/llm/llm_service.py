@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_community.chat_models import ChatOllama
 from langchain_community.llms import Ollama
 
