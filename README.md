@@ -17,7 +17,7 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
 
 - **Python 3.12+**：核心编程语言
 - **LangChain**：LLM集成框架
-- **Ollama**：本地LLM服务
+- **llama-cpp-python**：本地LLM服务
 - **Click**：命令行界面
 - **PyYAML**：配置管理
 - **SQLite**：数据持久化
@@ -61,13 +61,24 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
    ```
 
-6. **安装Ollama**
-   - 访问 [Ollama官网](https://ollama.com/) 下载Windows版本
-   - 运行安装包完成安装
-   - 下载所需模型：
+6. **下载GGUF模型文件**
+   - **方法1：使用模型下载脚本**
      ```powershell
-     ollama pull qwen3:8b
+     python scripts/download_model.py
      ```
+     该脚本将从ModelScope下载Qwen3-8B-Q5_K_M.gguf模型文件到.models/qwen/目录
+
+   - **方法2：手动下载**
+     1. 访问 [ModelScope模型库](https://modelscope.cn/models/qwen/Qwen3-8B-GGUF)
+     2. 下载Qwen3-8B-Q5_K_M.gguf模型文件
+     3. 创建.models/qwen/目录
+     4. 将模型文件放置到该目录中
+
+   - **方法3：从Hugging Face下载**
+     1. 访问 [Hugging Face模型库](https://huggingface.co/Qwen/Qwen3-8B-GGUF)
+     2. 下载Qwen3-8B-Q5_K_M.gguf模型文件
+     3. 创建.models/qwen/目录
+     4. 将模型文件放置到该目录中
 
 ## 开发工作流
 
