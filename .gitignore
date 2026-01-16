@@ -1,0 +1,74 @@
+# Python相关文件
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+env.local/
+env.*
+
+# 配置文件
+.env
+.env.*
+config.yaml
+!example.config.yaml
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 构建和分发
+build/
+dist/
+*.egg-info/
+
+# 操作系统相关
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# 编辑器相关
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 其他临时文件
+*.tmp
+*.temp
+.cache/
+
+# 测试相关
+*.test
+*.spec
+
+# uv相关
+.uv/
+
+# 文档相关
+*.rst
+*.md
+!README.md
+!*.md
+
+# 其他
+*.bak
+*.old
+*.orig
