@@ -106,7 +106,7 @@ class QueryExecutor:
                     answer=result.answer,
                     error_message=result.error_message,
                     execution_time=result.execution_time,
-                    timestamp=result.timestamp.isoformat()
+                    timestamp=result.timestamp.isoformat() if hasattr(result.timestamp, 'isoformat') else result.timestamp
                 )
                 for result in db_results
             ]

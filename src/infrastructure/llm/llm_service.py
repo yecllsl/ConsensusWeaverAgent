@@ -72,20 +72,64 @@ class LLMService:
     def analyze_question(self, question: str) -> Dict[str, Any]:
         """分析问题的完整性、清晰度和潜在歧义"""
         try:
+            import json
+            
             prompt = f"""
             请分析以下问题的完整性、清晰度和潜在歧义：
             "{question}"
             
-            请以JSON格式返回分析结果，包含以下字段：
-            - is_complete: boolean，表示问题是否完整（包含必要信息）
-            - is_clear: boolean，表示问题是否清晰易懂
-            - ambiguities: array，表示潜在的歧义点（如果有）
-            - missing_info: array，表示缺失的必要信息（如果有）
-            - complexity: string，表示问题复杂度（"simple"或"complex"）
+            请严格按照以下JSON格式返回分析结果，不要添加任何额外的解释或说明文字，只返回JSON字符串：
+            {{"is_complete": true/false, "is_clear": true/false, "ambiguities": ["歧义1", "歧义2"], "missing_info": ["信息1", "信息2"], "complexity": "simple"/"complex"}}
+            
+            注意：
+            1. 只返回JSON字符串，不要包含任何其他内容
+            2. 使用英文逗号分隔字段
+            3. 布尔值使用true/false，字符串使用双引号
             """
             
             response = self.generate_response(prompt)
-            return eval(response)  # 注意：在生产环境中应使用更安全的JSON解析
+            self.logger.debug(f"LLM原始响应: '{response}'")
+            
+            if not response.strip():
+                self.logger.error("LLM返回了空响应")
+                # 返回默认的分析结果
+                return {
+                    "is_complete": True,
+                    "is_clear": True,
+                    "ambiguities": [],
+                    "missing_info": [],
+                    "complexity": "complex"
+                }
+            
+            # 替换中文逗号为英文逗号，提高兼容性
+            response = response.replace('，', ',')
+            self.logger.debug(f"处理后响应: '{response}'")
+            
+            # 尝试从响应中提取JSON部分
+            try:
+                # 找到JSON的开始和结束位置
+                start_pos = response.find('{')
+                end_pos = response.rfind('}') + 1
+                
+                if start_pos != -1 and end_pos != -1:
+                    # 提取JSON部分
+                    json_str = response[start_pos:end_pos]
+                    self.logger.debug(f"提取的JSON部分: '{json_str}'")
+                    # 使用安全的JSON解析替代eval
+                    return json.loads(json_str)
+                else:
+                    # 如果没有找到JSON结构，尝试直接解析整个响应
+                    return json.loads(response)
+            except json.JSONDecodeError as e:
+                self.logger.error(f"JSON解析失败，响应内容: '{response}'，错误: {e}")
+                # 返回默认的分析结果
+                return {
+                    "is_complete": True,
+                    "is_clear": True,
+                    "ambiguities": [],
+                    "missing_info": [],
+                    "complexity": "complex"
+                }
         except Exception as e:
             self.logger.error(f"LLM分析问题失败: {e}")
             raise
@@ -117,20 +161,31 @@ class LLMService:
         """根据原始问题和澄清信息重构问题"""
         try:
             prompt = f"""
-            请根据以下原始问题和澄清信息，重构一个专业、完整的最终问题陈述：
+            请严格按照以下要求重构问题：
             
             原始问题："{original_question}"
             
             澄清信息：
             {chr(10).join([f"- {clarification}" for clarification in clarifications])}
             
-            请确保重构后的问题准确反映用户的核心意图，包含所有必要信息，且清晰无歧义。
+            重构要求：
+            1. 只返回重构后的问题，不要添加任何额外的解释或说明文字
+            2. 重构后的问题要专业、完整，准确反映用户的核心意图
+            3. 包含所有必要信息，且清晰无歧义
+            4. 不要重复原始问题和澄清信息的内容
             """
             
-            return self.generate_response(prompt)
+            response = self.generate_response(prompt)
+            # 清理响应，只保留问题部分
+            response = response.strip()
+            # 移除可能的前缀
+            if response.startswith("重构后的问题："):
+                response = response[7:].strip()
+            return response
         except Exception as e:
             self.logger.error(f"LLM重构问题失败: {e}")
-            raise
+            # 如果重构失败，返回原始问题
+            return original_question
 
     def classify_question_complexity(self, question: str) -> str:
         """判断问题复杂度（简单或复杂）"""

@@ -196,7 +196,7 @@ async def start_interaction(
                         "answer": result.answer,
                         "error_message": result.error_message,
                         "execution_time": result.execution_time,
-                        "timestamp": result.timestamp.isoformat()
+                        "timestamp": result.timestamp
                     }
                     for result in tool_results
                 ]

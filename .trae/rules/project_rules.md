@@ -11,13 +11,15 @@
 
 3. **测试要求**
    - 使用 **pytest** 编写单元测试
+   - 测试文件置于 `tests/` 目录
+   - 每个模块对应一个测试文件，文件名与模块名相同（如 `test_schema.py` 测试 `schema.py`）
    - 覆盖正常路径、错误路径和边界情况
    - 使用 `pytest-mock` 隔离外部依赖
    - 标记：`// @test_framework=pytest`
 
 4. **依赖管理**
-   - 使用 **uv** 管理依赖，禁止 `pip install`
-   - 通过 `pyproject.toml` 管理依赖
+   - 使用 **uv** 工具管理依赖，禁止 `pip install`
+   - 通过 `pyproject.toml` 文件管理依赖
    - 添加依赖：`uv add <package>` 或 `uv add --group <组名> <package>`
    - 变更后执行 `uv sync` 同步环境
 

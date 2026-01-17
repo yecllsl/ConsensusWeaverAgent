@@ -45,14 +45,21 @@ class ToolManager:
         timestamp = datetime.now().isoformat()
         
         try:
-            # 构建命令
-            command = f"{tool_config.command} {tool_config.args} \"{question}\""
+            # 安全地构建命令参数列表
+            import shlex
             
-            self.logger.info(f"运行外部工具: {command}")
+            # 解析工具命令和参数
+            full_command = f"{tool_config.command} {tool_config.args}"
+            base_args = shlex.split(full_command)
+            # 添加问题作为最后一个参数
+            command_args = base_args + [question]
             
-            # 运行命令
-            process = await asyncio.create_subprocess_shell(
-                command,
+            self.logger.info(f"运行外部工具: {' '.join(shlex.quote(arg) for arg in command_args)}")
+            
+            # 运行命令（不使用shell=True，更安全）
+            process = await asyncio.create_subprocess_exec(
+                command_args[0],
+                *command_args[1:],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True

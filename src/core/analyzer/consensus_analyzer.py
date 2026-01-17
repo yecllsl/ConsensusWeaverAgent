@@ -13,10 +13,30 @@ from src.infrastructure.data.data_manager import DataManager
 from src.infrastructure.llm.llm_service import LLMService
 from src.infrastructure.logging.logger import get_logger
 
-# 确保NLTK资源已下载
-nltk.download('punkt', quiet=True)
-nltk.download('stopwords', quiet=True)
-nltk.download('wordnet', quiet=True)
+# 注意：使用前请确保已手动下载NLTK资源
+# 运行以下命令下载所需资源：
+# python -c "import nltk; nltk.data.path = ['https://gitee.com/gislite/nltk_data/raw/'] + nltk.data.path；nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+
+# 配置NLTK数据路径（增加灵活性）
+import os
+import nltk
+import sys
+
+# 添加常见的NLTK数据路径
+common_data_paths = [
+    os.path.expanduser('~/.nltk_data'),
+    os.path.join(sys.prefix, 'nltk_data'),
+    os.path.join(os.environ.get('APPDATA', ''), 'nltk_data'),  # Windows
+    os.path.join(os.environ.get('LOCALAPPDATA', ''), 'nltk_data'),  # Windows
+]
+
+for path in common_data_paths:
+    if path and os.path.exists(path):
+        if path not in nltk.data.path:
+            nltk.data.path.append(path)
+
+# 简化检查，只在实际使用时处理错误
+# 移除启动时的强制检查，避免路径问题导致程序无法启动
 
 @dataclass
 class ConsensusAnalysisResult:
@@ -28,13 +48,44 @@ class ConsensusAnalysisResult:
     comprehensive_summary: str
     final_conclusion: str
 
+# 默认的英文停用词列表，避免依赖NLTK数据下载
+DEFAULT_STOP_WORDS = {
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours',
+    'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself',
+    'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those',
+    'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing',
+    'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about',
+    'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in',
+    'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how',
+    'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same',
+    'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o',
+    're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't",
+    'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't",
+    'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"
+}
+
 class ConsensusAnalyzer:
     def __init__(self, llm_service: LLMService, data_manager: DataManager):
         self.llm_service = llm_service
         self.data_manager = data_manager
         self.logger = get_logger()
-        self.stop_words = set(stopwords.words('english'))
-        self.lemmatizer = WordNetLemmatizer()
+        
+        # 加载停用词，优先使用NLTK的停用词，失败时使用默认列表
+        try:
+            self.stop_words = set(stopwords.words('english'))
+            self.logger.debug("成功加载NLTK停用词")
+        except LookupError:
+            self.logger.warning("NLTK停用词加载失败，使用默认停用词列表")
+            self.stop_words = DEFAULT_STOP_WORDS
+        
+        # 初始化词形还原器，失败时使用简单的替代方法
+        try:
+            self.lemmatizer = WordNetLemmatizer()
+            self.logger.debug("成功初始化NLTK词形还原器")
+        except LookupError:
+            self.logger.warning("NLTK词形还原器初始化失败，将使用简单分词")
+            # 创建一个简单的替代词形还原器，仅返回原词
+            self.lemmatizer = type('SimpleLemmatizer', (), {'lemmatize': lambda self, x: x})()
 
     def analyze_consensus(self, session_id: int, question: str, tool_results: List[Dict[str, Any]]) -> ConsensusAnalysisResult:
         """分析共识度"""
@@ -140,12 +191,30 @@ class ConsensusAnalyzer:
             - sources: 提到该观点的工具名称列表
             
             请确保提取的观点准确、简洁，并标注所有相关的来源工具。
+            
+            注意：请使用英文逗号分隔字段。
             """
             
-            response = self.llm_service.generate_response(prompt)
-            key_points = eval(response)  # 注意：在生产环境中应使用更安全的JSON解析
+            import json
             
-            return key_points
+            response = self.llm_service.generate_response(prompt)
+            self.logger.debug(f"核心观点提取 - LLM原始响应: '{response}'")
+            
+            if not response.strip():
+                self.logger.error("核心观点提取 - LLM返回了空响应")
+                return self._simple_key_point_extraction(tool_results)
+            
+            # 替换中文逗号为英文逗号，提高兼容性
+            response = response.replace('，', ',')
+            self.logger.debug(f"核心观点提取 - 处理后响应: '{response}'")
+            
+            try:
+                # 使用安全的JSON解析替代eval
+                key_points = json.loads(response)
+                return key_points
+            except json.JSONDecodeError as e:
+                self.logger.error(f"核心观点提取 - JSON解析失败，响应内容: '{response}'，错误: {e}")
+                return self._simple_key_point_extraction(tool_results)
         except Exception as e:
             self.logger.error(f"提取核心观点失败: {e}")
             # 回退到简单的文本分析
@@ -196,12 +265,30 @@ class ConsensusAnalyzer:
             - sources: 存在分歧的工具名称列表
             
             请确保识别的分歧点准确，并标注所有相关的来源工具。
+            
+            注意：请使用英文逗号分隔字段。
             """
             
-            response = self.llm_service.generate_response(prompt)
-            differences = eval(response)  # 注意：在生产环境中应使用更安全的JSON解析
+            import json
             
-            return differences
+            response = self.llm_service.generate_response(prompt)
+            self.logger.debug(f"分歧点识别 - LLM原始响应: '{response}'")
+            
+            if not response.strip():
+                self.logger.error("分歧点识别 - LLM返回了空响应")
+                return []
+            
+            # 替换中文逗号为英文逗号，提高兼容性
+            response = response.replace('，', ',')
+            self.logger.debug(f"分歧点识别 - 处理后响应: '{response}'")
+            
+            try:
+                # 使用安全的JSON解析替代eval
+                differences = json.loads(response)
+                return differences
+            except json.JSONDecodeError as e:
+                self.logger.error(f"分歧点识别 - JSON解析失败，响应内容: '{response}'，错误: {e}")
+                return []
         except Exception as e:
             self.logger.error(f"识别分歧点失败: {e}")
             return []
@@ -257,8 +344,12 @@ class ConsensusAnalyzer:
 
     def _preprocess_text(self, text: str) -> List[str]:
         """预处理文本"""
-        # 分词
-        words = word_tokenize(text.lower())
+        # 分词（使用简单的空格分割作为备选方案，避免NLTK数据依赖）
+        try:
+            words = word_tokenize(text.lower())
+        except LookupError:
+            self.logger.warning("NLTK分词失败，使用简单空格分割")
+            words = text.lower().split()
         
         # 过滤停用词和非字母字符
         filtered_words = [word for word in words if word.isalpha() and word not in self.stop_words]
