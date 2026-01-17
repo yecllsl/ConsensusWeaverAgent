@@ -11,9 +11,19 @@ class LocalLLMConfig:
     model: str
     model_path: str
     n_ctx: int = 4096
-    n_threads: int = 4
-    n_threads_batch: int = 2
+    n_threads: int = 6
+    n_threads_batch: int = 6
     n_batch: int = 512
+    max_tokens: int = 512
+    top_p: float = 0.9
+    top_k: int = 50
+    repeat_penalty: float = 1.1
+    last_n_tokens_size: int = 64
+    use_mlock: bool = True
+    use_mmap: bool = True
+    n_gpu_layers: int = 0
+    rope_freq_base: int = 10000
+    rope_freq_scale: float = 1.0
     temperature: float = 0.3
 
 @dataclass

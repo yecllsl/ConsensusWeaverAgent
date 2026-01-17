@@ -26,6 +26,16 @@ class LLMService:
                 n_threads=self.config.n_threads,
                 n_threads_batch=self.config.n_threads_batch,
                 n_batch=self.config.n_batch,
+                max_tokens=self.config.max_tokens,
+                top_p=self.config.top_p,
+                top_k=self.config.top_k,
+                repeat_penalty=self.config.repeat_penalty,
+                last_n_tokens_size=self.config.last_n_tokens_size,
+                use_mlock=self.config.use_mlock,
+                use_mmap=self.config.use_mmap,
+                n_gpu_layers=self.config.n_gpu_layers,
+                rope_freq_base=self.config.rope_freq_base,
+                rope_freq_scale=self.config.rope_freq_scale,
                 temperature=self.config.temperature
             )
             
@@ -36,6 +46,16 @@ class LLMService:
                 n_threads=self.config.n_threads,
                 n_threads_batch=self.config.n_threads_batch,
                 n_batch=self.config.n_batch,
+                max_tokens=self.config.max_tokens,
+                top_p=self.config.top_p,
+                top_k=self.config.top_k,
+                repeat_penalty=self.config.repeat_penalty,
+                last_n_tokens_size=self.config.last_n_tokens_size,
+                use_mlock=self.config.use_mlock,
+                use_mmap=self.config.use_mmap,
+                n_gpu_layers=self.config.n_gpu_layers,
+                rope_freq_base=self.config.rope_freq_base,
+                rope_freq_scale=self.config.rope_freq_scale,
                 temperature=self.config.temperature
             )
             
