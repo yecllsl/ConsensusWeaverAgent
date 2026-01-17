@@ -206,7 +206,19 @@ class ConsensusAnalyzer:
             
             # 替换中文逗号为英文逗号，提高兼容性
             response = response.replace('，', ',')
+            
+            # 去除可能的代码块标记
+            if response.startswith('```json'):
+                response = response[7:]
+            if response.endswith('```'):
+                response = response[:-3]
+            response = response.strip()
+            
             self.logger.debug(f"核心观点提取 - 处理后响应: '{response}'")
+            
+            if not response:
+                self.logger.error("核心观点提取 - 处理后响应为空")
+                return self._simple_key_point_extraction(tool_results)
             
             try:
                 # 使用安全的JSON解析替代eval

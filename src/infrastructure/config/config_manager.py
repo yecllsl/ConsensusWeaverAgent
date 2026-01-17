@@ -115,7 +115,7 @@ class ConfigManager:
             ],
             "network": {
                 "check_before_run": True,
-                "timeout": 60
+                "timeout": 120
             },
             "app": {
                 "max_clarification_rounds": 3,

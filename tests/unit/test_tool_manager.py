@@ -23,7 +23,7 @@ from src.infrastructure.config.config_manager import ConfigManager, ExternalTool
 class MockConfig:
     """模拟配置对象"""
     class NetworkConfig:
-        timeout: int = 60
+        timeout: int = 120
     
     class AppConfig:
         max_parallel_tools: int = 5
