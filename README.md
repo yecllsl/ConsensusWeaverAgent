@@ -58,13 +58,13 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
 
 5. **下载NLTK资源**
    ```powershell
-   python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+   python -c "import nltk; nltk.data.path.append('https://gitee.com/gislite/nltk_data/raw/'); nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
    ```
 
 6. **下载GGUF模型文件**
    - **方法1：使用模型下载脚本**
      ```powershell
-     python scripts/download_model.py
+     python scripts/download_qwen3-8b-gguf.py
      ```
      该脚本将从ModelScope下载Qwen3-8B-Q5_K_M.gguf模型文件到.models/qwen/目录
 
