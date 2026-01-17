@@ -1,5 +1,6 @@
 import asyncio
 import subprocess
+import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -54,22 +55,46 @@ class ToolManager:
             # 添加问题作为最后一个参数
             command_args = base_args + [question]
             
-            self.logger.info(f"运行外部工具: {' '.join(shlex.quote(arg) for arg in command_args)}")
+            # 检查是否为PowerShell脚本
+            is_powershell_script = False
+            if sys.platform == "win32" and tool_config.command.endswith(".ps1"):
+                is_powershell_script = True
+            
+            # 对于PowerShell脚本，需要通过powershell.exe执行
+            if is_powershell_script:
+                # 构建PowerShell命令
+                full_script_command = " " .join(shlex.quote(arg) for arg in command_args)
+                power_args = [
+                    "-ExecutionPolicy", "Bypass",
+                    "-Command", full_script_command
+                ]
+                process_command = "powershell.exe"
+                process_args = power_args
+                self.logger.info(f"运行PowerShell脚本: {process_command} {' '.join(process_args)}")
+            else:
+                # 对于普通可执行文件，直接运行
+                process_command = command_args[0]
+                process_args = command_args[1:]
+                self.logger.info(f"运行外部工具: {process_command} {' '.join(shlex.quote(arg) for arg in process_args)}")
             
             # 运行命令（不使用shell=True，更安全）
             process = await asyncio.create_subprocess_exec(
-                command_args[0],
-                *command_args[1:],
+                process_command,
+                *process_args,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                stderr=subprocess.PIPE
+                # 不使用text=True，避免兼容性问题
             )
             
             # 等待命令完成，设置超时
-            stdout, stderr = await asyncio.wait_for(
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(
                 process.communicate(),
                 timeout=self.config.network.timeout
             )
+            
+            # 手动解码输出
+            stdout = stdout_bytes.decode('utf-8', errors='replace').strip()
+            stderr = stderr_bytes.decode('utf-8', errors='replace').strip()
             
             execution_time = time.time() - start_time
             

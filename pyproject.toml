@@ -25,6 +25,7 @@ dependencies = [
     "nltk>=3.8.1",
     "scikit-learn>=1.5.0",
     "modelscope>=1.33.0",
+    "pytest-asyncio>=1.3.0",
 ]
 
 [project.optional-dependencies]
