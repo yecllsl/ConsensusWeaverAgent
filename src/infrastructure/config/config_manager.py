@@ -12,6 +12,8 @@ class LocalLLMConfig:
     model_path: str
     n_ctx: int = 4096
     n_threads: int = 4
+    n_threads_batch: int = 2
+    n_batch: int = 512
     temperature: float = 0.3
 
 @dataclass
@@ -92,7 +94,9 @@ class ConfigManager:
                 "model": "Qwen3-8B-Q5_K_M.gguf",
                 "model_path": ".models/qwen/Qwen3-8B-Q5_K_M.gguf",
                 "n_ctx": 4096,
-                "n_threads": 4,
+                "n_threads": 6,
+                "n_threads_batch": 6,
+                "n_batch": 512,
                 "temperature": 0.3
             },
             "external_tools": [

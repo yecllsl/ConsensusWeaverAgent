@@ -24,6 +24,8 @@ class LLMService:
                 model_path=self.config.model_path,
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
+                n_threads_batch=self.config.n_threads_batch,
+                n_batch=self.config.n_batch,
                 temperature=self.config.temperature
             )
             
@@ -32,6 +34,8 @@ class LLMService:
                 model_path=self.config.model_path,
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
+                n_threads_batch=self.config.n_threads_batch,
+                n_batch=self.config.n_batch,
                 temperature=self.config.temperature
             )
             
