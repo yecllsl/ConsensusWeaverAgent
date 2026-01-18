@@ -82,8 +82,8 @@ def test_default_config_creation(tmp_path):
 
     # 验证默认配置值
     config = config_manager.get_config()
-    assert config.local_llm.provider == "ollama"
-    assert config.local_llm.model == "qwen3:8b"
+    assert config.local_llm.provider == "llama-cpp"
+    assert config.local_llm.model == "Qwen3-8B-Q5_K_M.gguf"
     assert len(config.external_tools) == 2  # 默认应该有两个工具
 
 

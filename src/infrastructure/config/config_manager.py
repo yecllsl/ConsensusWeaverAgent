@@ -9,7 +9,8 @@ import yaml
 class LocalLLMConfig:
     provider: str
     model: str
-    model_path: str
+    # llama-cpp specific parameters
+    model_path: Optional[str] = None
     n_ctx: int = 4096
     n_threads: int = 6
     n_threads_batch: int = 6
@@ -25,6 +26,9 @@ class LocalLLMConfig:
     rope_freq_base: int = 10000
     rope_freq_scale: float = 1.0
     temperature: float = 0.3
+    # ollama specific parameters
+    base_url: Optional[str] = None
+    timeout: int = 30
 
 
 @dataclass
