@@ -1,7 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
-
+from typing import Any, Dict, List, Optional, cast
 import yaml
 
 
@@ -153,7 +152,8 @@ class ConfigManager:
         """获取配置对象"""
         if self.config is None:
             self.load_config()
-        return self.config
+        # 类型断言：load_config会确保self.config被设置为Config对象
+        return cast(Config, self.config)
 
     def reload_config(self) -> None:
         """重新加载配置文件"""

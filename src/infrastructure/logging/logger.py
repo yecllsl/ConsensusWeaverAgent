@@ -1,7 +1,7 @@
 import logging
 import logging.handlers
 import os
-from typing import Optional
+from typing import Any, Optional
 
 
 class Logger:
@@ -68,27 +68,27 @@ class Logger:
 
         return logger
 
-    def debug(self, message: str, *args, **kwargs) -> None:
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录调试信息"""
         self.logger.debug(message, *args, **kwargs)
 
-    def info(self, message: str, *args, **kwargs) -> None:
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录一般信息"""
         self.logger.info(message, *args, **kwargs)
 
-    def warning(self, message: str, *args, **kwargs) -> None:
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录警告信息"""
         self.logger.warning(message, *args, **kwargs)
 
-    def error(self, message: str, *args, **kwargs) -> None:
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录错误信息"""
         self.logger.error(message, *args, **kwargs)
 
-    def critical(self, message: str, *args, **kwargs) -> None:
+    def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录严重错误信息"""
         self.logger.critical(message, *args, **kwargs)
 
-    def exception(self, message: str, *args, **kwargs) -> None:
+    def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
         """记录异常信息"""
         self.logger.exception(message, *args, **kwargs)
 

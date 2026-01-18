@@ -45,6 +45,10 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
 [tool.uv]
 index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 
@@ -82,4 +86,5 @@ dev = [
     "pytest>=9.0.1",
     "pytest-mock>=3.14.0",
     "ruff>=0.5.5",
+    "types-click>=7.1.8",
 ]

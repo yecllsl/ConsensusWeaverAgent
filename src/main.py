@@ -25,7 +25,7 @@ from src.service.strategy.execution_strategy import (
 @click.command()
 @click.option("--config", "-c", default="config.yaml", help="配置文件路径")
 @click.option("--verbose", "-v", is_flag=True, help="启用详细日志")
-def main(config: str, verbose: bool):
+def main(config: str, verbose: bool) -> None:
     """智能问答协调终端应用"""
     # 初始化配置管理
     config_manager = ConfigManager(config)
@@ -95,7 +95,7 @@ async def start_interaction(
     consensus_analyzer: ConsensusAnalyzer,
     report_generator: ReportGenerator,
     tool_manager: ToolManager,
-):
+) -> None:
     """开始与用户的交互"""
     logger = get_logger()
 

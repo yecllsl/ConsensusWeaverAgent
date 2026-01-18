@@ -7,7 +7,7 @@
 import os
 import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import nltk
 import numpy as np
@@ -339,7 +339,8 @@ class ConsensusAnalyzer:
         # 计算余弦相似度矩阵
         similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-        return similarity_matrix
+        # 类型断言确保返回ndarray类型
+        return cast(np.ndarray, similarity_matrix)
 
     def _calculate_consensus_scores(
         self, tool_results: List[Dict[str, Any]], similarity_matrix: np.ndarray
@@ -415,7 +416,8 @@ class ConsensusAnalyzer:
             try:
                 # 使用安全的JSON解析替代eval
                 key_points = json.loads(response)
-                return key_points
+                # 类型断言确保返回List[Dict[str, Any]]类型
+                return cast(List[Dict[str, Any]], key_points)
             except json.JSONDecodeError as e:
                 self.logger.error(
                     f"核心观点提取 - JSON解析失败，响应内容: '{response}'，错误: {e}"
@@ -514,7 +516,8 @@ class ConsensusAnalyzer:
             try:
                 # 使用安全的JSON解析替代eval
                 differences = json.loads(response)
-                return differences
+                # 类型断言确保返回List[Dict[str, Any]]类型
+                return cast(List[Dict[str, Any]], differences)
             except json.JSONDecodeError as e:
                 self.logger.error(
                     f"分歧点识别 - JSON解析失败，响应内容: '{response}'，错误: {e}"
@@ -565,7 +568,9 @@ class ConsensusAnalyzer:
             请生成一份结构清晰、逻辑连贯的综合总结，涵盖所有核心观点和分歧点，并保持客观中立。
             """
 
-            return self.llm_service.generate_response(prompt)
+            response = self.llm_service.generate_response(prompt)
+            # 类型断言确保返回str类型
+            return cast(str, response)
         except Exception as e:
             self.logger.error(f"生成综合总结失败: {e}")
             return "综合总结生成失败"
@@ -592,7 +597,9 @@ class ConsensusAnalyzer:
             请生成一份简洁明了的最终结论，指出最可靠的信息，并根据共识度评分给出建议。
             """
 
-            return self.llm_service.generate_response(prompt)
+            response = self.llm_service.generate_response(prompt)
+            # 类型断言确保返回str类型
+            return cast(str, response)
         except Exception as e:
             self.logger.error(f"生成最终结论失败: {e}")
             return "最终结论生成失败"

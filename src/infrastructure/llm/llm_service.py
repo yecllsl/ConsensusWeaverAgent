@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, cast
 
 from langchain_community.chat_models import ChatLlamaCpp
 from langchain_community.llms import LlamaCpp
@@ -12,8 +12,8 @@ class LLMService:
     def __init__(self, config_manager: ConfigManager):
         self.config = config_manager.get_config().local_llm
         self.logger = get_logger()
-        self.llm = None
-        self.chat_llm = None
+        self.llm: Optional[LlamaCpp] = None
+        self.chat_llm: Optional[ChatLlamaCpp] = None
         self._init_llm()
 
     def _init_llm(self) -> None:
@@ -67,8 +67,11 @@ class LLMService:
     def generate_response(self, prompt: str) -> str:
         """生成LLM响应"""
         try:
-            response = self.llm.invoke(prompt)
-            return response.strip()
+            # 类型断言：llm在_init_llm中已初始化，不会为None
+            llm = cast(LlamaCpp, self.llm)
+            response = llm.invoke(prompt)
+            # 确保返回str类型
+            return str(response.strip())
         except Exception as e:
             self.logger.error(f"LLM生成响应失败: {e}")
             raise
@@ -87,8 +90,11 @@ class LLMService:
                     chat_messages.append(AIMessage(content=msg["content"]))
 
             # 调用聊天LLM
-            response = self.chat_llm.invoke(chat_messages)
-            return response.content.strip()
+            # 类型断言：chat_llm在_init_llm中已初始化，不会为None
+            chat_llm = cast(ChatLlamaCpp, self.chat_llm)
+            response = chat_llm.invoke(chat_messages)
+            # 确保返回str类型
+            return str(response.content.strip())
         except Exception as e:
             self.logger.error(f"LLM聊天对话失败: {e}")
             raise
@@ -178,7 +184,9 @@ class LLMService:
 
             # 尝试解析JSON
             try:
-                return json.loads(json_str)
+                result = json.loads(json_str)
+                # 类型断言确保返回Dict[str, Any]类型
+                return cast(Dict[str, Any], result)
             except json.JSONDecodeError as e:
                 self.logger.error(f"JSON解析失败，响应内容: '{response}'，错误: {e}")
                 # 尝试更宽容的解析
@@ -187,7 +195,7 @@ class LLMService:
                     # 1. 确保所有字符串用双引号包裹
                     json_str = re.sub(r"'([^']+)'", r'"\1"', json_str)
                     # 2. 移除尾部可能的逗号
-                    json_str = re.sub(r",\s*([}\]])", r"\1", json_str)
+                    json_str = re.sub(r",\s*([}\[\]])", r"\1", json_str)
                     # 3. 确保布尔值是小写
                     json_str = json_str.replace("True", "true").replace(
                         "False", "false"
@@ -198,7 +206,9 @@ class LLMService:
                     )
 
                     self.logger.debug(f"修复后的JSON: '{json_str}'")
-                    return json.loads(json_str)
+                    result = json.loads(json_str)
+                    # 类型断言确保返回Dict[str, Any]类型
+                    return cast(Dict[str, Any], result)
                 except json.JSONDecodeError:
                     self.logger.error("修复后仍解析失败")
                     return {
