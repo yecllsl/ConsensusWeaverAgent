@@ -45,7 +45,7 @@ jobs:
       # 4. 安装项目依赖
       - name: Install project dependencies
         run: |
-          uv sync --editable --group dev
+          uv pip install -e .[dev]
 
       # 5. 代码格式检查
       - name: Check code format with ruff
@@ -98,7 +98,7 @@ jobs:
       - name: Install uv and dependencies
         run: |
           python -m pip install uv==${{ env.UV_VERSION }}
-          uv sync --editable --group dev
+          uv pip install -e .[dev]
 
       # 安装并运行安全检查工具bandit
       - name: Run security scan with bandit
