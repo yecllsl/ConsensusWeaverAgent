@@ -2,8 +2,8 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
 from types import TracebackType
+from typing import Any, Dict, List, Optional, cast
 
 
 @dataclass
@@ -113,7 +113,7 @@ class DataManager:
         # 类型断言：cursor和conn在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
         conn = cast(sqlite3.Connection, self.conn)
-        
+
         cursor.execute(
             "INSERT INTO sessions "
             "(original_question, refined_question, timestamp, completed) "
@@ -200,7 +200,7 @@ class DataManager:
         # 类型断言：cursor和conn在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
         conn = cast(sqlite3.Connection, self.conn)
-        
+
         cursor.execute(
             "INSERT INTO tool_results "
             "(session_id, tool_name, success, answer, "
@@ -224,9 +224,7 @@ class DataManager:
         """获取会话的工具结果"""
         # 类型断言：cursor在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
-        cursor.execute(
-            "SELECT * FROM tool_results WHERE session_id = ?", (session_id,)
-        )
+        cursor.execute("SELECT * FROM tool_results WHERE session_id = ?", (session_id,))
         rows = cursor.fetchall()
         return [
             ToolResultRecord(
@@ -264,7 +262,7 @@ class DataManager:
         # 类型断言：cursor和conn在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
         conn = cast(sqlite3.Connection, self.conn)
-        
+
         cursor.execute(
             "INSERT INTO analysis_results "
             "(session_id, similarity_matrix, consensus_scores, key_points, "
@@ -312,13 +310,11 @@ class DataManager:
         # 类型断言：cursor和conn在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
         conn = cast(sqlite3.Connection, self.conn)
-        
+
         cursor.execute(
             "DELETE FROM analysis_results WHERE session_id = ?", (session_id,)
         )
-        cursor.execute(
-            "DELETE FROM tool_results WHERE session_id = ?", (session_id,)
-        )
+        cursor.execute("DELETE FROM tool_results WHERE session_id = ?", (session_id,))
         cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
         conn.commit()
 
@@ -327,7 +323,7 @@ class DataManager:
         # 类型断言：cursor和conn在_init_db中已初始化，不会为None
         cursor = cast(sqlite3.Cursor, self.cursor)
         conn = cast(sqlite3.Connection, self.conn)
-        
+
         # 获取要保留的会话ID
         cursor.execute(
             "SELECT id FROM sessions ORDER BY timestamp DESC LIMIT ?", (keep_count,)
@@ -356,6 +352,11 @@ class DataManager:
         """上下文管理器入口"""
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         """上下文管理器出口"""
         self.close()

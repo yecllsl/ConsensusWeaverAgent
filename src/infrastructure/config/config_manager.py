@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
+
 import yaml
 
 
