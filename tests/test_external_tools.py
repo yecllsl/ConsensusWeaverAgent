@@ -60,7 +60,7 @@ async def test_parallel_tool_call():
     test_question = "推荐三个开发AI Agent的开发框架，并比较他们的优缺点和擅长领域"
 
     # 并行调用所有启用的工具
-    print(f"并行调用所有启用的工具...")
+    print("并行调用所有启用的工具...")
     results = await tool_manager.run_multiple_tools(test_question)
 
     # 输出结果
@@ -98,7 +98,7 @@ async def test_tool_availability():
                 [tool["command"], "--help"], capture_output=True, text=True, timeout=5
             )
             if result.returncode == 0:
-                print(f"   可用性: ✅ 可用")
+                print("   可用性: ✅ 可用")
             else:
                 print(f"   可用性: ❌ 不可用 (返回码: {result.returncode})")
         except Exception as e:

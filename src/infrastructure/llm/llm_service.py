@@ -1,8 +1,8 @@
 from typing import Any, Dict, List
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_community.chat_models import ChatLlamaCpp
 from langchain_community.llms import LlamaCpp
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from src.infrastructure.config.config_manager import ConfigManager
 from src.infrastructure.logging.logger import get_logger
@@ -195,7 +195,7 @@ class LLMService:
                     self.logger.debug(f"修复后的JSON: '{json_str}'")
                     return json.loads(json_str)
                 except json.JSONDecodeError:
-                    self.logger.error(f"修复后仍解析失败")
+                    self.logger.error("修复后仍解析失败")
                     return {
                         "is_complete": True,
                         "is_clear": True,

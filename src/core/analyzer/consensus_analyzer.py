@@ -1,3 +1,9 @@
+# 注意：使用前请确保已手动下载NLTK资源
+# 运行以下命令下载所需资源：
+# python -c "import nltk; nltk.data.path = ['https://gitee.com/gislite/nltk_data/raw/'] + nltk.data.path；nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+# 配置NLTK数据路径（增加灵活性）
+import os
+import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -12,15 +18,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from src.infrastructure.data.data_manager import DataManager
 from src.infrastructure.llm.llm_service import LLMService
 from src.infrastructure.logging.logger import get_logger
-
-# 注意：使用前请确保已手动下载NLTK资源
-# 运行以下命令下载所需资源：
-# python -c "import nltk; nltk.data.path = ['https://gitee.com/gislite/nltk_data/raw/'] + nltk.data.path；nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
-
-# 配置NLTK数据路径（增加灵活性）
-import os
-import nltk
-import sys
 
 # 添加常见的NLTK数据路径
 common_data_paths = [

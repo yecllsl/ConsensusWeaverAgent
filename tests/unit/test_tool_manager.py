@@ -5,19 +5,20 @@ ToolManager 单元测试
 
 import asyncio
 import subprocess
-from unittest.mock import patch, MagicMock
-import pytest
-from dataclasses import dataclass
-from typing import List, Dict, Any
 
 # 添加项目根目录到Python路径
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import List
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.infrastructure.tools.tool_manager import ToolManager
 from src.infrastructure.config.config_manager import ConfigManager, ExternalToolConfig
+from src.infrastructure.tools.tool_manager import ToolManager
 
 
 @dataclass

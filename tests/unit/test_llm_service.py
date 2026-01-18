@@ -1,9 +1,9 @@
-import pytest
-import json
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from src.infrastructure.llm.llm_service import LLMService
+import pytest
+
 from src.infrastructure.config.config_manager import ConfigManager
+from src.infrastructure.llm.llm_service import LLMService
 
 
 @pytest.fixture

@@ -1,6 +1,7 @@
 # 模型下载
 import os
 import shutil
+
 from modelscope.hub.file_download import model_file_download
 
 # 获取项目根目录（Scripts目录的父目录）
@@ -27,10 +28,10 @@ print(f"文件已下载至临时位置: {downloaded_path}")
 target_path = os.path.join(download_dir, target_file)
 print(f"\n将文件移动到目标目录 {target_path}...")
 shutil.copy2(downloaded_path, target_path)
-print(f"文件已成功移动到目标目录")
+print("文件已成功移动到目标目录")
 
 # 验证下载结果
-print(f"\n验证下载结果:")
+print("\n验证下载结果:")
 
 # 检查下载目录中的文件
 print(f"\n下载目录 {download_dir} 中的文件:")

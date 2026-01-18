@@ -3,16 +3,15 @@
 测试分歧点识别功能
 """
 
-import sys
-import os
 import json
+import os
+import sys
 from unittest.mock import MagicMock
 
 # 将项目根目录添加到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.core.analyzer.consensus_analyzer import ConsensusAnalyzer
-from src.infrastructure.config.config_manager import ConfigManager
 
 
 def test_difference_identification():

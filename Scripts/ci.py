@@ -27,12 +27,14 @@ DEFAULT_CONFIG = {
     "RUFF_OUTPUT_FORMAT": "github",
     "MYPY_STRICT": "true",
     "PYTEST_VERBOSE": "true",
-    "PYTEST_TB_STYLE": "short"
+    "PYTEST_TB_STYLE": "short",
 }
+
 
 # 颜色定义（使用ANSI转义序列，支持跨平台）
 class Colors:
     """终端颜色定义"""
+
     GREEN = "\033[92m"
     RED = "\033[91m"
     YELLOW = "\033[93m"
@@ -75,6 +77,7 @@ def print_subsection(title: str) -> None:
 @dataclass
 class CIConfig:
     """CI配置类"""
+
     python_version: str
     uv_version: str
     project_dir: str
@@ -98,6 +101,7 @@ class CIConfig:
 
 class CIError(Exception):
     """CI执行错误"""
+
     pass
 
 
@@ -156,11 +160,7 @@ class CI:
 
         try:
             result = subprocess.run(
-                cmd,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                check=False
+                cmd, cwd=cwd, capture_output=True, text=True, check=False
             )
             output = result.stdout + result.stderr
             self.logger.debug(f"命令输出: {output}")
@@ -179,11 +179,14 @@ class CI:
 
     def _command_exists(self, command: str) -> bool:
         """检查命令是否存在"""
-        return subprocess.run(
-            [command, "--version"] if command != "python" else [command, "-V"],
-            capture_output=True,
-            text=True
-        ).returncode == 0
+        return (
+            subprocess.run(
+                [command, "--version"] if command != "python" else [command, "-V"],
+                capture_output=True,
+                text=True,
+            ).returncode
+            == 0
+        )
 
     def setup_environment(self) -> bool:
         """环境准备"""
@@ -195,14 +198,39 @@ class CI:
 
         # 检查Python
         print_subsection("检查Python版本")
-        if not self._command_exists("python") and not self._command_exists("python3"):
+        python_cmd = None
+        if self._command_exists("python"):
+            python_cmd = "python"
+        elif self._command_exists("python3"):
+            python_cmd = "python3"
+        else:
             self.logger.error("Python未安装")
             print_color("❌ Python未安装", "red")
             return False
+        
+        # 检查Python版本
+        version_cmd = [python_cmd, "--version"]
+        result = subprocess.run(version_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            self.logger.error("无法获取Python版本")
+            print_color("❌ 无法获取Python版本", "red")
+            return False
+            
+        version_output = result.stdout.strip()
+        self.logger.info(f"当前Python版本: {version_output}")
+        print_color(f"ℹ️ 当前Python版本: {version_output}", "blue")
+        
+        # 检查版本是否符合要求
+        if self.config.python_version not in version_output:
+            self.logger.error(f"需要Python {self.config.python_version}或更高版本")
+            print_color(f"❌ 需要Python {self.config.python_version}或更高版本", "red")
+            return False
+            
+        print_color("✅ Python版本符合要求", "green")
 
         # 安装uv
         print_subsection("安装uv依赖管理工具")
-        python_cmd = "python3" if self._command_exists("python3") else "python"
+        # 使用已经确定的python_cmd变量
         cmd = [python_cmd, "-m", "pip", "install", f"uv=={self.config.uv_version}"]
         success, _ = self._run_command(cmd, quiet=True)
         if not success:
@@ -223,7 +251,7 @@ class CI:
 
         # 检查是否在CI环境
         is_ci = os.environ.get("CI") == "true"
-        
+
         # 根据环境选择命令
         if is_ci:
             cmd = ["uv", "pip", "install", "-e", ".", "--group", "dev", "--system"]
@@ -249,8 +277,14 @@ class CI:
 
         # 使用ruff检查代码格式
         print_subsection("使用ruff检查代码格式")
-        cmd = ["uv", "run", "ruff", "check", 
-               f"--output-format={self.config.ruff_output_format}", "."]
+        cmd = [
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            f"--output-format={self.config.ruff_output_format}",
+            ".",
+        ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
             self.logger.error("代码格式检查失败")
@@ -290,12 +324,23 @@ class CI:
 
         # 使用mypy进行类型检查
         print_subsection("使用mypy进行类型检查")
-        cmd = ["uv", "run", "mypy"]
-        if self.config.mypy_strict:
-            cmd.append("--strict")
-        cmd.append("src/")
+        
+        # 临时修改PYTHONPATH，确保正确的模块搜索顺序
+        original_pythonpath = os.environ.get("PYTHONPATH", "")
+        src_path = os.path.abspath(os.path.join(self.config.project_dir, "src"))
+        os.environ["PYTHONPATH"] = src_path + (";" if os.name == "nt" else ":") + original_pythonpath
+        
+        try:
+            cmd = ["uv", "run", "mypy", "--follow-imports=silent"]
+            if self.config.mypy_strict:
+                cmd.append("--strict")
+            # 只检查src目录下的文件，避免模块名冲突
+            cmd.append("src/")
 
-        success, _ = self._run_command(cmd, cwd=self.config.project_dir)
+            success, _ = self._run_command(cmd, cwd=self.config.project_dir)
+        finally:
+            # 恢复原始PYTHONPATH
+            os.environ["PYTHONPATH"] = original_pythonpath
         if not success:
             self.logger.error("类型检查失败")
             print_color("❌ 类型检查失败", "red")
@@ -340,8 +385,12 @@ class CI:
         # 生成JUnit测试报告
         print_subsection("生成JUnit测试报告")
         cmd = [
-            "uv", "run", "pytest", "tests/",
-            "--junitxml", self.config.test_results_file
+            "uv",
+            "run",
+            "pytest",
+            "tests/",
+            "--junitxml",
+            self.config.test_results_file,
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
         if not success:
@@ -364,9 +413,7 @@ class CI:
         print_subsection("安装安全检查工具bandit")
         cmd = ["uv", "pip", "install", "bandit"]
         install_success, _ = self._run_command(
-            cmd, 
-            cwd=self.config.project_dir, 
-            quiet=True
+            cmd, cwd=self.config.project_dir, quiet=True
         )
         if not install_success:
             self.logger.warning("bandit安装失败，跳过安全检查")
@@ -376,8 +423,15 @@ class CI:
         # 运行安全检查
         print_subsection("使用bandit进行安全检查")
         cmd = [
-            "uv", "run", "bandit", "-r", "src/",
-            "-f", "json", "-o", self.config.security_report_file
+            "uv",
+            "run",
+            "bandit",
+            "-r",
+            "src/",
+            "-f",
+            "json",
+            "-o",
+            self.config.security_report_file,
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
         if not success:
@@ -402,7 +456,7 @@ class CI:
             ("类型检查", self.type_check),
             ("测试执行", self.run_tests),
             ("测试报告生成", self.generate_test_report),
-            ("安全检查", self.run_security_check)
+            ("安全检查", self.run_security_check),
         ]
 
         all_success = True
@@ -432,95 +486,64 @@ class CI:
 def parse_args() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="ConsensusWeaverAgent CI脚本")
-    
+
     # 配置文件
-    parser.add_argument(
-        "--config", 
-        type=str, 
-        help="配置文件路径"
-    )
-    
+    parser.add_argument("--config", type=str, help="配置文件路径")
+
     # 环境配置
     parser.add_argument(
-        "--python-version", 
-        type=str, 
+        "--python-version",
+        type=str,
         default=DEFAULT_CONFIG["PYTHON_VERSION"],
-        help="Python版本"
+        help="Python版本",
     )
     parser.add_argument(
-        "--uv-version", 
-        type=str, 
-        default=DEFAULT_CONFIG["UV_VERSION"],
-        help="uv版本"
+        "--uv-version", type=str, default=DEFAULT_CONFIG["UV_VERSION"], help="uv版本"
     )
     parser.add_argument(
-        "--project-dir", 
-        type=str, 
+        "--project-dir",
+        type=str,
         default=DEFAULT_CONFIG["PROJECT_DIR"],
-        help="项目目录"
+        help="项目目录",
     )
-    
+
     # 跳过选项
+    parser.add_argument("--skip-env-prep", action="store_true", help="跳过环境准备")
+    parser.add_argument("--skip-deps", action="store_true", help="跳过依赖安装")
     parser.add_argument(
-        "--skip-env-prep", 
-        action="store_true",
-        help="跳过环境准备"
+        "--skip-format", action="store_true", help="跳过代码格式检查和格式化"
     )
-    parser.add_argument(
-        "--skip-deps", 
-        action="store_true",
-        help="跳过依赖安装"
-    )
-    parser.add_argument(
-        "--skip-format", 
-        action="store_true",
-        help="跳过代码格式检查和格式化"
-    )
-    parser.add_argument(
-        "--skip-mypy", 
-        action="store_true",
-        help="跳过类型检查"
-    )
-    parser.add_argument(
-        "--skip-tests", 
-        action="store_true",
-        help="跳过测试执行"
-    )
-    parser.add_argument(
-        "--skip-security", 
-        action="store_true",
-        help="跳过安全检查"
-    )
-    
+    parser.add_argument("--skip-mypy", action="store_true", help="跳过类型检查")
+    parser.add_argument("--skip-tests", action="store_true", help="跳过测试执行")
+    parser.add_argument("--skip-security", action="store_true", help="跳过安全检查")
+
     # 日志配置
     parser.add_argument(
-        "--log-level", 
+        "--log-level",
         choices=["debug", "info", "warning", "error", "critical"],
         default="info",
-        help="日志级别"
+        help="日志级别",
     )
-    
+
     # 其他选项
     parser.add_argument(
-        "--upload-artifacts", 
-        action="store_true",
-        help="上传测试报告（仅CI环境有效）"
+        "--upload-artifacts", action="store_true", help="上传测试报告（仅CI环境有效）"
     )
-    
+
     return parser.parse_args()
 
 
 def load_config(config_file: Optional[str]) -> Dict[str, str]:
     """加载配置文件"""
     config = DEFAULT_CONFIG.copy()
-    
+
     if config_file and os.path.exists(config_file):
         parser = configparser.ConfigParser()
         parser.read(config_file)
-        
+
         if "CI" in parser:
             config.update(parser["CI"])
-    
+
     return config
 
 
@@ -528,12 +551,12 @@ def create_config(args: argparse.Namespace) -> CIConfig:
     """创建CI配置对象"""
     # 加载配置文件
     config_dict = load_config(args.config)
-    
+
     # 命令行参数覆盖配置文件
     config_dict["PYTHON_VERSION"] = args.python_version
     config_dict["UV_VERSION"] = args.uv_version
     config_dict["PROJECT_DIR"] = args.project_dir
-    
+
     return CIConfig(
         python_version=config_dict["PYTHON_VERSION"],
         uv_version=config_dict["UV_VERSION"],
@@ -553,7 +576,7 @@ def create_config(args: argparse.Namespace) -> CIConfig:
         skip_mypy=args.skip_mypy,
         skip_tests=args.skip_tests,
         skip_security=args.skip_security,
-        upload_artifacts=args.upload_artifacts
+        upload_artifacts=args.upload_artifacts,
     )
 
 
@@ -561,14 +584,14 @@ def main() -> int:
     """主函数"""
     # 解析命令行参数
     args = parse_args()
-    
+
     # 创建配置
     config = create_config(args)
-    
+
     # 创建CI实例并运行
     ci = CI(config)
     success = ci.run()
-    
+
     return 0 if success else 1
 
 
