@@ -44,9 +44,8 @@ line-length = 88
 target-version = "py312"
 indent-width = 4
 
-[[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-default = true
+[tool.uv]
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 
 [tool.ruff.format]
 indent-style = "space"
