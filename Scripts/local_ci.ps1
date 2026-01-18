@@ -80,7 +80,7 @@ function Install-Dependencies {
     Write-ColorMessage "🔧 安装项目依赖..." $YELLOW
     try {
         Set-Location $PROJECT_DIR
-        uv pip install --group dev --quiet
+        uv pip install -e . --group dev --quiet
         Write-ColorMessage "✅ 项目依赖安装成功" $GREEN
     } catch {
         Write-ColorMessage "❌ 项目依赖安装失败: $_" $RED
