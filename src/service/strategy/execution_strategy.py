@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
 from src.infrastructure.llm.llm_service import LLMService
@@ -10,11 +10,10 @@ from src.infrastructure.tools.tool_manager import ToolManager
 class ExecutionPlan:
     strategy: str  # "direct_answer" 或 "parallel_query"
     question: str
-    tools: List[str] = None
+    tools: List[str] = field(default_factory=list)
 
-    def __post_init__(self):
-        if self.tools is None:
-            self.tools = []
+    def __post_init__(self) -> None:
+        pass
 
 
 class ExecutionStrategyManager:

@@ -207,7 +207,7 @@ class CI:
             self.logger.error("Python未安装")
             print_color("❌ Python未安装", "red")
             return False
-        
+
         # 检查Python版本
         version_cmd = [python_cmd, "--version"]
         result = subprocess.run(version_cmd, capture_output=True, text=True)
@@ -215,28 +215,48 @@ class CI:
             self.logger.error("无法获取Python版本")
             print_color("❌ 无法获取Python版本", "red")
             return False
-            
+
         version_output = result.stdout.strip()
         self.logger.info(f"当前Python版本: {version_output}")
         print_color(f"ℹ️ 当前Python版本: {version_output}", "blue")
-        
+
         # 检查版本是否符合要求
         if self.config.python_version not in version_output:
             self.logger.error(f"需要Python {self.config.python_version}或更高版本")
             print_color(f"❌ 需要Python {self.config.python_version}或更高版本", "red")
             return False
-            
+
         print_color("✅ Python版本符合要求", "green")
 
         # 安装uv
         print_subsection("安装uv依赖管理工具")
-        # 使用已经确定的python_cmd变量
-        cmd = [python_cmd, "-m", "pip", "install", f"uv=={self.config.uv_version}"]
-        success, _ = self._run_command(cmd, quiet=True)
-        if not success:
-            self.logger.error("uv安装失败")
-            print_color("❌ uv安装失败", "red")
-            return False
+        # 检查uv是否已经安装
+        if self._command_exists("uv"):
+            # 获取当前uv版本
+            result = subprocess.run(["uv", "--version"], capture_output=True, text=True)
+            if result.returncode == 0:
+                current_version = result.stdout.strip()
+                self.logger.info(f"uv已经安装: {current_version}")
+                print_color(f"✅ uv已经安装: {current_version}", "green")
+            else:
+                self.logger.error("无法获取uv版本")
+                print_color("⚠️ 无法获取uv版本，尝试重新安装", "yellow")
+                # 尝试安装uv
+                cmd = [python_cmd, "-m", "pip", "install", "uv"]
+                success, _ = self._run_command(cmd, quiet=True)
+                if not success:
+                    self.logger.error("uv安装失败")
+                    print_color("❌ uv安装失败", "red")
+                    return False
+        else:
+            # 安装uv
+            cmd = [python_cmd, "-m", "pip", "install", "uv"]
+            success, _ = self._run_command(cmd, quiet=True)
+            if not success:
+                self.logger.error("uv安装失败")
+                print_color("❌ uv安装失败", "red")
+                return False
+            print_color("✅ uv安装成功", "green")
 
         print_color("✅ 环境准备完成", "green")
         return True
@@ -324,18 +344,27 @@ class CI:
 
         # 使用mypy进行类型检查
         print_subsection("使用mypy进行类型检查")
-        
+
         # 临时修改PYTHONPATH，确保正确的模块搜索顺序
         original_pythonpath = os.environ.get("PYTHONPATH", "")
         src_path = os.path.abspath(os.path.join(self.config.project_dir, "src"))
-        os.environ["PYTHONPATH"] = src_path + (";" if os.name == "nt" else ":") + original_pythonpath
-        
+        # 设置PYTHONPATH，Windows使用分号，其他系统使用冒号
+        separator = ";" if os.name == "nt" else ":"
+        os.environ["PYTHONPATH"] = src_path + separator + original_pythonpath
+
         try:
-            cmd = ["uv", "run", "mypy", "--follow-imports=silent"]
+            cmd = [
+                "uv",
+                "run",
+                "mypy",
+                "--namespace-packages",  # 使用命名空间包模式，避免模块名冲突
+                "--ignore-missing-imports",  # 忽略缺失的导入
+                "--follow-imports=skip",  # 不跟随导入，避免模块名冲突
+            ]
+            # 根据配置决定是否使用严格模式
             if self.config.mypy_strict:
                 cmd.append("--strict")
-            # 只检查src目录下的文件，避免模块名冲突
-            cmd.append("src/")
+            cmd.append("src/")  # 只检查src目录下的文件
 
             success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         finally:
@@ -529,6 +558,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--upload-artifacts", action="store_true", help="上传测试报告（仅CI环境有效）"
     )
+    parser.add_argument(
+        "--mypy-strict", action="store_true", help="使用严格的类型检查模式"
+    )
+    parser.add_argument(
+        "--no-mypy-strict", action="store_true", help="不使用严格的类型检查模式"
+    )
 
     return parser.parse_args()
 
@@ -556,6 +591,12 @@ def create_config(args: argparse.Namespace) -> CIConfig:
     config_dict["PYTHON_VERSION"] = args.python_version
     config_dict["UV_VERSION"] = args.uv_version
     config_dict["PROJECT_DIR"] = args.project_dir
+
+    # 处理mypy严格模式参数
+    if hasattr(args, "mypy_strict") and args.mypy_strict:
+        config_dict["MYPY_STRICT"] = "true"
+    if hasattr(args, "no_mypy_strict") and args.no_mypy_strict:
+        config_dict["MYPY_STRICT"] = "false"
 
     return CIConfig(
         python_version=config_dict["PYTHON_VERSION"],

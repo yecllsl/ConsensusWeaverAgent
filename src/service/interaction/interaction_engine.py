@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from src.infrastructure.data.data_manager import DataManager
@@ -12,12 +12,11 @@ class InteractionState:
     original_question: str
     refined_question: Optional[str] = None
     clarification_rounds: int = 0
-    clarifications: List[str] = None
+    clarifications: List[str] = field(default_factory=list)
     completed: bool = False
 
-    def __post_init__(self):
-        if self.clarifications is None:
-            self.clarifications = []
+    def __post_init__(self) -> None:
+        pass
 
 
 class InteractionEngine:
