@@ -80,6 +80,7 @@ function Install-Dependencies {
     Write-ColorMessage "🔧 安装项目依赖..." $YELLOW
     try {
         Set-Location $PROJECT_DIR
+        # 本地环境使用虚拟环境，CI环境使用--system参数
         uv pip install -e . --group dev --quiet
         Write-ColorMessage "✅ 项目依赖安装成功" $GREEN
     } catch {
