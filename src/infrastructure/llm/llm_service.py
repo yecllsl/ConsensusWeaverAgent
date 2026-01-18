@@ -24,7 +24,6 @@ class LLMService:
                 model_path=self.config.model_path,
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
-                n_threads_batch=self.config.n_threads_batch,
                 n_batch=self.config.n_batch,
                 max_tokens=self.config.max_tokens,
                 top_p=self.config.top_p,
@@ -37,6 +36,9 @@ class LLMService:
                 rope_freq_base=self.config.rope_freq_base,
                 rope_freq_scale=self.config.rope_freq_scale,
                 temperature=self.config.temperature,
+                model_kwargs={
+                    "n_threads_batch": self.config.n_threads_batch
+                }
             )
 
             # 初始化聊天LLM
@@ -44,7 +46,6 @@ class LLMService:
                 model_path=self.config.model_path,
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
-                n_threads_batch=self.config.n_threads_batch,
                 n_batch=self.config.n_batch,
                 max_tokens=self.config.max_tokens,
                 top_p=self.config.top_p,
@@ -57,6 +58,9 @@ class LLMService:
                 rope_freq_base=self.config.rope_freq_base,
                 rope_freq_scale=self.config.rope_freq_scale,
                 temperature=self.config.temperature,
+                model_kwargs={
+                    "n_threads_batch": self.config.n_threads_batch
+                }
             )
 
             self.logger.info(f"成功加载本地模型: {self.config.model}")
