@@ -5,7 +5,12 @@ from typing import Optional
 
 
 class Logger:
-    def __init__(self, name: str = "ConsensusWeaver", log_file: str = "consensusweaver.log", log_level: str = "info"):
+    def __init__(
+        self,
+        name: str = "ConsensusWeaver",
+        log_file: str = "consensusweaver.log",
+        log_level: str = "info",
+    ):
         self.name = name
         self.log_file = log_file
         self.log_level = self._get_log_level(log_level)
@@ -18,13 +23,13 @@ class Logger:
             "info": logging.INFO,
             "warning": logging.WARNING,
             "error": logging.ERROR,
-            "critical": logging.CRITICAL
+            "critical": logging.CRITICAL,
         }
         return log_level_map.get(log_level.lower(), logging.INFO)
 
     def _setup_logger(self) -> logging.Logger:
         """配置日志记录器"""
-        
+
         logger = logging.getLogger(self.name)
         logger.setLevel(self.log_level)
         logger.propagate = False
@@ -36,7 +41,7 @@ class Logger:
         # 创建格式器
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
         # 创建控制台处理器
@@ -55,7 +60,7 @@ class Logger:
             self.log_file,
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=5,  # 保存5个备份
-            encoding="utf-8"
+            encoding="utf-8",
         )
         file_handler.setLevel(self.log_level)
         file_handler.setFormatter(formatter)
@@ -99,17 +104,27 @@ class Logger:
         self.log_file = log_file
         self.logger = self._setup_logger()
 
+
 # 创建全局日志记录器实例
 _global_logger: Optional[Logger] = None
 
-def get_logger(name: Optional[str] = None, log_file: Optional[str] = None, log_level: Optional[str] = None) -> Logger:
+
+def get_logger(
+    name: Optional[str] = None,
+    log_file: Optional[str] = None,
+    log_level: Optional[str] = None,
+) -> Logger:
     """获取日志记录器实例"""
     global _global_logger
-    
+
     # 如果提供了参数，创建新的日志记录器实例
     if name or log_file or log_level:
-        return Logger(name=name or "ConsensusWeaver", log_file=log_file or "consensusweaver.log", log_level=log_level or "info")
-    
+        return Logger(
+            name=name or "ConsensusWeaver",
+            log_file=log_file or "consensusweaver.log",
+            log_level=log_level or "info",
+        )
+
     # 否则返回全局单例实例
     if _global_logger is None:
         _global_logger = Logger()

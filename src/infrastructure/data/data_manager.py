@@ -13,6 +13,7 @@ class SessionRecord:
     timestamp: datetime
     completed: bool
 
+
 @dataclass
 class ToolResultRecord:
     id: int
@@ -23,6 +24,7 @@ class ToolResultRecord:
     error_message: str
     execution_time: float
     timestamp: datetime
+
 
 @dataclass
 class AnalysisResultRecord:
@@ -36,6 +38,7 @@ class AnalysisResultRecord:
     final_conclusion: str
     timestamp: datetime
 
+
 class DataManager:
     def __init__(self, db_path: str = "consensusweaver.db"):
         self.db_path = db_path
@@ -47,7 +50,7 @@ class DataManager:
         """初始化数据库"""
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
-        
+
         # 创建会话表
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS sessions (
@@ -58,7 +61,7 @@ class DataManager:
             completed BOOLEAN DEFAULT FALSE
         )
         """)
-        
+
         # 创建工具结果表
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS tool_results (
@@ -73,7 +76,7 @@ class DataManager:
             FOREIGN KEY (session_id) REFERENCES sessions (id)
         )
         """)
-        
+
         # 创建分析结果表
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS analysis_results (
@@ -89,7 +92,7 @@ class DataManager:
             FOREIGN KEY (session_id) REFERENCES sessions (id)
         )
         """)
-        
+
         self.conn.commit()
 
     def close(self) -> None:
@@ -101,29 +104,36 @@ class DataManager:
         self.cursor = None
         self.conn = None
 
-    def save_session(self, original_question: str, refined_question: Optional[str] = None) -> int:
+    def save_session(
+        self, original_question: str, refined_question: Optional[str] = None
+    ) -> int:
         """保存会话记录"""
         timestamp = datetime.now().isoformat()
         self.cursor.execute(
             "INSERT INTO sessions (original_question, refined_question, timestamp, completed) VALUES (?, ?, ?, ?)",
-            (original_question, refined_question, timestamp, False)
+            (original_question, refined_question, timestamp, False),
         )
         self.conn.commit()
         return self.cursor.lastrowid
 
-    def update_session(self, session_id: int, refined_question: Optional[str] = None, completed: Optional[bool] = None) -> None:
+    def update_session(
+        self,
+        session_id: int,
+        refined_question: Optional[str] = None,
+        completed: Optional[bool] = None,
+    ) -> None:
         """更新会话记录"""
         update_fields = []
         update_values = []
-        
+
         if refined_question is not None:
             update_fields.append("refined_question = ?")
             update_values.append(refined_question)
-        
+
         if completed is not None:
             update_fields.append("completed = ?")
             update_values.append(completed)
-        
+
         if update_fields:
             update_values.append(session_id)
             query = f"UPDATE sessions SET {', '.join(update_fields)} WHERE id = ?"
@@ -140,13 +150,15 @@ class DataManager:
                 original_question=row[1],
                 refined_question=row[2],
                 timestamp=datetime.fromisoformat(row[3]),
-                completed=bool(row[4])
+                completed=bool(row[4]),
             )
         return None
 
     def get_recent_sessions(self, limit: int = 10) -> List[SessionRecord]:
         """获取最近的会话记录"""
-        self.cursor.execute("SELECT * FROM sessions ORDER BY timestamp DESC LIMIT ?", (limit,))
+        self.cursor.execute(
+            "SELECT * FROM sessions ORDER BY timestamp DESC LIMIT ?", (limit,)
+        )
         rows = self.cursor.fetchall()
         return [
             SessionRecord(
@@ -154,24 +166,42 @@ class DataManager:
                 original_question=row[1],
                 refined_question=row[2],
                 timestamp=datetime.fromisoformat(row[3]),
-                completed=bool(row[4])
+                completed=bool(row[4]),
             )
             for row in rows
         ]
 
-    def save_tool_result(self, session_id: int, tool_name: str, success: bool, answer: str = "", error_message: str = "", execution_time: float = 0.0) -> int:
+    def save_tool_result(
+        self,
+        session_id: int,
+        tool_name: str,
+        success: bool,
+        answer: str = "",
+        error_message: str = "",
+        execution_time: float = 0.0,
+    ) -> int:
         """保存工具结果"""
         timestamp = datetime.now().isoformat()
         self.cursor.execute(
             "INSERT INTO tool_results (session_id, tool_name, success, answer, error_message, execution_time, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (session_id, tool_name, success, answer, error_message, execution_time, timestamp)
+            (
+                session_id,
+                tool_name,
+                success,
+                answer,
+                error_message,
+                execution_time,
+                timestamp,
+            ),
         )
         self.conn.commit()
         return self.cursor.lastrowid
 
     def get_tool_results(self, session_id: int) -> List[ToolResultRecord]:
         """获取会话的工具结果"""
-        self.cursor.execute("SELECT * FROM tool_results WHERE session_id = ?", (session_id,))
+        self.cursor.execute(
+            "SELECT * FROM tool_results WHERE session_id = ?", (session_id,)
+        )
         rows = self.cursor.fetchall()
         return [
             ToolResultRecord(
@@ -182,31 +212,51 @@ class DataManager:
                 answer=row[4],
                 error_message=row[5],
                 execution_time=row[6],
-                timestamp=datetime.fromisoformat(row[7])
+                timestamp=datetime.fromisoformat(row[7]),
             )
             for row in rows
         ]
 
-    def save_analysis_result(self, session_id: int, similarity_matrix: List[List[float]], consensus_scores: Dict[str, float], key_points: List[Dict[str, Any]], differences: List[Dict[str, Any]], comprehensive_summary: str, final_conclusion: str) -> int:
+    def save_analysis_result(
+        self,
+        session_id: int,
+        similarity_matrix: List[List[float]],
+        consensus_scores: Dict[str, float],
+        key_points: List[Dict[str, Any]],
+        differences: List[Dict[str, Any]],
+        comprehensive_summary: str,
+        final_conclusion: str,
+    ) -> int:
         """保存分析结果"""
         timestamp = datetime.now().isoformat()
-        
+
         # 将复杂数据结构转换为JSON字符串
         similarity_matrix_json = json.dumps(similarity_matrix)
         consensus_scores_json = json.dumps(consensus_scores)
         key_points_json = json.dumps(key_points)
         differences_json = json.dumps(differences)
-        
+
         self.cursor.execute(
             "INSERT INTO analysis_results (session_id, similarity_matrix, consensus_scores, key_points, differences, comprehensive_summary, final_conclusion, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (session_id, similarity_matrix_json, consensus_scores_json, key_points_json, differences_json, comprehensive_summary, final_conclusion, timestamp)
+            (
+                session_id,
+                similarity_matrix_json,
+                consensus_scores_json,
+                key_points_json,
+                differences_json,
+                comprehensive_summary,
+                final_conclusion,
+                timestamp,
+            ),
         )
         self.conn.commit()
         return self.cursor.lastrowid
 
     def get_analysis_result(self, session_id: int) -> Optional[AnalysisResultRecord]:
         """获取会话的分析结果"""
-        self.cursor.execute("SELECT * FROM analysis_results WHERE session_id = ?", (session_id,))
+        self.cursor.execute(
+            "SELECT * FROM analysis_results WHERE session_id = ?", (session_id,)
+        )
         row = self.cursor.fetchone()
         if row:
             return AnalysisResultRecord(
@@ -218,29 +268,43 @@ class DataManager:
                 differences=json.loads(row[5]),
                 comprehensive_summary=row[6],
                 final_conclusion=row[7],
-                timestamp=datetime.fromisoformat(row[8])
+                timestamp=datetime.fromisoformat(row[8]),
             )
         return None
 
     def delete_session(self, session_id: int) -> None:
         """删除会话及其相关数据"""
-        self.cursor.execute("DELETE FROM analysis_results WHERE session_id = ?", (session_id,))
-        self.cursor.execute("DELETE FROM tool_results WHERE session_id = ?", (session_id,))
+        self.cursor.execute(
+            "DELETE FROM analysis_results WHERE session_id = ?", (session_id,)
+        )
+        self.cursor.execute(
+            "DELETE FROM tool_results WHERE session_id = ?", (session_id,)
+        )
         self.cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
         self.conn.commit()
 
     def clear_old_sessions(self, keep_count: int = 100) -> None:
         """清除旧会话，保留指定数量的最近会话"""
         # 获取要保留的会话ID
-        self.cursor.execute("SELECT id FROM sessions ORDER BY timestamp DESC LIMIT ?", (keep_count,))
+        self.cursor.execute(
+            "SELECT id FROM sessions ORDER BY timestamp DESC LIMIT ?", (keep_count,)
+        )
         keep_ids = [row[0] for row in self.cursor.fetchall()]
-        
+
         if keep_ids:
             # 删除不在保留列表中的会话
             placeholders = ",".join(["?"] * len(keep_ids))
-            self.cursor.execute(f"DELETE FROM analysis_results WHERE session_id NOT IN ({placeholders})", keep_ids)
-            self.cursor.execute(f"DELETE FROM tool_results WHERE session_id NOT IN ({placeholders})", keep_ids)
-            self.cursor.execute(f"DELETE FROM sessions WHERE id NOT IN ({placeholders})", keep_ids)
+            self.cursor.execute(
+                f"DELETE FROM analysis_results WHERE session_id NOT IN ({placeholders})",
+                keep_ids,
+            )
+            self.cursor.execute(
+                f"DELETE FROM tool_results WHERE session_id NOT IN ({placeholders})",
+                keep_ids,
+            )
+            self.cursor.execute(
+                f"DELETE FROM sessions WHERE id NOT IN ({placeholders})", keep_ids
+            )
             self.conn.commit()
 
     def __enter__(self) -> "DataManager":

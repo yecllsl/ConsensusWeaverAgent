@@ -2,6 +2,7 @@
 """
 测试分歧点识别功能
 """
+
 import sys
 import os
 import json
@@ -20,12 +21,12 @@ def test_difference_identification():
     mock_config_manager = MagicMock()
     mock_config = MagicMock()
     mock_config_manager.get_config.return_value = mock_config
-    
+
     # 创建模拟LLM服务
     mock_llm_service = MagicMock()
-    
+
     # 模拟LLM返回带有代码块标记的响应
-    mock_response = '''```json
+    mock_response = """```json
 [
   {
     "content": "The first answer lists six collaboration modes, including centralized, distributed, hierarchical, alliance, competitive and mixed.",
@@ -36,35 +37,35 @@ def test_difference_identification():
     "sources": ["iflow", "codebuddy"]
   }
 ]
-```'''
-    
+```"""
+
     mock_llm_service.generate_response.return_value = mock_response
-    
+
     # 创建模拟数据管理器
     mock_data_manager = MagicMock()
-    
+
     # 创建ConsensusAnalyzer实例
     analyzer = ConsensusAnalyzer(mock_llm_service, mock_data_manager)
-    
+
     # 模拟工具结果
     tool_results = [
         {
-            'tool_name': 'iflow',
-            'answer': 'This is a test answer from iflow.',
-            'success': True
+            "tool_name": "iflow",
+            "answer": "This is a test answer from iflow.",
+            "success": True,
         },
         {
-            'tool_name': 'codebuddy',
-            'answer': 'This is a test answer from codebuddy.',
-            'success': True
+            "tool_name": "codebuddy",
+            "answer": "This is a test answer from codebuddy.",
+            "success": True,
         },
         {
-            'tool_name': 'qwen',
-            'answer': 'This is a test answer from qwen.',
-            'success': True
-        }
+            "tool_name": "qwen",
+            "answer": "This is a test answer from qwen.",
+            "success": True,
+        },
     ]
-    
+
     try:
         # 调用分歧点识别方法
         differences = analyzer._identify_differences(tool_results)
@@ -74,6 +75,7 @@ def test_difference_identification():
     except Exception as e:
         print(f"测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

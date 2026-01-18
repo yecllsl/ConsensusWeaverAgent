@@ -1,4 +1,4 @@
-#模型下载
+# 模型下载
 import os
 import shutil
 from modelscope.hub.file_download import model_file_download
@@ -8,7 +8,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 
 # 确保下载目录存在
-download_dir = os.path.join(project_root, '.models', 'qwen')
+download_dir = os.path.join(project_root, ".models", "qwen")
 os.makedirs(download_dir, exist_ok=True)
 
 # 指定要下载的文件
@@ -18,9 +18,7 @@ target_file = "Qwen3-8B-Q5_K_M.gguf"  # 从ModelScope模型页面获取的准确
 # 使用model_file_download精确下载单个文件
 print(f"开始下载模型文件 {target_file}...")
 downloaded_path = model_file_download(
-    model_id=model_id,
-    file_path=target_file,
-    revision="master"
+    model_id=model_id, file_path=target_file, revision="master"
 )
 
 print(f"文件已下载至临时位置: {downloaded_path}")
@@ -41,9 +39,9 @@ for file in dir_files:
     file_path = os.path.join(download_dir, file)
     file_size = os.path.getsize(file_path) / (1024 * 1024 * 1024)  # GB
     print(f"  - {file} ({file_size:.2f} GB)")
-    
+
     # 检查是否有多余的gguf文件
-    if file.endswith('.gguf') and file != target_file:
+    if file.endswith(".gguf") and file != target_file:
         print(f"    ⚠️  警告: 发现多余的gguf文件 {file}")
 
 # 确认目标文件是否存在且大小合理

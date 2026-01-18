@@ -36,9 +36,9 @@ class LLMService:
                 n_gpu_layers=self.config.n_gpu_layers,
                 rope_freq_base=self.config.rope_freq_base,
                 rope_freq_scale=self.config.rope_freq_scale,
-                temperature=self.config.temperature
+                temperature=self.config.temperature,
             )
-            
+
             # 初始化聊天LLM
             self.chat_llm = ChatLlamaCpp(
                 model_path=self.config.model_path,
@@ -56,9 +56,9 @@ class LLMService:
                 n_gpu_layers=self.config.n_gpu_layers,
                 rope_freq_base=self.config.rope_freq_base,
                 rope_freq_scale=self.config.rope_freq_scale,
-                temperature=self.config.temperature
+                temperature=self.config.temperature,
             )
-            
+
             self.logger.info(f"成功加载本地模型: {self.config.model}")
         except Exception as e:
             self.logger.error(f"加载本地模型失败: {e}")
@@ -85,7 +85,7 @@ class LLMService:
                     chat_messages.append(HumanMessage(content=msg["content"]))
                 elif msg["role"] == "assistant":
                     chat_messages.append(AIMessage(content=msg["content"]))
-            
+
             # 调用聊天LLM
             response = self.chat_llm.invoke(chat_messages)
             return response.content.strip()
@@ -98,7 +98,7 @@ class LLMService:
         try:
             import json
             import re
-            
+
             prompt = f"""
             任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
             
@@ -122,10 +122,10 @@ class LLMService:
             输出示例：
             {{"is_complete": false, "is_clear": true, "ambiguities": ["是否需要考虑商业用途？"], "missing_info": ["各框架的最新版本是什么？"], "complexity": "complex"}}
             """
-            
+
             response = self.generate_response(prompt)
             self.logger.debug(f"LLM原始响应: '{response}'")
-            
+
             if not response.strip():
                 self.logger.error("LLM返回了空响应")
                 return {
@@ -133,18 +133,18 @@ class LLMService:
                     "is_clear": True,
                     "ambiguities": [],
                     "missing_info": [],
-                    "complexity": "complex"
+                    "complexity": "complex",
                 }
-            
+
             # 预处理响应
             response = response.strip()
-            
+
             # 替换中文逗号为英文逗号
-            response = response.replace('，', ',')
-            
+            response = response.replace("，", ",")
+
             # 移除可能的非JSON内容
             # 移除JSON前后的所有非JSON字符
-            json_match = re.search(r'\{.*?\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*?\}", response, re.DOTALL)
             if json_match:
                 json_str = json_match.group(0)
             else:
@@ -153,24 +153,24 @@ class LLMService:
                 brace_count = 0
                 start_pos = None
                 for i, char in enumerate(response):
-                    if char == '{':
+                    if char == "{":
                         if brace_count == 0:
                             start_pos = i
                         brace_count += 1
-                    elif char == '}':
+                    elif char == "}":
                         brace_count -= 1
                         if brace_count == 0 and start_pos is not None:
-                            json_parts.append(response[start_pos:i+1])
+                            json_parts.append(response[start_pos : i + 1])
                             start_pos = None
-                
+
                 if json_parts:
                     # 选择最长的JSON片段（通常最完整）
                     json_str = max(json_parts, key=len)
                 else:
                     json_str = response
-            
+
             self.logger.debug(f"提取的JSON部分: '{json_str}'")
-            
+
             # 尝试解析JSON
             try:
                 return json.loads(json_str)
@@ -182,12 +182,16 @@ class LLMService:
                     # 1. 确保所有字符串用双引号包裹
                     json_str = re.sub(r"'([^']+)'", r'"\1"', json_str)
                     # 2. 移除尾部可能的逗号
-                    json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+                    json_str = re.sub(r",\s*([}\]])", r"\1", json_str)
                     # 3. 确保布尔值是小写
-                    json_str = json_str.replace('True', 'true').replace('False', 'false')
+                    json_str = json_str.replace("True", "true").replace(
+                        "False", "false"
+                    )
                     # 4. 确保复杂度值是小写
-                    json_str = json_str.replace('Simple', 'simple').replace('Complex', 'complex')
-                    
+                    json_str = json_str.replace("Simple", "simple").replace(
+                        "Complex", "complex"
+                    )
+
                     self.logger.debug(f"修复后的JSON: '{json_str}'")
                     return json.loads(json_str)
                 except json.JSONDecodeError:
@@ -197,13 +201,15 @@ class LLMService:
                         "is_clear": True,
                         "ambiguities": [],
                         "missing_info": [],
-                        "complexity": "complex"
+                        "complexity": "complex",
                     }
         except Exception as e:
             self.logger.error(f"LLM分析问题失败: {e}")
             raise
 
-    def generate_clarification_question(self, original_question: str, analysis: Dict[str, Any]) -> str:
+    def generate_clarification_question(
+        self, original_question: str, analysis: Dict[str, Any]
+    ) -> str:
         """根据问题分析生成澄清问题"""
         try:
             prompt = f"""
@@ -212,15 +218,15 @@ class LLMService:
             原始问题："{original_question}"
             
             问题分析：
-            - 完整性：{'完整' if analysis['is_complete'] else '不完整'}
-            - 清晰度：{'清晰' if analysis['is_clear'] else '不清晰'}
-            - 潜在歧义：{', '.join(analysis['ambiguities']) if analysis['ambiguities'] else '无'}
-            - 缺失信息：{', '.join(analysis['missing_info']) if analysis['missing_info'] else '无'}
-            - 复杂度：{analysis['complexity']}
+            - 完整性：{"完整" if analysis["is_complete"] else "不完整"}
+            - 清晰度：{"清晰" if analysis["is_clear"] else "不清晰"}
+            - 潜在歧义：{", ".join(analysis["ambiguities"]) if analysis["ambiguities"] else "无"}
+            - 缺失信息：{", ".join(analysis["missing_info"]) if analysis["missing_info"] else "无"}
+            - 复杂度：{analysis["complexity"]}
             
             请生成一个简洁、明确的澄清问题，帮助用户完善问题。
             """
-            
+
             return self.generate_response(prompt)
         except Exception as e:
             self.logger.error(f"LLM生成澄清问题失败: {e}")
@@ -247,70 +253,100 @@ class LLMService:
             输出示例：
             请推荐三个用于开发AI Agent的主流框架，并详细比较它们的功能特性、适用场景及技术优势等方面的异同。
             """
-            
+
             response = self.generate_response(prompt)
             # 清理响应，提取有效问题
             response = response.strip()
-            
+
             # 移除所有可能的前缀，包括重复出现的前缀
             import re
+
             # 移除所有"重构后的问题："前缀（包括重复出现的）
-            response = re.sub(r'重构后的问题：\s*', '', response)
+            response = re.sub(r"重构后的问题：\s*", "", response)
             # 移除其他可能的前缀
             unwanted_prefixes = [
-                r'最终问题：\s*', r'答案：\s*', r'结果：\s*',
-                r'我将为您重构问题：\s*', r'根据您的要求：\s*'
+                r"最终问题：\s*",
+                r"答案：\s*",
+                r"结果：\s*",
+                r"我将为您重构问题：\s*",
+                r"根据您的要求：\s*",
             ]
             for prefix in unwanted_prefixes:
-                response = re.sub(prefix, '', response)
-            
+                response = re.sub(prefix, "", response)
+
             # 分割多个候选问题（如果有）
             candidate_questions = []
             # 匹配以问号结尾的句子
-            question_matches = re.findall(r'([^?]+\?)', response, re.DOTALL)
+            question_matches = re.findall(r"([^?]+\?)", response, re.DOTALL)
             if question_matches:
                 candidate_questions = [q.strip() for q in question_matches]
             else:
                 # 如果没有问号，按换行或分号分割
-                for sep in ['\n', ';', '；']:
+                for sep in ["\n", ";", "；"]:
                     if sep in response:
-                        candidate_questions = [q.strip() for q in response.split(sep) if q.strip()]
+                        candidate_questions = [
+                            q.strip() for q in response.split(sep) if q.strip()
+                        ]
                         break
-            
+
             # 选择最相关的问题
             if candidate_questions:
                 # 优先选择最长的问题（通常更完整）
                 response = max(candidate_questions, key=len)
-            
+
             # 最终清理
             response = response.strip()
-            
+
             # 移除常见的思考过程短语
             unwanted_phrases = [
-                '最后，我会再次检查', '确保没有遗漏', '最终呈现',
-                '符合所有要求', '严格要求中的各项规定',
-                '现在我需要根据', '我将按照要求',
-                '首先，我需要', '接下来是', '现在要处理'
+                "最后，我会再次检查",
+                "确保没有遗漏",
+                "最终呈现",
+                "符合所有要求",
+                "严格要求中的各项规定",
+                "现在我需要根据",
+                "我将按照要求",
+                "首先，我需要",
+                "接下来是",
+                "现在要处理",
             ]
-            
+
             for phrase in unwanted_phrases:
                 if phrase in response:
                     # 如果包含思考过程，尝试提取有用的问题部分
                     import re
+
                     # 尝试找到以问号结尾的句子
-                    question_matches = re.findall(r'([^?]+\?)', response, re.DOTALL)
+                    question_matches = re.findall(r"([^?]+\?)", response, re.DOTALL)
                     if question_matches:
                         response = question_matches[-1].strip()
                     break
-            
+
             # 确保返回有效问题
             # 检查是否是真正的问题（包含问号或关键疑问词）
-            has_question_mark = '?' in response
-            has_question_words = any(word in response for word in ['如何', '什么', '哪个', '是否', '为什么', '推荐', '比较', '分析'])
-            
-            if not response or not (has_question_mark or has_question_words) or '重构问题' in response or '重构要求' in response:
+            has_question_mark = "?" in response
+            has_question_words = any(
+                word in response
+                for word in [
+                    "如何",
+                    "什么",
+                    "哪个",
+                    "是否",
+                    "为什么",
+                    "推荐",
+                    "比较",
+                    "分析",
+                ]
+            )
+
+            if (
+                not response
+                or not (has_question_mark or has_question_words)
+                or "重构问题" in response
+                or "重构要求" in response
+            ):
                 return original_question
-            
+
             return response
         except Exception as e:
             self.logger.error(f"LLM重构问题失败: {e}")
@@ -330,7 +366,7 @@ class LLMService:
             
             请直接返回"simple"或"complex"。
             """
-            
+
             response = self.generate_response(prompt)
             return response.strip().lower()
         except Exception as e:
@@ -346,7 +382,7 @@ class LLMService:
             
             请提供简洁、准确的答案，避免不必要的解释。
             """
-            
+
             return self.generate_response(prompt)
         except Exception as e:
             self.logger.error(f"LLM回答简单问题失败: {e}")

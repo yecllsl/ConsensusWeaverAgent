@@ -26,6 +26,7 @@ class LocalLLMConfig:
     rope_freq_scale: float = 1.0
     temperature: float = 0.3
 
+
 @dataclass
 class ExternalToolConfig:
     name: str
@@ -35,10 +36,12 @@ class ExternalToolConfig:
     priority: int
     enabled: bool = True
 
+
 @dataclass
 class NetworkConfig:
     check_before_run: bool
     timeout: int
+
 
 @dataclass
 class AppConfig:
@@ -49,12 +52,14 @@ class AppConfig:
     history_enabled: bool
     history_limit: int
 
+
 @dataclass
 class Config:
     local_llm: LocalLLMConfig
     external_tools: list[ExternalToolConfig]
     network: NetworkConfig
     app: AppConfig
+
 
 class ConfigManager:
     def __init__(self, config_path: str = "config.yaml"):
@@ -66,34 +71,33 @@ class ConfigManager:
         """加载配置文件"""
         if not os.path.exists(self.config_path):
             self._create_default_config()
-        
+
         with open(self.config_path, "r", encoding="utf-8") as f:
             config_dict = yaml.safe_load(f)
-        
+
         self.config = self._parse_config(config_dict)
 
     def _parse_config(self, config_dict: Dict[str, Any]) -> Config:
         """解析配置字典为Config对象"""
         # 解析本地LLM配置
         llm_config = LocalLLMConfig(**config_dict["local_llm"])
-        
+
         # 解析外部工具配置
         tools_config = [
-            ExternalToolConfig(**tool)
-            for tool in config_dict["external_tools"]
+            ExternalToolConfig(**tool) for tool in config_dict["external_tools"]
         ]
-        
+
         # 解析网络配置
         network_config = NetworkConfig(**config_dict["network"])
-        
+
         # 解析应用配置
         app_config = AppConfig(**config_dict["app"])
-        
+
         return Config(
             local_llm=llm_config,
             external_tools=tools_config,
             network=network_config,
-            app=app_config
+            app=app_config,
         )
 
     def _create_default_config(self) -> None:
@@ -107,7 +111,7 @@ class ConfigManager:
                 "n_threads": 6,
                 "n_threads_batch": 6,
                 "n_batch": 512,
-                "temperature": 0.3
+                "temperature": 0.3,
             },
             "external_tools": [
                 {
@@ -116,7 +120,7 @@ class ConfigManager:
                     "args": "ask --streaming=false",
                     "needs_internet": True,
                     "priority": 1,
-                    "enabled": True
+                    "enabled": True,
                 },
                 {
                     "name": "codebuddy",
@@ -124,23 +128,20 @@ class ConfigManager:
                     "args": "ask --format plain",
                     "needs_internet": True,
                     "priority": 2,
-                    "enabled": True
-                }
+                    "enabled": True,
+                },
             ],
-            "network": {
-                "check_before_run": True,
-                "timeout": 120
-            },
+            "network": {"check_before_run": True, "timeout": 120},
             "app": {
                 "max_clarification_rounds": 3,
                 "max_parallel_tools": 5,
                 "log_level": "info",
                 "log_file": "consensusweaver.log",
                 "history_enabled": True,
-                "history_limit": 100
-            }
+                "history_limit": 100,
+            },
         }
-        
+
         with open(self.config_path, "w", encoding="utf-8") as f:
             yaml.dump(default_config, f, default_flow_style=False, allow_unicode=True)
 
