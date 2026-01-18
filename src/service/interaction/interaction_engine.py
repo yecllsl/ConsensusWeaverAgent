@@ -79,7 +79,8 @@ class InteractionEngine:
             state.clarification_rounds += 1
 
             self.logger.info(
-                f"生成澄清问题 ({state.clarification_rounds}/{self.max_clarification_rounds}): {clarification}"
+                f"生成澄清问题 ({state.clarification_rounds}/"
+                f"{self.max_clarification_rounds}): {clarification}"
             )
 
             return clarification

@@ -133,7 +133,8 @@ class ExecutionStrategyManager:
             ):
                 if len(plan.tools) > 1:
                     self.logger.info(
-                        f"并行查询策略失败，减少工具数量从 {len(plan.tools)} 到 {len(plan.tools) - 1}"
+                        f"并行查询策略失败，减少工具数量从 {len(plan.tools)} 到 "
+                        f"{len(plan.tools) - 1}"
                     )
                     return ExecutionPlan(
                         strategy="parallel_query",

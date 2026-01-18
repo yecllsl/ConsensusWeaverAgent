@@ -61,7 +61,6 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
 no_implicit_optional = true
-
 exclude = [".venv", "test_*.py", "tests", "Scripts"]
 
 # Pytest configuration

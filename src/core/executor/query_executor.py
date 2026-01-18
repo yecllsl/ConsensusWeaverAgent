@@ -65,7 +65,9 @@ class QueryExecutor:
             )
 
             self.logger.info(
-                f"并行查询完成，会话ID: {session_id}, 成功: {success_count}, 失败: {failure_count}, 总耗时: {total_execution_time:.2f}秒"
+                f"并行查询完成，会话ID: {session_id}, "
+                f"成功: {success_count}, 失败: {failure_count}, "
+                f"总耗时: {total_execution_time:.2f}秒"
             )
 
             return result
@@ -94,7 +96,8 @@ class QueryExecutor:
             )
 
             self.logger.info(
-                f"单个查询完成，会话ID: {session_id}, 工具: {tool_name}, 成功: {result.success}"
+                f"单个查询完成，会话ID: {session_id}, "
+                f"工具: {tool_name}, 成功: {result.success}"
             )
 
             return result

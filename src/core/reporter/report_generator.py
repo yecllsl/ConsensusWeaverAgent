@@ -191,7 +191,8 @@ class ReportGenerator:
         """保存报告到文件"""
         try:
             if not file_path:
-                file_path = f"report_{report.session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_path = f"report_{report.session_id}_{timestamp}.txt"
 
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(report.content)

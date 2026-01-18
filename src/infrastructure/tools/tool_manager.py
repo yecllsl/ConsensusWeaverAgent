@@ -84,9 +84,9 @@ class ToolManager:
                 # 对于普通可执行文件，直接运行
                 process_command = command_args[0]
                 process_args = command_args[1:]
-                self.logger.info(
-                    f"运行外部工具: {process_command} {' '.join(shlex.quote(arg) for arg in process_args)}"
-                )
+                # 记录运行的外部工具和参数
+                quoted_args = " ".join(shlex.quote(arg) for arg in process_args)
+                self.logger.info(f"运行外部工具: {process_command} {quoted_args}")
 
             # 运行命令（不使用shell=True，更安全）
             process = await asyncio.create_subprocess_exec(
@@ -128,7 +128,9 @@ class ToolManager:
                     tool_name=tool_name,
                     success=False,
                     answer="",
-                    error_message=f"返回码: {process.returncode}, 错误信息: {stderr.strip()}",
+                    error_message=(
+                        f"返回码: {process.returncode}, 错误信息: {stderr.strip()}"
+                    ),
                     execution_time=execution_time,
                     timestamp=timestamp,
                 )

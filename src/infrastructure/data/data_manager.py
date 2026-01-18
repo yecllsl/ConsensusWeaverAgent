@@ -110,7 +110,9 @@ class DataManager:
         """保存会话记录"""
         timestamp = datetime.now().isoformat()
         self.cursor.execute(
-            "INSERT INTO sessions (original_question, refined_question, timestamp, completed) VALUES (?, ?, ?, ?)",
+            "INSERT INTO sessions "
+            "(original_question, refined_question, timestamp, completed) "
+            "VALUES (?, ?, ?, ?)",
             (original_question, refined_question, timestamp, False),
         )
         self.conn.commit()
@@ -183,7 +185,10 @@ class DataManager:
         """保存工具结果"""
         timestamp = datetime.now().isoformat()
         self.cursor.execute(
-            "INSERT INTO tool_results (session_id, tool_name, success, answer, error_message, execution_time, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO tool_results "
+            "(session_id, tool_name, success, answer, "
+            "error_message, execution_time, timestamp) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 session_id,
                 tool_name,
@@ -237,7 +242,10 @@ class DataManager:
         differences_json = json.dumps(differences)
 
         self.cursor.execute(
-            "INSERT INTO analysis_results (session_id, similarity_matrix, consensus_scores, key_points, differences, comprehensive_summary, final_conclusion, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO analysis_results "
+            "(session_id, similarity_matrix, consensus_scores, key_points, "
+            "differences, comprehensive_summary, final_conclusion, timestamp) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 session_id,
                 similarity_matrix_json,
@@ -295,7 +303,8 @@ class DataManager:
             # 删除不在保留列表中的会话
             placeholders = ",".join(["?"] * len(keep_ids))
             self.cursor.execute(
-                f"DELETE FROM analysis_results WHERE session_id NOT IN ({placeholders})",
+                f"DELETE FROM analysis_results "
+                f"WHERE session_id NOT IN ({placeholders})",
                 keep_ids,
             )
             self.cursor.execute(

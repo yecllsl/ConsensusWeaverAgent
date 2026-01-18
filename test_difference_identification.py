@@ -28,11 +28,13 @@ def test_difference_identification():
     mock_response = """```json
 [
   {
-    "content": "The first answer lists six collaboration modes, including centralized, distributed, hierarchical, alliance, competitive and mixed.",
+    "content": "The first answer lists six collaboration modes, including centralized, "
+                "distributed, hierarchical, alliance, competitive and mixed.",
     "sources": ["iflow", "codebuddy", "qwen"]
   },
   {
-    "content": "The second answer also mentions six collaboration modes: hierarchical, equal, pipeline, competition, consensus and mixed.",
+    "content": "The second answer also mentions six collaboration modes: hierarchical, "
+                "equal, pipeline, competition, consensus and mixed.",
     "sources": ["iflow", "codebuddy"]
   }
 ]

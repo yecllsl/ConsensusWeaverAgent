@@ -1,6 +1,8 @@
 # 注意：使用前请确保已手动下载NLTK资源
 # 运行以下命令下载所需资源：
-# python -c "import nltk; nltk.data.path = ['https://gitee.com/gislite/nltk_data/raw/'] + nltk.data.path；nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+# python -c "import nltk; \
+# nltk.data.path = ['https://gitee.com/gislite/nltk_data/raw/'] + nltk.data.path; \
+# nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
 # 配置NLTK数据路径（增加灵活性）
 import os
 import sys

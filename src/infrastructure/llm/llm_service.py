@@ -120,7 +120,12 @@ class LLMService:
             6. 不要添加任何额外的JSON结构或注释
             
             输出示例：
-            {{"is_complete": false, "is_clear": true, "ambiguities": ["是否需要考虑商业用途？"], "missing_info": ["各框架的最新版本是什么？"], "complexity": "complex"}}
+            {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
             """
 
             response = self.generate_response(prompt)
@@ -220,8 +225,14 @@ class LLMService:
             问题分析：
             - 完整性：{"完整" if analysis["is_complete"] else "不完整"}
             - 清晰度：{"清晰" if analysis["is_clear"] else "不清晰"}
-            - 潜在歧义：{", ".join(analysis["ambiguities"]) if analysis["ambiguities"] else "无"}
-            - 缺失信息：{", ".join(analysis["missing_info"]) if analysis["missing_info"] else "无"}
+            - 潜在歧义：{
+                ", ".join(analysis["ambiguities"]) if analysis["ambiguities"] else "无"
+            }
+            - 缺失信息：{
+                ", ".join(analysis["missing_info"])
+                if analysis["missing_info"]
+                else "无"
+            }
             - 复杂度：{analysis["complexity"]}
             
             请生成一个简洁、明确的澄清问题，帮助用户完善问题。
@@ -251,7 +262,8 @@ class LLMService:
             5. 准确反映用户核心意图
             
             输出示例：
-            请推荐三个用于开发AI Agent的主流框架，并详细比较它们的功能特性、适用场景及技术优势等方面的异同。
+            请推荐三个用于开发AI Agent的主流框架，并详细比较它们的
+            功能特性、适用场景及技术优势等方面的异同。
             """
 
             response = self.generate_response(prompt)

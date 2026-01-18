@@ -138,8 +138,6 @@ def mock_process():
 @pytest.mark.asyncio
 async def test_run_tool_success(tool_manager, mock_process):
     """测试工具调用成功"""
-    # 保存原始的communicate函数
-    original_communicate = mock_process.communicate
 
     # 定义新的communicate函数，返回指定的内容
     async def mock_communicate_success():

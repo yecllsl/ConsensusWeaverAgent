@@ -90,7 +90,7 @@ def test_default_config_creation(tmp_path):
 # 测试配置重新加载
 def test_config_reload(temp_config_file):
     config_manager = ConfigManager(temp_config_file)
-    config = config_manager.get_config()
+    config_manager.get_config()
 
     # 修改配置文件
     new_content = {

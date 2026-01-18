@@ -183,9 +183,8 @@ async def start_interaction(
                 click.echo(f"\n直接回答：\n{answer}")
             else:
                 # 复杂问题，执行并行查询
-                click.echo(
-                    f"\n识别为复杂问题，正在调用 {len(execution_plan.tools)} 个外部工具进行并行查询..."
-                )
+                click.echo("\n识别为复杂问题，正在调用外部工具进行并行查询...")
+                click.echo(f"使用工具数量: {len(execution_plan.tools)}")
                 click.echo(f"使用工具: {', '.join(execution_plan.tools)}")
 
                 # 检查网络连接
@@ -203,9 +202,10 @@ async def start_interaction(
                     state.session_id, refined_question, execution_plan.tools
                 )
 
-                click.echo(
-                    f"\n查询完成：成功 {result.success_count} 个，失败 {result.failure_count} 个，总耗时 {result.total_execution_time:.2f} 秒"
-                )
+                click.echo("\n查询完成：")
+                click.echo(f"  - 成功: {result.success_count} 个")
+                click.echo(f"  - 失败: {result.failure_count} 个")
+                click.echo(f"  - 总耗时: {result.total_execution_time:.2f} 秒")
 
                 # 分析共识度
                 click.echo("\n正在分析共识度...")
@@ -222,7 +222,8 @@ async def start_interaction(
                     for result in tool_results
                 ]
 
-                consensus_result = consensus_analyzer.analyze_consensus(
+                # 分析共识度
+                consensus_analyzer.analyze_consensus(
                     state.session_id, refined_question, tool_results_dict
                 )
 

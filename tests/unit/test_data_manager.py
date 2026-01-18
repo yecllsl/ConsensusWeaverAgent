@@ -32,7 +32,7 @@ def test_data_manager_basic(tmp_path):
         assert updated_session.completed
 
         # 测试保存工具结果
-        tool_result_id = data_manager.save_tool_result(
+        data_manager.save_tool_result(
             session_id=session_id,
             tool_name="iflow",
             success=True,
@@ -58,7 +58,7 @@ def test_data_manager_basic(tmp_path):
         comprehensive_summary = "综合来看..."
         final_conclusion = "最终结论是..."
 
-        analysis_id = data_manager.save_analysis_result(
+        data_manager.save_analysis_result(
             session_id=session_id,
             similarity_matrix=similarity_matrix,
             consensus_scores=consensus_scores,
