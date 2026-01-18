@@ -39,10 +39,11 @@ dev = [
 
 # Ruff configuration
 [tool.ruff]
-select = ["E", "F", "I"]
 line-length = 88
 target-version = "py312"
-indent-width = 4
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 
 [tool.uv]
 index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
