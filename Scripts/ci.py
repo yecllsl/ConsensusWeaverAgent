@@ -413,15 +413,20 @@ class CI:
 
         print_section("生成测试报告")
 
+        # 确保test-results目录存在
+        test_results_dir = os.path.join(self.config.project_dir, "reports", "test-results")
+        os.makedirs(test_results_dir, exist_ok=True)
+
         # 生成JUnit测试报告
         print_subsection("生成JUnit测试报告")
+        test_results_file = os.path.join(test_results_dir, "test-results.xml")
         cmd = [
             "uv",
             "run",
             "pytest",
             "tests/",
             "--junitxml",
-            self.config.test_results_file,
+            test_results_file,
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
         if not success:
@@ -429,7 +434,7 @@ class CI:
             print_color("❌ 测试报告生成失败", "red")
             return False
 
-        print_color(f"✅ 测试报告生成成功: {self.config.test_results_file}", "green")
+        print_color(f"✅ 测试报告生成成功: {test_results_file}", "green")
         return True
 
     def run_security_check(self) -> bool:
@@ -451,8 +456,13 @@ class CI:
             print_color("⚠️ bandit安装失败，跳过安全检查", "yellow")
             return True
 
+        # 确保security目录存在
+        security_dir = os.path.join(self.config.project_dir, "reports", "security")
+        os.makedirs(security_dir, exist_ok=True)
+
         # 运行安全检查
         print_subsection("使用bandit进行安全检查")
+        security_report_file = os.path.join(security_dir, "security-report.json")
         cmd = [
             "uv",
             "run",
@@ -462,14 +472,14 @@ class CI:
             "-f",
             "json",
             "-o",
-            self.config.security_report_file,
+            security_report_file,
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
         if not success:
             self.logger.warning("安全检查发现问题")
             print_color("⚠️ 安全检查发现问题，请查看报告", "yellow")
         else:
-            print_color(f"✅ 安全检查完成: {self.config.security_report_file}", "green")
+            print_color(f"✅ 安全检查完成: {security_report_file}", "green")
 
         return True
 
