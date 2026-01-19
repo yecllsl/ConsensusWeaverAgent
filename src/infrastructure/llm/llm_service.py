@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, cast
 
 from langchain_community.chat_models import ChatLlamaCpp
 from langchain_community.llms import LlamaCpp
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 from src.infrastructure.config.config_manager import ConfigManager
 from src.infrastructure.logging.logger import get_logger
@@ -21,7 +21,7 @@ class LLMService:
         try:
             # 初始化基础LLM
             self.llm = LlamaCpp(
-                model_path=self.config.model_path,
+                model_path=cast(str, self.config.model_path),
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
                 n_batch=self.config.n_batch,
@@ -41,7 +41,7 @@ class LLMService:
 
             # 初始化聊天LLM
             self.chat_llm = ChatLlamaCpp(
-                model_path=self.config.model_path,
+                model_path=cast(str, self.config.model_path),
                 n_ctx=self.config.n_ctx,
                 n_threads=self.config.n_threads,
                 n_batch=self.config.n_batch,
@@ -80,7 +80,7 @@ class LLMService:
         """进行聊天对话"""
         try:
             # 转换消息格式
-            chat_messages = []
+            chat_messages: List[BaseMessage] = []
             for msg in messages:
                 if msg["role"] == "system":
                     chat_messages.append(SystemMessage(content=msg["content"]))

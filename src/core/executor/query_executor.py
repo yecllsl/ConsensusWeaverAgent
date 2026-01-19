@@ -54,7 +54,7 @@ class QueryExecutor:
 
             total_execution_time = time.time() - start_time
 
-            result = QueryExecutionResult(
+            execution_result = QueryExecutionResult(
                 session_id=session_id,
                 question=question,
                 tool_results=tool_results,
@@ -70,7 +70,7 @@ class QueryExecutor:
                 f"总耗时: {total_execution_time:.2f}秒"
             )
 
-            return result
+            return execution_result
         except Exception as e:
             self.logger.error(f"执行并行查询失败: {e}")
             raise
@@ -121,7 +121,7 @@ class QueryExecutor:
                     execution_time=result.execution_time,
                     timestamp=result.timestamp.isoformat()
                     if hasattr(result.timestamp, "isoformat")
-                    else result.timestamp,
+                    else str(result.timestamp),
                 )
                 for result in db_results
             ]

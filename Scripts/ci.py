@@ -414,7 +414,9 @@ class CI:
         print_section("生成测试报告")
 
         # 确保test-results目录存在
-        test_results_dir = os.path.join(self.config.project_dir, "reports", "test-results")
+        test_results_dir = os.path.join(
+            self.config.project_dir, "reports", "test-results"
+        )
         os.makedirs(test_results_dir, exist_ok=True)
 
         # 生成JUnit测试报告

@@ -569,8 +569,7 @@ class ConsensusAnalyzer:
             """
 
             response = self.llm_service.generate_response(prompt)
-            # 类型断言确保返回str类型
-            return cast(str, response)
+            return response
         except Exception as e:
             self.logger.error(f"生成综合总结失败: {e}")
             return "综合总结生成失败"
@@ -598,8 +597,7 @@ class ConsensusAnalyzer:
             """
 
             response = self.llm_service.generate_response(prompt)
-            # 类型断言确保返回str类型
-            return cast(str, response)
+            return response
         except Exception as e:
             self.logger.error(f"生成最终结论失败: {e}")
             return "最终结论生成失败"

@@ -50,8 +50,7 @@ class InteractionEngine:
         try:
             analysis = self.llm_service.analyze_question(state.original_question)
             self.logger.info(f"问题分析结果: {analysis}")
-            # 类型断言确保返回Dict[str, Any]类型
-            return cast(Dict[str, Any], analysis)
+            return analysis
         except Exception as e:
             self.logger.error(f"分析问题失败: {e}")
             raise
@@ -121,8 +120,7 @@ class InteractionEngine:
 
             self.logger.info(f"重构后的问题: {refined_question}")
 
-            # 类型断言确保返回str类型
-            return cast(str, refined_question)
+            return refined_question
         except Exception as e:
             self.logger.error(f"重构问题失败: {e}")
             raise
