@@ -70,8 +70,11 @@ class LLMService:
             # 类型断言：llm在_init_llm中已初始化，不会为None
             llm = cast(LlamaCpp, self.llm)
             response = llm.invoke(prompt)
-            # 确保返回str类型
-            return str(response.strip())
+            # 确保返回str类型，处理response可能是不同类型的情况
+            if isinstance(response, str):
+                return response.strip()
+            else:
+                return str(response)
         except Exception as e:
             self.logger.error(f"LLM生成响应失败: {e}")
             raise
@@ -93,8 +96,12 @@ class LLMService:
             # 类型断言：chat_llm在_init_llm中已初始化，不会为None
             chat_llm = cast(ChatLlamaCpp, self.chat_llm)
             response = chat_llm.invoke(chat_messages)
-            # 确保返回str类型
-            return str(response.content.strip())
+            # 确保返回str类型，处理response.content可能是列表的情况
+            content = response.content
+            if isinstance(content, str):
+                return content.strip()
+            else:
+                return str(content)
         except Exception as e:
             self.logger.error(f"LLM聊天对话失败: {e}")
             raise
