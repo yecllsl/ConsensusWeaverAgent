@@ -65,13 +65,13 @@ jobs:
       # 8. 运行测试
       - name: Run tests with pytest
         run: |
-          uv run pytest tests/ -v --tb=short
+          uv run pytest tests/ -v --tb=short -n auto
 
       # 9. 生成测试报告
       - name: Generate test report
         if: always()
         run: |
-          uv run pytest tests/ --junitxml=test-results.xml
+          uv run pytest tests/ --junitxml=test-results.xml -n auto
 
       # 10. 上传测试结果
       - name: Upload test results

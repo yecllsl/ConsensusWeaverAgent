@@ -1,5 +1,6 @@
 # tests/conftest.py
 import pytest
+
 from src.infrastructure.data.data_manager import DataManager
 
 
@@ -20,16 +21,14 @@ def test_data():
         "refined_question": "人工智能的定义和应用是什么？",
         "similarity_matrix": [[1.0, 0.8], [0.8, 1.0]],
         "consensus_scores": {"iflow": 90.5, "codebuddy": 85.0},
-        "key_points": [{
-            "content": "人工智能的定义", 
-            "sources": ["iflow", "codebuddy"]
-        }],
-        "differences": [{
-            "content": "应用领域的不同观点", 
-            "sources": ["iflow", "codebuddy"]
-        }],
+        "key_points": [
+            {"content": "人工智能的定义", "sources": ["iflow", "codebuddy"]}
+        ],
+        "differences": [
+            {"content": "应用领域的不同观点", "sources": ["iflow", "codebuddy"]}
+        ],
         "comprehensive_summary": "综合来看，人工智能是一种模拟人类智能的技术...",
-        "final_conclusion": "最终结论是，人工智能在多个领域都有广泛应用..."
+        "final_conclusion": "最终结论是，人工智能在多个领域都有广泛应用...",
     }
 
 
@@ -43,7 +42,7 @@ def mock_llm_service(mocker):
         "is_complete": True,
         "is_clear": True,
         "ambiguities": [],
-        "complexity": "simple"
+        "complexity": "simple",
     }
     mock_service.generate_clarification_question.return_value = None
     return mock_service
@@ -59,12 +58,10 @@ def mock_config_manager(mocker):
             model="test-model.gguf",
             model_path=".models/test-model.gguf",
             n_ctx=4096,
-            n_threads=6
+            n_threads=6,
         ),
         app=mocker.MagicMock(
-            max_clarification_rounds=3,
-            log_level="info",
-            log_file="test.log"
-        )
+            max_clarification_rounds=3, log_level="info", log_file="test.log"
+        ),
     )
     return mock_manager

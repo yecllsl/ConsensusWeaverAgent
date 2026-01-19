@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,18 +9,18 @@ from src.infrastructure.llm.llm_service import LLMService
 def llm_service():
     """创建模拟的LLM服务实例，避免实际加载模型"""
     # 创建模拟的LLMService实例，不实际初始化模型
-    with patch('src.infrastructure.llm.llm_service.LLMService._init_llm') as mock_init_llm:
+    with patch("src.infrastructure.llm.llm_service.LLMService._init_llm"):
         llm_service_instance = LLMService.__new__(LLMService)
-        
+
         # 手动设置必要的属性
         llm_service_instance.logger = MagicMock()
         llm_service_instance.llm = MagicMock()
         llm_service_instance.chat_llm = MagicMock()
         llm_service_instance.config = MagicMock()
-        
+
         # 调用__init__方法（会调用_init_llm，但我们已经模拟了它）
         llm_service_instance.__init__(MagicMock())
-        
+
         yield llm_service_instance
 
 
