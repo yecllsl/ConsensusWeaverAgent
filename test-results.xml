@@ -1,1 +1,306 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="28" time="131.873" timestamp="2026-01-18T16:47:06.197799+08:00" hostname="ColinThinkBook"><testcase classname="tests.test_external_tools" name="test_single_tool_call" time="51.980" /><testcase classname="tests.test_external_tools" name="test_parallel_tool_call" time="27.923" /><testcase classname="tests.test_external_tools" name="test_tool_availability" time="0.005" /><testcase classname="tests.unit.test_config_manager" name="test_config_load" time="0.006" /><testcase classname="tests.unit.test_config_manager" name="test_default_config_creation" time="0.004" /><testcase classname="tests.unit.test_config_manager" name="test_config_reload" time="0.005" /><testcase classname="tests.unit.test_data_manager" name="test_data_manager_basic" time="0.013" /><testcase classname="tests.unit.test_data_manager" name="test_session_management" time="0.019" /><testcase classname="tests.unit.test_data_manager" name="test_data_manager_exceptions" time="0.007" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_empty_response" time="5.651" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_invalid_json" time="5.700" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_valid_json" time="5.481" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_with_chinese_commas" time="5.365" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_with_extra_text" time="5.442" /><testcase classname="tests.unit.test_llm_service" name="test_refine_question_with_clarifications" time="5.341" /><testcase classname="tests.unit.test_llm_service" name="test_refine_question_with_prefix" time="5.470" /><testcase classname="tests.unit.test_llm_service" name="test_refine_question_failure" time="5.557" /><testcase classname="tests.unit.test_logger" name="test_logger_basic" time="0.026" /><testcase classname="tests.unit.test_logger" name="test_logger_level" time="0.037" /><testcase classname="tests.unit.test_logger" name="test_logger_exception" time="0.018" /><testcase classname="tests.unit.test_logger" name="test_logger_file_switch" time="0.024" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_not_found" time="0.014" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_timeout" time="0.908" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_exception" time="0.010" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_success" time="0.013" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_failure" time="0.002" /><testcase classname="tests.unit.test_tool_manager" name="test_command_construction" time="0.042" /><testcase classname="tests.unit.test_tool_manager" name="test_output_decoding" time="0.020" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="28" time="164.509" timestamp="2026-01-19T14:33:03.592526+08:00" hostname="ColinThinkBook"><testcase classname="tests.test_external_tools" name="test_single_tool_call" time="74.907" /><testcase classname="tests.test_external_tools" name="test_parallel_tool_call" time="49.419" /><testcase classname="tests.test_external_tools" name="test_tool_availability" time="0.004" /><testcase classname="tests.unit.test_config_manager" name="test_config_load" time="0.006" /><testcase classname="tests.unit.test_config_manager" name="test_default_config_creation" time="0.005" /><testcase classname="tests.unit.test_config_manager" name="test_config_reload" time="0.006" /><testcase classname="tests.unit.test_data_manager" name="test_data_manager_basic" time="0.053" /><testcase classname="tests.unit.test_data_manager" name="test_session_management" time="0.078" /><testcase classname="tests.unit.test_data_manager" name="test_data_manager_exceptions" time="0.031" /><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_empty_response" time="6.595"><failure message="ValueError: Invalid format specifier ' false, &quot;is_clear&quot;: true,&#10;                &quot;ambiguities&quot;: [&quot;是否需要考虑商业用途？&quot;],&#10;                &quot;missing_info&quot;: [&quot;各框架的最新版本是什么？&quot;],&#10;                &quot;complexity&quot;: &quot;complex&quot;&#10;            ' for object of type 'str'">llm_service = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8D1F10&gt;
+
+    def test_analyze_question_empty_response(llm_service):
+        """测试分析问题时LLM返回空响应的情况"""
+        # 模拟空响应
+        with patch.object(llm_service, "generate_response", return_value=""):
+&gt;           result = llm_service.analyze_question("人工智能是什么？")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_llm_service.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8D1F10&gt;
+question = '人工智能是什么？'
+
+    def analyze_question(self, question: str) -&gt; Dict[str, Any]:
+        """分析问题的完整性、清晰度和潜在歧义"""
+        try:
+            import json
+            import re
+    
+            prompt = f"""
+            任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
+    
+            问题："{question}"
+    
+            分析内容：
+            - is_complete: 问题是否完整 (true/false)
+            - is_clear: 问题是否清晰 (true/false)
+            - ambiguities: 潜在歧义列表
+            - missing_info: 缺失的关键信息列表
+            - complexity: 问题复杂度 (simple/complex)
+    
+            严格要求：
+            1. 仅返回JSON字符串，不包含任何解释、说明或其他文字
+            2. 必须使用英文逗号分隔字段
+            3. 布尔值使用小写的true/false
+            4. 字符串必须使用双引号
+            5. 数组元素使用双引号包裹
+            6. 不要添加任何额外的JSON结构或注释
+    
+            输出示例：
+&gt;           {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
+            """
+E           ValueError: Invalid format specifier ' false, "is_clear": true,
+E                           "ambiguities": ["是否需要考虑商业用途？"],
+E                           "missing_info": ["各框架的最新版本是什么？"],
+E                           "complexity": "complex"
+E                       ' for object of type 'str'
+
+src\infrastructure\llm\llm_service.py:129: ValueError</failure></testcase><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_invalid_json" time="6.383"><failure message="ValueError: Invalid format specifier ' false, &quot;is_clear&quot;: true,&#10;                &quot;ambiguities&quot;: [&quot;是否需要考虑商业用途？&quot;],&#10;                &quot;missing_info&quot;: [&quot;各框架的最新版本是什么？&quot;],&#10;                &quot;complexity&quot;: &quot;complex&quot;&#10;            ' for object of type 'str'">llm_service = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8FD910&gt;
+
+    def test_analyze_question_invalid_json(llm_service):
+        """测试分析问题时LLM返回无效JSON的情况"""
+        # 模拟无效JSON响应
+        with patch.object(
+            llm_service, "generate_response", return_value="这不是有效的JSON格式"
+        ):
+&gt;           result = llm_service.analyze_question("人工智能是什么？")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_llm_service.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8FD910&gt;
+question = '人工智能是什么？'
+
+    def analyze_question(self, question: str) -&gt; Dict[str, Any]:
+        """分析问题的完整性、清晰度和潜在歧义"""
+        try:
+            import json
+            import re
+    
+            prompt = f"""
+            任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
+    
+            问题："{question}"
+    
+            分析内容：
+            - is_complete: 问题是否完整 (true/false)
+            - is_clear: 问题是否清晰 (true/false)
+            - ambiguities: 潜在歧义列表
+            - missing_info: 缺失的关键信息列表
+            - complexity: 问题复杂度 (simple/complex)
+    
+            严格要求：
+            1. 仅返回JSON字符串，不包含任何解释、说明或其他文字
+            2. 必须使用英文逗号分隔字段
+            3. 布尔值使用小写的true/false
+            4. 字符串必须使用双引号
+            5. 数组元素使用双引号包裹
+            6. 不要添加任何额外的JSON结构或注释
+    
+            输出示例：
+&gt;           {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
+            """
+E           ValueError: Invalid format specifier ' false, "is_clear": true,
+E                           "ambiguities": ["是否需要考虑商业用途？"],
+E                           "missing_info": ["各框架的最新版本是什么？"],
+E                           "complexity": "complex"
+E                       ' for object of type 'str'
+
+src\infrastructure\llm\llm_service.py:129: ValueError</failure></testcase><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_valid_json" time="4.699"><failure message="ValueError: Invalid format specifier ' false, &quot;is_clear&quot;: true,&#10;                &quot;ambiguities&quot;: [&quot;是否需要考虑商业用途？&quot;],&#10;                &quot;missing_info&quot;: [&quot;各框架的最新版本是什么？&quot;],&#10;                &quot;complexity&quot;: &quot;complex&quot;&#10;            ' for object of type 'str'">llm_service = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8D38C0&gt;
+
+    def test_analyze_question_valid_json(llm_service):
+        """测试分析问题时LLM返回有效JSON的情况"""
+        # 模拟有效JSON响应
+        valid_json = """{
+            "is_complete": true,
+            "is_clear": true,
+            "ambiguities": [],
+            "missing_info": [],
+            "complexity": "complex"
+        }"""
+    
+        with patch.object(llm_service, "generate_response", return_value=valid_json):
+&gt;           result = llm_service.analyze_question("人工智能是什么？")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_llm_service.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E57D8D38C0&gt;
+question = '人工智能是什么？'
+
+    def analyze_question(self, question: str) -&gt; Dict[str, Any]:
+        """分析问题的完整性、清晰度和潜在歧义"""
+        try:
+            import json
+            import re
+    
+            prompt = f"""
+            任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
+    
+            问题："{question}"
+    
+            分析内容：
+            - is_complete: 问题是否完整 (true/false)
+            - is_clear: 问题是否清晰 (true/false)
+            - ambiguities: 潜在歧义列表
+            - missing_info: 缺失的关键信息列表
+            - complexity: 问题复杂度 (simple/complex)
+    
+            严格要求：
+            1. 仅返回JSON字符串，不包含任何解释、说明或其他文字
+            2. 必须使用英文逗号分隔字段
+            3. 布尔值使用小写的true/false
+            4. 字符串必须使用双引号
+            5. 数组元素使用双引号包裹
+            6. 不要添加任何额外的JSON结构或注释
+    
+            输出示例：
+&gt;           {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
+            """
+E           ValueError: Invalid format specifier ' false, "is_clear": true,
+E                           "ambiguities": ["是否需要考虑商业用途？"],
+E                           "missing_info": ["各框架的最新版本是什么？"],
+E                           "complexity": "complex"
+E                       ' for object of type 'str'
+
+src\infrastructure\llm\llm_service.py:129: ValueError</failure></testcase><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_with_chinese_commas" time="1.432"><failure message="ValueError: Invalid format specifier ' false, &quot;is_clear&quot;: true,&#10;                &quot;ambiguities&quot;: [&quot;是否需要考虑商业用途？&quot;],&#10;                &quot;missing_info&quot;: [&quot;各框架的最新版本是什么？&quot;],&#10;                &quot;complexity&quot;: &quot;complex&quot;&#10;            ' for object of type 'str'">llm_service = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E51C181A30&gt;
+
+    def test_analyze_question_with_chinese_commas(llm_service):
+        """测试分析问题时LLM返回包含中文逗号的JSON的情况"""
+        # 模拟包含中文逗号的JSON响应
+        json_with_chinese_commas = """{
+            "is_complete": true,
+            "is_clear": false,
+            "ambiguities": ["歧义1"， "歧义2"， "歧义3"],
+            "missing_info": ["信息1"， "信息2"],
+            "complexity": "complex"
+        }"""
+    
+        with patch.object(
+            llm_service, "generate_response", return_value=json_with_chinese_commas
+        ):
+&gt;           result = llm_service.analyze_question("人工智能是什么？")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_llm_service.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E51C181A30&gt;
+question = '人工智能是什么？'
+
+    def analyze_question(self, question: str) -&gt; Dict[str, Any]:
+        """分析问题的完整性、清晰度和潜在歧义"""
+        try:
+            import json
+            import re
+    
+            prompt = f"""
+            任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
+    
+            问题："{question}"
+    
+            分析内容：
+            - is_complete: 问题是否完整 (true/false)
+            - is_clear: 问题是否清晰 (true/false)
+            - ambiguities: 潜在歧义列表
+            - missing_info: 缺失的关键信息列表
+            - complexity: 问题复杂度 (simple/complex)
+    
+            严格要求：
+            1. 仅返回JSON字符串，不包含任何解释、说明或其他文字
+            2. 必须使用英文逗号分隔字段
+            3. 布尔值使用小写的true/false
+            4. 字符串必须使用双引号
+            5. 数组元素使用双引号包裹
+            6. 不要添加任何额外的JSON结构或注释
+    
+            输出示例：
+&gt;           {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
+            """
+E           ValueError: Invalid format specifier ' false, "is_clear": true,
+E                           "ambiguities": ["是否需要考虑商业用途？"],
+E                           "missing_info": ["各框架的最新版本是什么？"],
+E                           "complexity": "complex"
+E                       ' for object of type 'str'
+
+src\infrastructure\llm\llm_service.py:129: ValueError</failure></testcase><testcase classname="tests.unit.test_llm_service" name="test_analyze_question_with_extra_text" time="2.412"><failure message="ValueError: Invalid format specifier ' false, &quot;is_clear&quot;: true,&#10;                &quot;ambiguities&quot;: [&quot;是否需要考虑商业用途？&quot;],&#10;                &quot;missing_info&quot;: [&quot;各框架的最新版本是什么？&quot;],&#10;                &quot;complexity&quot;: &quot;complex&quot;&#10;            ' for object of type 'str'">llm_service = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E51C17E360&gt;
+
+    def test_analyze_question_with_extra_text(llm_service):
+        """测试分析问题时LLM返回包含额外文本的JSON的情况"""
+        # 模拟包含额外文本的JSON响应
+        json_with_extra_text = """{
+            "is_complete": true,
+            "is_clear": true,
+            "ambiguities": [],
+            "missing_info": [],
+            "complexity": "complex"
+        } 这是额外的文本"""
+    
+        with patch.object(
+            llm_service, "generate_response", return_value=json_with_extra_text
+        ):
+&gt;           result = llm_service.analyze_question("人工智能是什么？")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\test_llm_service.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;src.infrastructure.llm.llm_service.LLMService object at 0x000001E51C17E360&gt;
+question = '人工智能是什么？'
+
+    def analyze_question(self, question: str) -&gt; Dict[str, Any]:
+        """分析问题的完整性、清晰度和潜在歧义"""
+        try:
+            import json
+            import re
+    
+            prompt = f"""
+            任务：请仅返回JSON格式的问题分析结果，不要添加任何其他内容。
+    
+            问题："{question}"
+    
+            分析内容：
+            - is_complete: 问题是否完整 (true/false)
+            - is_clear: 问题是否清晰 (true/false)
+            - ambiguities: 潜在歧义列表
+            - missing_info: 缺失的关键信息列表
+            - complexity: 问题复杂度 (simple/complex)
+    
+            严格要求：
+            1. 仅返回JSON字符串，不包含任何解释、说明或其他文字
+            2. 必须使用英文逗号分隔字段
+            3. 布尔值使用小写的true/false
+            4. 字符串必须使用双引号
+            5. 数组元素使用双引号包裹
+            6. 不要添加任何额外的JSON结构或注释
+    
+            输出示例：
+&gt;           {
+                "is_complete": false, "is_clear": true,
+                "ambiguities": ["是否需要考虑商业用途？"],
+                "missing_info": ["各框架的最新版本是什么？"],
+                "complexity": "complex"
+            }
+            """
+E           ValueError: Invalid format specifier ' false, "is_clear": true,
+E                           "ambiguities": ["是否需要考虑商业用途？"],
+E                           "missing_info": ["各框架的最新版本是什么？"],
+E                           "complexity": "complex"
+E                       ' for object of type 'str'
+
+src\infrastructure\llm\llm_service.py:129: ValueError</failure></testcase><testcase classname="tests.unit.test_llm_service" name="test_refine_question_with_clarifications" time="5.982" /><testcase classname="tests.unit.test_llm_service" name="test_refine_question_with_prefix" time="3.938" /><testcase classname="tests.unit.test_llm_service" name="test_refine_question_failure" time="4.576" /><testcase classname="tests.unit.test_logger" name="test_logger_basic" time="0.028" /><testcase classname="tests.unit.test_logger" name="test_logger_level" time="0.033" /><testcase classname="tests.unit.test_logger" name="test_logger_exception" time="0.017" /><testcase classname="tests.unit.test_logger" name="test_logger_file_switch" time="0.023" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_not_found" time="0.003" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_timeout" time="0.788" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_exception" time="0.011" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_success" time="0.027" /><testcase classname="tests.unit.test_tool_manager" name="test_run_tool_failure" time="0.019" /><testcase classname="tests.unit.test_tool_manager" name="test_command_construction" time="0.007" /><testcase classname="tests.unit.test_tool_manager" name="test_output_decoding" time="0.002" /></testsuite></testsuites>

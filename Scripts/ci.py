@@ -389,6 +389,8 @@ class CI:
         # 使用pytest运行测试
         print_subsection("使用pytest运行测试")
         cmd = ["uv", "run", "pytest", "tests/"]
+        # 添加并行测试支持，自动使用所有可用CPU核心
+        cmd.extend(["-n", "auto"])
         if self.config.pytest_verbose:
             cmd.append("-v")
         if self.config.pytest_tb_style:

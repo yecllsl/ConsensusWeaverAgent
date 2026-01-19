@@ -1,3 +1,4 @@
+import pytest
 from src.infrastructure.data.data_manager import (
     AnalysisResultRecord,
     DataManager,
@@ -6,12 +7,11 @@ from src.infrastructure.data.data_manager import (
 
 
 # 测试数据管理器的基本功能
-def test_data_manager_basic(tmp_path):
-    db_path = tmp_path / "test.db"
-
-    with DataManager(str(db_path)) as data_manager:
+@pytest.mark.unit
+@pytest.mark.database
+def test_data_manager_basic(data_manager, test_data):
         # 测试保存会话
-        original_question = "什么是人工智能？"
+        original_question = test_data["original_question"]
         session_id = data_manager.save_session(original_question)
 
         # 测试获取会话
@@ -21,7 +21,7 @@ def test_data_manager_basic(tmp_path):
         assert not session.completed
 
         # 测试更新会话
-        refined_question = "人工智能的定义和应用是什么？"
+        refined_question = test_data["refined_question"]
         data_manager.update_session(
             session_id, refined_question=refined_question, completed=True
         )
@@ -49,14 +49,12 @@ def test_data_manager_basic(tmp_path):
         assert tool_results[0].answer == "人工智能是..."
 
         # 测试保存分析结果
-        similarity_matrix = [[1.0, 0.8], [0.8, 1.0]]
-        consensus_scores = {"iflow": 90.5, "codebuddy": 85.0}
-        key_points = [{"content": "人工智能的定义", "sources": ["iflow", "codebuddy"]}]
-        differences = [
-            {"content": "应用领域的不同观点", "sources": ["iflow", "codebuddy"]}
-        ]
-        comprehensive_summary = "综合来看..."
-        final_conclusion = "最终结论是..."
+        similarity_matrix = test_data["similarity_matrix"]
+        consensus_scores = test_data["consensus_scores"]
+        key_points = test_data["key_points"]
+        differences = test_data["differences"]
+        comprehensive_summary = test_data["comprehensive_summary"]
+        final_conclusion = test_data["final_conclusion"]
 
         data_manager.save_analysis_result(
             session_id=session_id,
@@ -80,10 +78,9 @@ def test_data_manager_basic(tmp_path):
 
 
 # 测试会话管理功能
-def test_session_management(tmp_path):
-    db_path = tmp_path / "test_sessions.db"
-
-    with DataManager(str(db_path)) as data_manager:
+@pytest.mark.unit
+@pytest.mark.database
+def test_session_management(data_manager):
         # 创建多个会话
         session_ids = []
         for i in range(5):
