@@ -23,6 +23,7 @@ config.yaml
 # 日志文件
 *.log
 logs/
+reports/
 
 # 数据库文件
 *.db
