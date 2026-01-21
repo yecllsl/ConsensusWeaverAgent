@@ -2,11 +2,7 @@ name: CI - ConsensusWeaverAgent
 
 # 工作流触发条件
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  # 允许手动触发
+  # 只允许手动触发
   workflow_dispatch:
 
 # 环境变量设置
