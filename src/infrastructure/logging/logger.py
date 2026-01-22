@@ -8,7 +8,7 @@ class Logger:
     def __init__(
         self,
         name: str = "ConsensusWeaver",
-        log_file: str = "consensusweaver.log",
+        log_file: str = "logs/consensusweaver.log",
         log_level: str = "info",
     ):
         self.name = name
@@ -121,7 +121,7 @@ def get_logger(
     if name or log_file or log_level:
         return Logger(
             name=name or "ConsensusWeaver",
-            log_file=log_file or "consensusweaver.log",
+            log_file=log_file or "logs/consensusweaver.log",
             log_level=log_level or "info",
         )
 

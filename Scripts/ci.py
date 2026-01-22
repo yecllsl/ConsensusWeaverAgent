@@ -126,7 +126,9 @@ class CI:
         logger.addHandler(console_handler)
 
         # 文件日志
-        log_file = os.path.join(self.config.project_dir, "ci.log")
+        log_dir = os.path.join(self.config.project_dir, "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "ci.log")
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         file_formatter = logging.Formatter(

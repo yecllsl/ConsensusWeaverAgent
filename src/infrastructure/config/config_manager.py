@@ -140,7 +140,7 @@ class ConfigManager:
                 "max_clarification_rounds": 3,
                 "max_parallel_tools": 5,
                 "log_level": "info",
-                "log_file": "consensusweaver.log",
+                "log_file": "logs/consensusweaver.log",
                 "history_enabled": True,
                 "history_limit": 100,
             },
