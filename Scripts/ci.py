@@ -388,8 +388,15 @@ class CI:
 
         print_section("运行测试")
 
-        # 使用pytest运行测试
-        print_subsection("使用pytest运行测试")
+        # 确保test-results目录存在
+        test_results_dir = os.path.join(
+            self.config.project_dir, "reports", "test-results"
+        )
+        os.makedirs(test_results_dir, exist_ok=True)
+        test_results_file = os.path.join(test_results_dir, "test-results.xml")
+
+        # 使用pytest运行测试并同时生成JUnit测试报告
+        print_subsection("使用pytest运行测试并生成报告")
         cmd = ["uv", "run", "pytest", "tests/"]
         # 添加并行测试支持，自动使用所有可用CPU核心
         cmd.extend(["-n", "auto"])
@@ -397,6 +404,8 @@ class CI:
             cmd.append("-v")
         if self.config.pytest_tb_style:
             cmd.append(f"--tb={self.config.pytest_tb_style}")
+        # 添加JUnit测试报告生成
+        cmd.extend(["--junitxml", test_results_file])
 
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
@@ -405,6 +414,7 @@ class CI:
             return False
 
         print_color("✅ 测试执行成功", "green")
+        print_color(f"✅ 测试报告生成成功: {test_results_file}", "green")
         return True
 
     def generate_test_report(self) -> bool:
@@ -415,31 +425,39 @@ class CI:
 
         print_section("生成测试报告")
 
-        # 确保test-results目录存在
+        # 检查是否已经在run_tests中生成了测试报告
         test_results_dir = os.path.join(
             self.config.project_dir, "reports", "test-results"
         )
-        os.makedirs(test_results_dir, exist_ok=True)
-
-        # 生成JUnit测试报告
-        print_subsection("生成JUnit测试报告")
         test_results_file = os.path.join(test_results_dir, "test-results.xml")
-        cmd = [
-            "uv",
-            "run",
-            "pytest",
-            "tests/",
-            "--junitxml",
-            test_results_file,
-        ]
-        success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
-        if not success:
-            self.logger.error("测试报告生成失败")
-            print_color("❌ 测试报告生成失败", "red")
-            return False
 
-        print_color(f"✅ 测试报告生成成功: {test_results_file}", "green")
-        return True
+        if os.path.exists(test_results_file):
+            # 如果测试报告已经存在，直接返回成功
+            print_subsection("测试报告已存在")
+            print_color(f"✅ 测试报告已存在: {test_results_file}", "green")
+            return True
+        else:
+            # 如果测试报告不存在，生成测试报告
+            print_subsection("生成JUnit测试报告")
+            os.makedirs(test_results_dir, exist_ok=True)
+            cmd = [
+                "uv",
+                "run",
+                "pytest",
+                "tests/",
+                "--junitxml",
+                test_results_file,
+                "-n",
+                "auto",  # 使用并行测试加速
+            ]
+            success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
+            if not success:
+                self.logger.error("测试报告生成失败")
+                print_color("❌ 测试报告生成失败", "red")
+                return False
+
+            print_color(f"✅ 测试报告生成成功: {test_results_file}", "green")
+            return True
 
     def run_security_check(self) -> bool:
         """运行安全检查"""
