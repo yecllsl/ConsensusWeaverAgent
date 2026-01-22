@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.infrastructure.llm.llm_service import LLMService
 from src.infrastructure.logging.logger import get_logger
 from src.infrastructure.tools.tool_manager import ToolManager
+from src.service.agent.external_agent import create_external_agent
 
 
 @dataclass
@@ -17,16 +18,31 @@ class ExecutionPlan:
 
 
 class ExecutionStrategyManager:
-    def __init__(self, llm_service: LLMService, tool_manager: ToolManager):
+    def __init__(
+        self,
+        llm_service: LLMService,
+        tool_manager: ToolManager,
+        main_agent: Optional[str] = None,
+    ):
         self.llm_service = llm_service
         self.tool_manager = tool_manager
+        self.main_agent = main_agent
         self.logger = get_logger()
+
+        # 初始化外部Agent
+        self.external_agent = None
+        if main_agent:
+            self.external_agent = create_external_agent(main_agent)
+            self.logger.info(f"使用外部Agent {main_agent} 替代本地LLM")
 
     def create_execution_plan(self, question: str) -> ExecutionPlan:
         """创建执行计划"""
         try:
             # 判断问题复杂度
-            complexity = self.llm_service.classify_question_complexity(question)
+            if self.external_agent:
+                complexity = self.external_agent.classify_question_complexity(question)
+            else:
+                complexity = self.llm_service.classify_question_complexity(question)
 
             self.logger.info(f"问题复杂度判断结果: {complexity}")
 
@@ -63,7 +79,10 @@ class ExecutionStrategyManager:
         try:
             if plan.strategy == "direct_answer":
                 # 直接回答
-                answer = self.llm_service.answer_simple_question(plan.question)
+                if self.external_agent:
+                    answer = self.external_agent.answer_simple_question(plan.question)
+                else:
+                    answer = self.llm_service.answer_simple_question(plan.question)
                 return {
                     "strategy": "direct_answer",
                     "success": True,

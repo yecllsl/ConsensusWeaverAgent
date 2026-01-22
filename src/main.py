@@ -25,8 +25,40 @@ from src.service.strategy.execution_strategy import (
 @click.command()
 @click.option("--config", "-c", default="config.yaml", help="配置文件路径")
 @click.option("--verbose", "-v", is_flag=True, help="启用详细日志")
-def main(config: str, verbose: bool) -> None:
+@click.option(
+    "--i", "--iflow", "iflow_agent", is_flag=True, help="使用iflow作为主Agent"
+)
+@click.option("--q", "--qwen", "qwen_agent", is_flag=True, help="使用qwen作为主Agent")
+@click.option(
+    "--b",
+    "--codebuddy",
+    "codebuddy_agent",
+    is_flag=True,
+    help="使用codebuddy作为主Agent",
+)
+def main(
+    config: str,
+    verbose: bool,
+    iflow_agent: bool,
+    qwen_agent: bool,
+    codebuddy_agent: bool,
+) -> None:
     """智能问答协调终端应用"""
+    # 检查参数互斥性
+    agent_flags = [iflow_agent, qwen_agent, codebuddy_agent]
+    if sum(agent_flags) > 1:
+        click.echo("错误: 只能选择一个主Agent", err=True)
+        sys.exit(1)
+
+    # 确定主Agent类型
+    main_agent = None
+    if iflow_agent:
+        main_agent = "iflow"
+    elif qwen_agent:
+        main_agent = "qwen"
+    elif codebuddy_agent:
+        main_agent = "codebuddy"
+
     # 初始化配置管理
     config_manager = ConfigManager(config)
     config_data = config_manager.get_config()
@@ -37,6 +69,10 @@ def main(config: str, verbose: bool) -> None:
 
     logger.info("启动智能问答协调终端应用")
     logger.info(f"使用配置文件: {config}")
+    if main_agent:
+        logger.info(f"使用外部工具作为主Agent: {main_agent}")
+    else:
+        logger.info("使用本地LLM作为主Agent")
 
     try:
         # 初始化数据管理器
@@ -50,11 +86,16 @@ def main(config: str, verbose: bool) -> None:
 
         # 初始化交互引擎
         interaction_engine = InteractionEngine(
-            llm_service, data_manager, config_data.app.max_clarification_rounds
+            llm_service,
+            data_manager,
+            config_data.app.max_clarification_rounds,
+            main_agent,
         )
 
         # 初始化执行策略管理器
-        execution_strategy_manager = ExecutionStrategyManager(llm_service, tool_manager)
+        execution_strategy_manager = ExecutionStrategyManager(
+            llm_service, tool_manager, main_agent
+        )
 
         # 初始化查询执行器
         query_executor = QueryExecutor(tool_manager, data_manager)

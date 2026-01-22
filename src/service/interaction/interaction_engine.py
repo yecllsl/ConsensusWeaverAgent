@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 from src.infrastructure.data.data_manager import DataManager
 from src.infrastructure.llm.llm_service import LLMService
 from src.infrastructure.logging.logger import get_logger
+from src.service.agent.external_agent import create_external_agent
 
 
 @dataclass
@@ -25,11 +26,19 @@ class InteractionEngine:
         llm_service: LLMService,
         data_manager: DataManager,
         max_clarification_rounds: int = 3,
+        main_agent: Optional[str] = None,
     ):
         self.llm_service = llm_service
         self.data_manager = data_manager
         self.max_clarification_rounds = max_clarification_rounds
+        self.main_agent = main_agent
         self.logger = get_logger()
+
+        # 初始化外部Agent
+        self.external_agent = None
+        if main_agent:
+            self.external_agent = create_external_agent(main_agent)
+            self.logger.info(f"使用外部Agent {main_agent} 替代本地LLM")
 
     def start_interaction(self, original_question: str) -> InteractionState:
         """开始新的交互会话"""
@@ -48,7 +57,10 @@ class InteractionEngine:
     def analyze_question(self, state: InteractionState) -> Dict[str, Any]:
         """分析问题"""
         try:
-            analysis = self.llm_service.analyze_question(state.original_question)
+            if self.external_agent:
+                analysis = self.external_agent.analyze_question(state.original_question)
+            else:
+                analysis = self.llm_service.analyze_question(state.original_question)
             self.logger.info(f"问题分析结果: {analysis}")
             return analysis
         except Exception as e:
@@ -73,9 +85,14 @@ class InteractionEngine:
             return None
 
         try:
-            clarification = self.llm_service.generate_clarification_question(
-                state.original_question, analysis
-            )
+            if self.external_agent:
+                clarification = self.external_agent.generate_clarification_question(
+                    state.original_question, analysis
+                )
+            else:
+                clarification = self.llm_service.generate_clarification_question(
+                    state.original_question, analysis
+                )
             state.clarification_rounds += 1
 
             self.logger.info(
@@ -83,8 +100,7 @@ class InteractionEngine:
                 f"{self.max_clarification_rounds}): {clarification}"
             )
 
-            # 类型断言确保返回Optional[str]类型
-            return cast(Optional[str], clarification)
+            return clarification
         except Exception as e:
             self.logger.error(f"生成澄清问题失败: {e}")
             raise
@@ -107,9 +123,14 @@ class InteractionEngine:
     def refine_question(self, state: InteractionState) -> str:
         """重构问题"""
         try:
-            refined_question = self.llm_service.refine_question(
-                state.original_question, state.clarifications
-            )
+            if self.external_agent:
+                refined_question = self.external_agent.refine_question(
+                    state.original_question, state.clarifications
+                )
+            else:
+                refined_question = self.llm_service.refine_question(
+                    state.original_question, state.clarifications
+                )
 
             state.refined_question = refined_question
 
