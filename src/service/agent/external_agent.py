@@ -215,12 +215,25 @@ class ExternalAgent:
             else:
                 raise ValueError(f"不支持的Agent名称: {self.agent_name}")
 
-            # 执行命令
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            # 执行命令（使用bytes模式捕获输出，手动处理编码）
+            result = subprocess.run(cmd, capture_output=True, timeout=60)
 
-            output = result.stdout.strip()
+            # 尝试使用UTF-8编码解码，失败则使用GBK
+            try:
+                output = result.stdout.decode("utf-8").strip()
+            except UnicodeDecodeError:
+                try:
+                    output = result.stdout.decode("gbk").strip()
+                except UnicodeDecodeError:
+                    output = result.stdout.decode("latin-1").strip()
+
+            # 处理stderr
             if result.stderr:
-                self.logger.warning(f"工具执行警告: {result.stderr.strip()}")
+                try:
+                    stderr_output = result.stderr.decode("utf-8").strip()
+                except UnicodeDecodeError:
+                    stderr_output = result.stderr.decode("gbk").strip()
+                self.logger.warning(f"工具执行警告: {stderr_output}")
 
             execution_time = time.time() - start_time
             self.logger.info(
@@ -242,13 +255,69 @@ class ExternalAgent:
             解析后的结果
         """
         try:
+            if not result:
+                return {
+                    "is_complete": True,
+                    "is_clear": True,
+                    "ambiguities": [],
+                    "missing_info": [],
+                }
+
+            # 清理结果字符串
+            cleaned_result = result.strip()
+
             # 尝试直接解析JSON
-            if result.strip().startswith("{"):
-                parsed: Dict[str, Any] = json.loads(result)
+            try:
+                parsed: Dict[str, Any] = json.loads(cleaned_result)
                 return parsed
+            except json.JSONDecodeError:
+                # 尝试提取JSON部分
+                # 查找JSON开始和结束位置
+                start_pos = cleaned_result.find("{")
+                if start_pos == -1:
+                    start_pos = cleaned_result.find("[")
+
+                if start_pos != -1:
+                    # 尝试找到对应的结束位置
+                    if cleaned_result[start_pos] == "{":
+                        # 处理对象
+                        brace_count = 0
+                        end_pos = -1
+                        for i in range(start_pos, len(cleaned_result)):
+                            if cleaned_result[i] == "{":
+                                brace_count += 1
+                            elif cleaned_result[i] == "}":
+                                brace_count -= 1
+                                if brace_count == 0:
+                                    end_pos = i + 1
+                                    break
+                    else:
+                        # 处理数组
+                        bracket_count = 0
+                        end_pos = -1
+                        for i in range(start_pos, len(cleaned_result)):
+                            if cleaned_result[i] == "[":
+                                bracket_count += 1
+                            elif cleaned_result[i] == "]":
+                                bracket_count -= 1
+                                if bracket_count == 0:
+                                    end_pos = i + 1
+                                    break
+
+                    if end_pos != -1:
+                        json_part = cleaned_result[start_pos:end_pos]
+                        try:
+                            extracted_parsed: Dict[str, Any] = json.loads(json_part)
+                            return extracted_parsed
+                        except json.JSONDecodeError:
+                            self.logger.warning(
+                                f"提取的JSON部分解析失败: {json_part[:100]}..."
+                            )
 
             # 如果不是JSON格式，返回默认结果
-            self.logger.warning(f"外部Agent返回非JSON格式结果: {result[:100]}...")
+            self.logger.warning(
+                f"外部Agent返回非JSON格式结果: {cleaned_result[:100]}..."
+            )
             return {
                 "is_complete": True,
                 "is_clear": True,

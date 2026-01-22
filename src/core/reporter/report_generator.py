@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -192,7 +193,9 @@ class ReportGenerator:
         try:
             if not file_path:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path = f"report_{report.session_id}_{timestamp}.txt"
+                # 确保reports目录存在
+                os.makedirs("reports", exist_ok=True)
+                file_path = f"reports/report_{report.session_id}_{timestamp}.txt"
 
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(report.content)
