@@ -28,7 +28,7 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
 
 ### 前置要求
 
-- Windows 10/11 (64位)
+- Windows 10/11 (64位) / macOS / Linux
 - Python 3.12+
 - 至少8GB RAM (推荐16GB以上)
 - 至少10GB可用磁盘空间
@@ -41,27 +41,95 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
    cd ConsensusWeaverAgent
    ```
 
-2. **安装uv包管理器**
+2. **使用pip安装**
+   ```powershell
+   # 安装依赖管理工具uv
+   pip install uv
+   
+   # 创建虚拟环境并安装依赖
+   uv venv && uv sync --all-extras
+   
+   # 或使用pip直接安装
+   pip install -e .
+   ```
+
+3. **直接安装（推荐）**
+   ```powershell
+   # 直接使用pip安装
+   pip install consensusweaveragent
+   ```
+
+## 命令行使用
+
+### 基本命令
+
+```powershell
+# 启动应用
+consensusweaver
+
+# 查看帮助
+consensusweaver --help
+```
+
+### 可用选项
+
+| 选项 | 别名 | 描述 |
+|------|------|------|
+| `-c, --config` | | 指定配置文件路径（默认：config.yaml） |
+| `-v, --verbose` | | 启用详细日志 |
+| `--i, --iflow` | | 使用iflow作为主Agent |
+| `--q, --qwen` | | 使用qwen作为主Agent |
+| `--b, --codebuddy` | | 使用codebuddy作为主Agent |
+| `--help` | | 显示帮助信息 |
+
+### 使用示例
+
+```powershell
+# 使用默认配置启动应用
+consensusweaver
+
+# 使用自定义配置文件
+consensusweaver --config my_config.yaml
+
+# 启用详细日志
+consensusweaver -v
+
+# 使用iflow作为主Agent
+consensusweaver --iflow
+
+# 使用qwen作为主Agent
+consensusweaver --qwen
+
+# 使用codebuddy作为主Agent
+consensusweaver --codebuddy
+```
+
+## 开发环境搭建
+
+如果您需要进行开发，可以按照以下步骤搭建开发环境：
+
+1. **安装uv包管理器**
    ```powershell
    pip install uv
    ```
 
-3. **创建虚拟环境并安装依赖**
+2. **创建虚拟环境并安装依赖**
    ```powershell
    uv venv && uv sync --all-extras
    ```
 
-4. **激活虚拟环境**
+3. **激活虚拟环境**
    ```powershell
-   .venv\Scripts\activate
+   .venv\Scripts\activate  # Windows
+   source .venv/bin/activate  # macOS/Linux
    ```
 
-5. **下载NLTK资源**
+4. **下载NLTK资源**
    ```powershell
    python -c "import nltk; nltk.data.path.append('https://gitee.com/gislite/nltk_data/raw/'); nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
    ```
 
-6. **下载GGUF模型文件**
+5. **下载GGUF模型文件**
    - **方法1：使用模型下载脚本**
      ```powershell
      python scripts/download_qwen3-8b-gguf.py
@@ -80,109 +148,89 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
      3. 创建.models/qwen/目录
      4. 将模型文件放置到该目录中
 
-## 开发工作流
+## 使用说明
 
-### 代码规范
+1. **启动应用**
+   ```powershell
+   consensusweaver
+   ```
 
-- **代码格式化**：使用ruff统一处理代码格式化和lint检查
-  ```powershell
-  uv run ruff check .
-  uv run ruff format .
-  ```
+2. **输入问题**
+   - 在命令行中输入您的问题，按回车键确认
+   - 系统会自动分析问题并可能要求您澄清一些细节
 
-- **类型检查**：使用mypy进行严格的类型检查
-  ```powershell
-  uv run mypy --strict .
-  ```
+3. **查看结果**
+   - 系统会并行调用多个外部AI工具获取答案
+   - 对答案进行分析和共识计算
+   - 生成并显示最终报告
 
-### 测试流程
-
-- **运行单元测试**
-  ```powershell
-  uv run pytest tests/unit/
-  ```
-
-- **运行集成测试**
-  ```powershell
-  uv run pytest tests/integration/
-  ```
-
-- **运行所有测试**
-  ```powershell
-  uv run pytest
-  ```
-
-### 依赖管理
-
-- **添加依赖**
-  ```powershell
-  uv add <package>
-  uv add --group dev <package>  # 添加开发依赖
-  ```
-
-- **更新依赖**
-  ```powershell
-  uv update
-  ```
-
-- **同步环境**
-  ```powershell
-  uv sync
-  ```
-
-## 运行应用
-
-```powershell
-# 运行应用
-python -m src.main
-
-# 指定配置文件
-python -m src.main --config my_config.yaml
-
-# 启用详细日志
-python -m src.main --verbose
-```
+4. **保存报告**
+   - 系统会询问是否保存报告
+   - 确认后报告将保存到reports/目录
 
 ## 项目结构
 
 ```
-src/
-├── core/                   # 核心功能层
-│   ├── analyzer/          # 共识分析引擎
-│   ├── executor/          # 并发查询执行器
-│   └── reporter/          # 报告生成器
-├── infrastructure/        # 基础设施层
-│   ├── config/            # 配置管理
-│   ├── data/              # 数据持久化
-│   ├── logging/           # 日志系统
-│   ├── llm/               # LLM集成服务
-│   └── tools/             # 外部工具集成
-├── service/               # 应用服务层
-│   ├── interaction/       # 智能交互引擎
-│   └── strategy/          # 执行策略管理器
-├── models/                # 数据模型
-├── utils/                 # 工具函数
-├── ui/                    # 用户界面层
-└── main.py                # 应用入口
+ConsensusWeaverAgent/
+├── src/                          # 源代码目录
+│   ├── main.py                   # 应用入口
+│   ├── core/                     # 核心功能层
+│   │   ├── analyzer/             # 共识分析引擎
+│   │   ├── executor/             # 并发查询执行器
+│   │   └── reporter/             # 报告生成器
+│   ├── infrastructure/           # 基础设施层
+│   │   ├── config/               # 配置管理
+│   │   ├── data/                 # 数据持久化
+│   │   ├── llm/                  # LLM集成服务
+│   │   ├── logging/              # 日志系统
+│   │   └── tools/                # 外部工具集成
+│   ├── service/                  # 应用服务层
+│   │   ├── interaction/          # 智能交互引擎
+│   │   └── strategy/             # 执行策略管理器
+│   ├── models/                   # 数据模型
+│   ├── ui/                       # 用户界面层
+│   └── utils/                    # 工具函数
+├── tests/                        # 测试目录
+│   ├── unit/                     # 单元测试
+│   ├── integration/              # 集成测试
+│   └── test_external_tools.py
+├── docs/                         # 文档目录
+├── .models/                      # 模型文件目录
+├── reports/                      # 报告输出目录
+├── logs/                         # 日志文件目录
+└── config.yaml                   # 配置文件
 ```
 
-## 配置说明
+## 配置管理
 
-项目使用YAML格式的配置文件 `config.yaml`，首次运行时会自动创建默认配置。配置文件包含以下主要部分：
+项目使用YAML格式的配置文件 `config.yaml`，首次运行时会自动创建默认配置。
 
-- **local_llm**：本地LLM服务配置
-- **external_tools**：外部AI工具配置
-- **network**：网络相关配置
-- **app**：应用行为配置
+### 主要配置项
 
-详细配置说明请参考 `docs/design/配置设计.md`。
+- **local_llm**：本地LLM服务配置（模型路径、参数等）
+- **external_tools**：外部AI工具配置（命令、参数、优先级等）
+- **network**：网络相关配置（超时、检查等）
+- **app**：应用行为配置（日志级别、最大澄清轮数等）
 
-## 文档
+## 开发指南
 
-- **需求文档**：`docs/requirements/requirements.md`
-- **技术选型**：`docs/design/技术选型.md`
-- **架构设计**：`docs/design/架构设计.md`
-- **本地开发环境搭建**：`docs/dev/本地开发环境搭建.md`
+### 代码风格
+
+- 使用ruff进行代码格式化和检查
+- 遵守PEP 8编码规范
+- 所有函数必须包含类型注解
+- 公共函数必须包含文档字符串
+
+### 测试
+
+- 使用pytest进行单元测试
+- 测试文件位于tests/目录
+- 运行测试命令：`uv run pytest -n auto`
+
+### CI/CD
+
+- 使用GitHub Actions进行持续集成
+- 本地CI脚本：`python Scripts/ci.py`
 
 ## 贡献指南
 

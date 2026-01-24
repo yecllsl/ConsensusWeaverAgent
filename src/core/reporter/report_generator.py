@@ -126,7 +126,7 @@ class ReportGenerator:
             report_parts.append(f"- 执行时间: {result.execution_time:.2f}秒")
             if result.success:
                 report_parts.append("- 回答:")
-                report_parts.append(f'  "\{result.answer}"')
+                report_parts.append(f'  "{result.answer}"')
             else:
                 report_parts.append(f"- 错误信息: {result.error_message}")
             report_parts.append("")

@@ -3,9 +3,6 @@ import sys
 
 import click
 
-# 添加项目根目录到Python路径
-sys.path.append(".")
-
 from src.core.analyzer.consensus_analyzer import ConsensusAnalyzer
 from src.core.executor.query_executor import QueryExecutor
 from src.core.reporter.report_generator import ReportGenerator
