@@ -2,7 +2,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from src.infrastructure.logging.logger import get_logger
 
@@ -157,7 +157,7 @@ class LLMCache:
     def __init__(self, cache_manager: CacheManager) -> None:
         self.cache_manager = cache_manager
         self.logger = get_logger()
-        self._prompt_keys = {}
+        self._prompt_keys: Dict[tuple[str, str], str] = {}
 
     def _generate_key(self, prompt: str, model: str = "default") -> str:
         key_data = f"llm:{model}:{prompt}"
@@ -171,7 +171,8 @@ class LLMCache:
         cached = self.cache_manager.get(key)
         if cached:
             self.logger.info(f"LLM缓存命中: {prompt[:50]}...")
-            return cached
+            if isinstance(cached, str):
+                return cached
         return None
 
     def set_response(
@@ -202,7 +203,7 @@ class ToolCache:
     def __init__(self, cache_manager: CacheManager) -> None:
         self.cache_manager = cache_manager
         self.logger = get_logger()
-        self._tool_keys = {}
+        self._tool_keys: Dict[tuple[str, str], str] = {}
 
     def _generate_key(self, tool_name: str, question: str) -> str:
         key_data = f"tool:{tool_name}:{question}"
@@ -217,8 +218,9 @@ class ToolCache:
         if cached:
             self.logger.info(f"工具缓存命中: {tool_name} - {question[:50]}...")
             if isinstance(cached, str):
-                return json.loads(cached)
-            return cached
+                return cast(Dict[str, Any], json.loads(cached))
+            if isinstance(cached, dict):
+                return cast(Dict[str, Any], cached)
         return None
 
     def set_result(

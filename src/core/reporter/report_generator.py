@@ -22,7 +22,7 @@ class Report:
     consensus_analysis: Dict[str, Any]
     comprehensive_summary: str
     final_conclusion: str
-    content: str
+    content: str | bytes
 
 
 class ReportGenerator:
@@ -197,8 +197,12 @@ class ReportGenerator:
                 os.makedirs("reports", exist_ok=True)
                 file_path = f"reports/report_{report.session_id}_{timestamp}.txt"
 
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(report.content)
+            if isinstance(report.content, bytes):
+                with open(file_path, "wb") as f:
+                    f.write(report.content)
+            else:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(report.content)
 
             self.logger.info(f"报告已保存到: {file_path}")
 
@@ -207,7 +211,7 @@ class ReportGenerator:
             self.logger.error(f"保存报告失败: {e}")
             raise
 
-    def get_report_content(self, session_id: int) -> Optional[str]:
+    def get_report_content(self, session_id: int) -> Optional[str | bytes]:
         """获取报告内容"""
         try:
             report = self.generate_report(session_id)

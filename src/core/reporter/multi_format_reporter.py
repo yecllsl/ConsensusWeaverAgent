@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from src.core.reporter.report_generator import Report
 from src.infrastructure.data.data_manager import (
@@ -62,6 +62,7 @@ class MultiFormatReporter:
                 "differences": analysis.differences,
             }
 
+            content: str | bytes
             if format == ReportFormat.TEXT:
                 content = self._render_text_report(session, tool_results, analysis)
             elif format == ReportFormat.MARKDOWN:
@@ -459,13 +460,13 @@ class MultiFormatReporter:
         session: SessionRecord,
         tool_results: List[ToolResultRecord],
         analysis: AnalysisResultRecord,
-    ) -> str:
+    ) -> str | bytes:
         html_content = self._render_html_report(session, tool_results, analysis)
 
         try:
             import tempfile
 
-            from weasyprint import HTML
+            from weasyprint import HTML  # type: ignore
 
             with tempfile.NamedTemporaryFile(
                 suffix=".html", delete=False, mode="w", encoding="utf-8"
@@ -513,7 +514,7 @@ class MultiFormatReporter:
 
                 file_path = f"reports/report_{report.session_id}_{timestamp}{extension}"
 
-            if format == ReportFormat.PDF and isinstance(report.content, bytes):
+            if isinstance(report.content, bytes):
                 with open(file_path, "wb") as f:
                     f.write(report.content)
             else:

@@ -129,7 +129,7 @@ class HistoryManager:
             query += " ORDER BY consensus_score ASC"
 
         query += " LIMIT ? OFFSET ?"
-        params.extend([filters.limit, filters.offset])
+        params.extend([str(filters.limit), str(filters.offset)])
 
         try:
             with sqlite3.connect(self.db_path) as conn:
