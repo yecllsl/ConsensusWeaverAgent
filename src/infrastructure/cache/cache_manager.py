@@ -23,9 +23,6 @@ class CacheConfig:
     default_ttl: int = 3600
 
 
-
-
-
 class MemoryCache:
     def __init__(self, max_size: int = 1000) -> None:
         self.cache: Dict[str, CacheEntry] = {}
@@ -58,7 +55,7 @@ class MemoryCache:
             key=key,
             value=value,
             created_at=datetime.now(),
-            expires_at=datetime.now() + timedelta(seconds=ttl) if ttl else None
+            expires_at=datetime.now() + timedelta(seconds=ttl) if ttl else None,
         )
 
         self.cache[key] = entry
@@ -77,17 +74,14 @@ class MemoryCache:
 
     def get_statistics(self) -> Dict[str, Any]:
         total_requests = self.hit_count + self.miss_count
-        hit_rate = (
-            self.hit_count / total_requests * 100
-            if total_requests > 0 else 0
-        )
+        hit_rate = self.hit_count / total_requests * 100 if total_requests > 0 else 0
 
         return {
             "total_entries": len(self.cache),
             "hit_count": self.hit_count,
             "miss_count": self.miss_count,
             "hit_rate": hit_rate,
-            "max_size": self.max_size
+            "max_size": self.max_size,
         }
 
     def invalidate_pattern(self, pattern: str) -> int:
@@ -105,10 +99,7 @@ class MemoryCache:
         if len(self.cache) <= self.max_size:
             return
 
-        sorted_entries = sorted(
-            self.cache.items(),
-            key=lambda x: x[1].hit_count
-        )
+        sorted_entries = sorted(self.cache.items(), key=lambda x: x[1].hit_count)
 
         entries_to_remove = len(self.cache) - self.max_size
         for i in range(entries_to_remove):
@@ -150,7 +141,7 @@ class CacheManager:
                 "miss_count": 0,
                 "hit_rate": 0.0,
                 "max_size": self.config.max_size,
-                "enabled": self.config.enabled
+                "enabled": self.config.enabled,
             }
         stats = self.memory_cache.get_statistics()
         stats["enabled"] = self.config.enabled
@@ -188,7 +179,7 @@ class LLMCache:
         prompt: str,
         response: str,
         model: str = "default",
-        ttl: Optional[int] = None
+        ttl: Optional[int] = None,
     ) -> None:
         key = self._generate_key(prompt, model)
         self.cache_manager.set(key, response, ttl)
@@ -200,7 +191,7 @@ class LLMCache:
             if mod == model:
                 keys_to_delete.append(key)
                 del self._prompt_keys[(prompt, mod)]
-        
+
         count = 0
         for key in keys_to_delete:
             if self.cache_manager.delete(key):
@@ -236,7 +227,7 @@ class ToolCache:
         tool_name: str,
         question: str,
         result: Dict[str, Any],
-        ttl: Optional[int] = None
+        ttl: Optional[int] = None,
     ) -> None:
         key = self._generate_key(tool_name, question)
         self.cache_manager.set(key, result, ttl)
@@ -247,7 +238,7 @@ class ToolCache:
             if tool == tool_name:
                 keys_to_delete.append(key)
                 del self._tool_keys[(tool, question)]
-        
+
         count = 0
         for key in keys_to_delete:
             if self.cache_manager.delete(key):

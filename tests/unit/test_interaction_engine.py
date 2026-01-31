@@ -1,17 +1,19 @@
-import pytest
 from unittest.mock import Mock, patch
 
-from src.service.interaction.interaction_engine import InteractionEngine, InteractionState
+import pytest
+
+from src.service.interaction.interaction_engine import (
+    InteractionEngine,
+    InteractionState,
+)
 
 
 @pytest.fixture
 def mock_llm_service():
     llm_service = Mock()
-    llm_service.analyze_question = Mock(return_value={
-        "is_complete": True,
-        "is_clear": True,
-        "ambiguities": []
-    })
+    llm_service.analyze_question = Mock(
+        return_value={"is_complete": True, "is_clear": True, "ambiguities": []}
+    )
     llm_service.generate_clarification_question = Mock(return_value="澄清问题")
     llm_service.refine_question = Mock(return_value="重构问题")
     return llm_service
@@ -32,7 +34,9 @@ def interaction_engine(mock_llm_service, mock_data_manager):
     return InteractionEngine(mock_llm_service, mock_data_manager)
 
 
-def test_interaction_engine_initialization(interaction_engine, mock_llm_service, mock_data_manager):
+def test_interaction_engine_initialization(
+    interaction_engine, mock_llm_service, mock_data_manager
+):
     assert interaction_engine.llm_service == mock_llm_service
     assert interaction_engine.data_manager == mock_data_manager
     assert interaction_engine.max_clarification_rounds == 3
@@ -75,11 +79,7 @@ def test_analyze_question_exception(interaction_engine, mock_llm_service):
 
 def test_generate_clarification_no_need(interaction_engine):
     state = InteractionState(session_id=1, original_question="测试问题")
-    analysis = {
-        "is_complete": True,
-        "is_clear": True,
-        "ambiguities": []
-    }
+    analysis = {"is_complete": True, "is_clear": True, "ambiguities": []}
 
     clarification = interaction_engine.generate_clarification(state, analysis)
 
@@ -88,15 +88,9 @@ def test_generate_clarification_no_need(interaction_engine):
 
 def test_generate_clarification_max_rounds(interaction_engine):
     state = InteractionState(
-        session_id=1,
-        original_question="测试问题",
-        clarification_rounds=3
+        session_id=1, original_question="测试问题", clarification_rounds=3
     )
-    analysis = {
-        "is_complete": False,
-        "is_clear": False,
-        "ambiguities": ["歧义1"]
-    }
+    analysis = {"is_complete": False, "is_clear": False, "ambiguities": ["歧义1"]}
 
     clarification = interaction_engine.generate_clarification(state, analysis)
 
@@ -105,11 +99,7 @@ def test_generate_clarification_max_rounds(interaction_engine):
 
 def test_generate_clarification_success(interaction_engine, mock_llm_service):
     state = InteractionState(session_id=1, original_question="测试问题")
-    analysis = {
-        "is_complete": False,
-        "is_clear": False,
-        "ambiguities": ["歧义1"]
-    }
+    analysis = {"is_complete": False, "is_clear": False, "ambiguities": ["歧义1"]}
 
     mock_llm_service.generate_clarification_question.return_value = "这是澄清问题"
 
@@ -121,11 +111,7 @@ def test_generate_clarification_success(interaction_engine, mock_llm_service):
 
 def test_generate_clarification_exception(interaction_engine, mock_llm_service):
     state = InteractionState(session_id=1, original_question="测试问题")
-    analysis = {
-        "is_complete": False,
-        "is_clear": False,
-        "ambiguities": ["歧义1"]
-    }
+    analysis = {"is_complete": False, "is_clear": False, "ambiguities": ["歧义1"]}
 
     mock_llm_service.generate_clarification_question.side_effect = Exception("测试异常")
 
@@ -221,14 +207,12 @@ def test_get_session_state_with_clarifications(interaction_engine, mock_data_man
 
 
 def test_is_clarification_needed_true():
-    analysis = {
-        "is_complete": False,
-        "is_clear": True,
-        "ambiguities": []
-    }
+    analysis = {"is_complete": False, "is_clear": True, "ambiguities": []}
 
     engine = Mock()
-    engine.is_clarification_needed = InteractionEngine.is_clarification_needed.__get__(engine, InteractionEngine)
+    engine.is_clarification_needed = InteractionEngine.is_clarification_needed.__get__(
+        engine, InteractionEngine
+    )
 
     result = engine.is_clarification_needed(analysis)
 
@@ -236,14 +220,12 @@ def test_is_clarification_needed_true():
 
 
 def test_is_clarification_needed_false():
-    analysis = {
-        "is_complete": True,
-        "is_clear": True,
-        "ambiguities": []
-    }
+    analysis = {"is_complete": True, "is_clear": True, "ambiguities": []}
 
     engine = Mock()
-    engine.is_clarification_needed = InteractionEngine.is_clarification_needed.__get__(engine, InteractionEngine)
+    engine.is_clarification_needed = InteractionEngine.is_clarification_needed.__get__(
+        engine, InteractionEngine
+    )
 
     result = engine.is_clarification_needed(analysis)
 
@@ -257,7 +239,7 @@ def test_interaction_state_creation():
         refined_question="重构问题",
         clarification_rounds=2,
         clarifications=["回答1", "回答2"],
-        completed=True
+        completed=True,
     )
 
     assert state.session_id == 1
@@ -281,19 +263,17 @@ def test_interaction_state_defaults():
 
 def test_interaction_engine_with_external_agent(mock_data_manager):
     mock_external_agent = Mock()
-    mock_external_agent.analyze_question = Mock(return_value={
-        "is_complete": True,
-        "is_clear": True,
-        "ambiguities": []
-    })
+    mock_external_agent.analyze_question = Mock(
+        return_value={"is_complete": True, "is_clear": True, "ambiguities": []}
+    )
 
-    with patch('src.service.interaction.interaction_engine.create_external_agent') as mock_create:
+    with patch(
+        "src.service.interaction.interaction_engine.create_external_agent"
+    ) as mock_create:
         mock_create.return_value = mock_external_agent
 
         engine = InteractionEngine(
-            llm_service=Mock(),
-            data_manager=mock_data_manager,
-            main_agent="test_agent"
+            llm_service=Mock(), data_manager=mock_data_manager, main_agent="test_agent"
         )
 
         assert engine.external_agent is not None

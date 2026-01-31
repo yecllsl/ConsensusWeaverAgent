@@ -1,18 +1,18 @@
-import pytest
-import sqlite3
-import json
 import csv
-from datetime import datetime
-import tempfile
+import json
 import os
-from pathlib import Path
+import sqlite3
+import tempfile
+from datetime import datetime
+
+import pytest
 
 from src.service.history.history_manager import (
     HistoryManager,
+    SessionDetails,
     SessionFilter,
     SessionSummary,
-    SessionDetails,
-    SortOrder
+    SortOrder,
 )
 
 
@@ -20,9 +20,9 @@ from src.service.history.history_manager import (
 def temp_db():
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
         db_path = f.name
-    
+
     yield db_path
-    
+
     if os.path.exists(db_path):
         try:
             os.unlink(db_path)
@@ -39,7 +39,7 @@ def history_manager(temp_db):
 def populated_db(temp_db):
     with sqlite3.connect(temp_db) as conn:
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +49,7 @@ def populated_db(temp_db):
                 completed BOOLEAN DEFAULT FALSE
             )
         """)
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tool_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +63,7 @@ def populated_db(temp_db):
                 FOREIGN KEY (session_id) REFERENCES sessions (id)
             )
         """)
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS analysis_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,42 +78,54 @@ def populated_db(temp_db):
                 FOREIGN KEY (session_id) REFERENCES sessions (id)
             )
         """)
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO sessions (original_question, completed, timestamp)
             VALUES (?, 1, ?)
-        """, ("测试问题1", datetime.now().isoformat()))
+        """,
+            ("测试问题1", datetime.now().isoformat()),
+        )
         session_id1 = cursor.lastrowid
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO sessions (original_question, completed, timestamp)
             VALUES (?, 1, ?)
-        """, ("测试问题2", datetime.now().isoformat()))
+        """,
+            ("测试问题2", datetime.now().isoformat()),
+        )
         session_id2 = cursor.lastrowid
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO tool_results (session_id, tool_name, success, answer, error_message, execution_time, timestamp)
             VALUES (?, 'tool1', 1, '答案1', NULL, 1.0, ?)
-        """, (session_id1, datetime.now().isoformat()))
-        
-        cursor.execute("""
+        """,
+            (session_id1, datetime.now().isoformat()),
+        )
+
+        cursor.execute(
+            """
             INSERT INTO analysis_results (
                 session_id, similarity_matrix, consensus_scores, 
                 key_points, differences, comprehensive_summary, final_conclusion, timestamp
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            session_id1,
-            json.dumps([[1.0, 0.8], [0.8, 1.0]]),
-            json.dumps({"tool1": 0.9}),
-            json.dumps([{"content": "观点1", "sources": "tool1"}]),
-            json.dumps([]),
-            "综合总结",
-            "最终结论",
-            datetime.now().isoformat()
-        ))
-        
+        """,
+            (
+                session_id1,
+                json.dumps([[1.0, 0.8], [0.8, 1.0]]),
+                json.dumps({"tool1": 0.9}),
+                json.dumps([{"content": "观点1", "sources": "tool1"}]),
+                json.dumps([]),
+                "综合总结",
+                "最终结论",
+                datetime.now().isoformat(),
+            ),
+        )
+
         conn.commit()
-    
+
     return temp_db
 
 
@@ -192,18 +204,20 @@ def test_export_sessions_json(populated_history_manager, tmp_path):
             question="问题1",
             consensus_score=0.9,
             created_at=datetime.now(),
-            tool_count=2
+            tool_count=2,
         )
     ]
 
     output_path = os.path.join(str(tmp_path), "export.json")
-    populated_history_manager.export_sessions(sessions, format="json", output_path=str(output_path))
+    populated_history_manager.export_sessions(
+        sessions, format="json", output_path=str(output_path)
+    )
 
     assert os.path.exists(output_path)
-    
+
     with open(output_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    
+
     assert len(data) == 1
     assert data[0]["question"] == "问题1"
 
@@ -215,21 +229,29 @@ def test_export_sessions_csv(populated_history_manager, tmp_path):
             question="问题1",
             consensus_score=0.9,
             created_at=datetime.now(),
-            tool_count=2
+            tool_count=2,
         )
     ]
 
     output_path = os.path.join(str(tmp_path), "export.csv")
-    populated_history_manager.export_sessions(sessions, format="csv", output_path=str(output_path))
+    populated_history_manager.export_sessions(
+        sessions, format="csv", output_path=str(output_path)
+    )
 
     assert os.path.exists(output_path)
-    
+
     with open(output_path, "r", encoding="utf-8", newline="") as f:
         reader = csv.reader(f)
         rows = list(reader)
-    
+
     assert len(rows) == 2
-    assert rows[0] == ["session_id", "question", "consensus_score", "created_at", "tool_count"]
+    assert rows[0] == [
+        "session_id",
+        "question",
+        "consensus_score",
+        "created_at",
+        "tool_count",
+    ]
 
 
 def test_export_sessions_unsupported_format(populated_history_manager, tmp_path):
@@ -238,7 +260,9 @@ def test_export_sessions_unsupported_format(populated_history_manager, tmp_path)
     output_path = os.path.join(str(tmp_path), "export.txt")
 
     with pytest.raises(ValueError):
-        populated_history_manager.export_sessions(sessions, format="txt", output_path=str(output_path))
+        populated_history_manager.export_sessions(
+            sessions, format="txt", output_path=str(output_path)
+        )
 
 
 def test_get_statistics(populated_history_manager):
@@ -261,7 +285,9 @@ def test_search_by_keyword(populated_history_manager):
 
 
 def test_filter_by_consensus(populated_history_manager):
-    results = populated_history_manager.filter_by_consensus(0.0, max_score=1.0, limit=10)
+    results = populated_history_manager.filter_by_consensus(
+        0.0, max_score=1.0, limit=10
+    )
 
     assert isinstance(results, list)
 
@@ -297,7 +323,7 @@ def test_session_summary_creation():
         question="测试问题",
         consensus_score=0.9,
         created_at=datetime.now(),
-        tool_count=2
+        tool_count=2,
     )
 
     assert summary.session_id == 1
@@ -314,7 +340,7 @@ def test_session_details_creation():
         tool_results=[],
         consensus_analysis={},
         report="报告",
-        created_at=datetime.now()
+        created_at=datetime.now(),
     )
 
     assert details.session_id == 1
@@ -326,14 +352,14 @@ def test_session_details_creation():
 def test_ensure_indexes(populated_history_manager):
     with sqlite3.connect(populated_history_manager.db_path) as conn:
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT name FROM sqlite_master 
             WHERE type='index' AND name LIKE 'idx_%'
         """)
-        
+
         indexes = [row[0] for row in cursor.fetchall()]
-        
+
         assert "idx_sessions_timestamp" in indexes
         assert "idx_sessions_completed" in indexes
         assert "idx_tool_results_session_id" in indexes

@@ -1,7 +1,11 @@
-import pytest
 from unittest.mock import Mock, patch
 
-from src.service.strategy.execution_strategy import ExecutionStrategyManager, ExecutionPlan
+import pytest
+
+from src.service.strategy.execution_strategy import (
+    ExecutionPlan,
+    ExecutionStrategyManager,
+)
 
 
 @pytest.fixture
@@ -15,12 +19,12 @@ def mock_llm_service():
 @pytest.fixture
 def mock_tool_manager():
     tool_manager = Mock()
-    
+
     tool1 = Mock()
     tool1.name = "tool1"
     tool2 = Mock()
     tool2.name = "tool2"
-    
+
     tool_manager.enabled_tools = [tool1, tool2]
     tool_manager.config = Mock()
     tool_manager.config.network = Mock()
@@ -34,7 +38,9 @@ def execution_strategy_manager(mock_llm_service, mock_tool_manager):
     return ExecutionStrategyManager(mock_llm_service, mock_tool_manager)
 
 
-def test_execution_strategy_manager_initialization(execution_strategy_manager, mock_llm_service, mock_tool_manager):
+def test_execution_strategy_manager_initialization(
+    execution_strategy_manager, mock_llm_service, mock_tool_manager
+):
     assert execution_strategy_manager.llm_service == mock_llm_service
     assert execution_strategy_manager.tool_manager == mock_tool_manager
     assert execution_strategy_manager.external_agent is None
@@ -104,7 +110,9 @@ def test_execute_plan_direct_answer(execution_strategy_manager, mock_llm_service
 
 
 def test_execute_plan_parallel_query(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+    )
 
     result = execution_strategy_manager.execute_plan(plan)
 
@@ -132,7 +140,9 @@ def test_validate_plan_direct_answer(execution_strategy_manager):
 
 
 def test_validate_plan_parallel_query_valid(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+    )
 
     is_valid = execution_strategy_manager.validate_plan(plan)
 
@@ -148,15 +158,21 @@ def test_validate_plan_parallel_query_no_tools(execution_strategy_manager):
 
 
 def test_validate_plan_parallel_query_invalid_tool(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["invalid_tool"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["invalid_tool"]
+    )
 
     is_valid = execution_strategy_manager.validate_plan(plan)
 
     assert is_valid is False
 
 
-def test_validate_plan_parallel_query_no_internet(execution_strategy_manager, mock_tool_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"])
+def test_validate_plan_parallel_query_no_internet(
+    execution_strategy_manager, mock_tool_manager
+):
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+    )
 
     mock_tool_manager.config.network.check_before_run = True
     mock_tool_manager.check_internet_connection.return_value = False
@@ -167,7 +183,9 @@ def test_validate_plan_parallel_query_no_internet(execution_strategy_manager, mo
 
 
 def test_validate_plan_exception(execution_strategy_manager, mock_tool_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+    )
 
     mock_tool_manager.enabled_tools = None
 
@@ -195,7 +213,9 @@ def test_adjust_plan_direct_answer_failure(execution_strategy_manager):
 
 
 def test_adjust_plan_parallel_query_failure_reduce_tools(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+    )
     feedback = {"success": False}
 
     adjusted_plan = execution_strategy_manager.adjust_plan(plan, feedback)
@@ -205,7 +225,9 @@ def test_adjust_plan_parallel_query_failure_reduce_tools(execution_strategy_mana
 
 
 def test_adjust_plan_parallel_query_failure_switch_strategy(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=["tool1"])
+    plan = ExecutionPlan(
+        strategy="parallel_query", question="复杂问题", tools=["tool1"]
+    )
     feedback = {"success": False}
 
     adjusted_plan = execution_strategy_manager.adjust_plan(plan, feedback)
@@ -233,9 +255,7 @@ def test_execution_plan_creation():
 
 def test_execution_plan_creation_with_tools():
     plan = ExecutionPlan(
-        strategy="parallel_query",
-        question="测试问题",
-        tools=["tool1", "tool2"]
+        strategy="parallel_query", question="测试问题", tools=["tool1", "tool2"]
     )
 
     assert plan.strategy == "parallel_query"
@@ -243,17 +263,21 @@ def test_execution_plan_creation_with_tools():
     assert len(plan.tools) == 2
 
 
-def test_execution_strategy_manager_with_external_agent(mock_llm_service, mock_tool_manager):
+def test_execution_strategy_manager_with_external_agent(
+    mock_llm_service, mock_tool_manager
+):
     mock_external_agent = Mock()
     mock_external_agent.classify_question_complexity = Mock(return_value="simple")
 
-    with patch('src.service.strategy.execution_strategy.create_external_agent') as mock_create:
+    with patch(
+        "src.service.strategy.execution_strategy.create_external_agent"
+    ) as mock_create:
         mock_create.return_value = mock_external_agent
 
         manager = ExecutionStrategyManager(
             llm_service=mock_llm_service,
             tool_manager=mock_tool_manager,
-            main_agent="test_agent"
+            main_agent="test_agent",
         )
 
         assert manager.external_agent is not None
@@ -268,13 +292,15 @@ def test_execute_plan_with_external_agent(mock_llm_service, mock_tool_manager):
     mock_external_agent = Mock()
     mock_external_agent.answer_simple_question = Mock(return_value="外部Agent回答")
 
-    with patch('src.service.strategy.execution_strategy.create_external_agent') as mock_create:
+    with patch(
+        "src.service.strategy.execution_strategy.create_external_agent"
+    ) as mock_create:
         mock_create.return_value = mock_external_agent
 
         manager = ExecutionStrategyManager(
             llm_service=mock_llm_service,
             tool_manager=mock_tool_manager,
-            main_agent="test_agent"
+            main_agent="test_agent",
         )
 
         plan = ExecutionPlan(strategy="direct_answer", question="简单问题")

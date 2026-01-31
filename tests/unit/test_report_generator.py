@@ -1,9 +1,9 @@
-import pytest
-from unittest.mock import Mock
 from datetime import datetime
-import json
+from unittest.mock import Mock
 
-from src.core.reporter.report_generator import ReportGenerator, Report
+import pytest
+
+from src.core.reporter.report_generator import Report, ReportGenerator
 
 
 @pytest.fixture
@@ -52,18 +52,16 @@ def mock_analysis():
     analysis = Mock()
     analysis.similarity_matrix = [[1.0, 0.8], [0.8, 1.0]]
     analysis.consensus_scores = {"tool1": 0.9, "tool2": 0.85}
-    analysis.key_points = [
-        {"content": "观点1", "sources": "tool1,tool2"}
-    ]
-    analysis.differences = [
-        {"content": "分歧1", "sources": "tool1"}
-    ]
+    analysis.key_points = [{"content": "观点1", "sources": "tool1,tool2"}]
+    analysis.differences = [{"content": "分歧1", "sources": "tool1"}]
     analysis.comprehensive_summary = "综合总结"
     analysis.final_conclusion = "最终结论"
     return analysis
 
 
-def test_generate_report_success(report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis):
+def test_generate_report_success(
+    report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis
+):
     session_id = 1
 
     mock_data_manager.get_session.return_value = mock_session
@@ -90,7 +88,9 @@ def test_generate_report_session_not_found(report_generator, mock_data_manager):
         report_generator.generate_report(session_id)
 
 
-def test_generate_report_analysis_not_found(report_generator, mock_data_manager, mock_session, mock_tool_results):
+def test_generate_report_analysis_not_found(
+    report_generator, mock_data_manager, mock_session, mock_tool_results
+):
     session_id = 1
 
     mock_data_manager.get_session.return_value = mock_session
@@ -101,8 +101,12 @@ def test_generate_report_analysis_not_found(report_generator, mock_data_manager,
         report_generator.generate_report(session_id)
 
 
-def test_render_text_report(report_generator, mock_session, mock_tool_results, mock_analysis):
-    content = report_generator._render_text_report(mock_session, mock_tool_results, mock_analysis)
+def test_render_text_report(
+    report_generator, mock_session, mock_tool_results, mock_analysis
+):
+    content = report_generator._render_text_report(
+        mock_session, mock_tool_results, mock_analysis
+    )
 
     assert "# 智能问答协调终端" in content
     assert "测试问题" in content
@@ -113,13 +117,17 @@ def test_render_text_report(report_generator, mock_session, mock_tool_results, m
     assert "最终结论" in content
 
 
-def test_render_text_report_no_refined_question(report_generator, mock_tool_results, mock_analysis):
+def test_render_text_report_no_refined_question(
+    report_generator, mock_tool_results, mock_analysis
+):
     mock_session = Mock()
     mock_session.id = 1
     mock_session.original_question = "测试问题"
     mock_session.refined_question = None
 
-    content = report_generator._render_text_report(mock_session, mock_tool_results, mock_analysis)
+    content = report_generator._render_text_report(
+        mock_session, mock_tool_results, mock_analysis
+    )
 
     assert "测试问题" in content
     assert "重构问题" not in content
@@ -134,13 +142,17 @@ def test_render_text_report_failed_tool(report_generator, mock_session, mock_ana
     failed_result.execution_time = 1.0
     failed_result.timestamp = datetime.now()
 
-    content = report_generator._render_text_report(mock_session, [failed_result], mock_analysis)
+    content = report_generator._render_text_report(
+        mock_session, [failed_result], mock_analysis
+    )
 
     assert "失败" in content
     assert "错误信息" in content
 
 
-def test_render_text_report_no_differences(report_generator, mock_session, mock_tool_results):
+def test_render_text_report_no_differences(
+    report_generator, mock_session, mock_tool_results
+):
     mock_analysis = Mock()
     mock_analysis.similarity_matrix = [[1.0]]
     mock_analysis.consensus_scores = {"tool1": 1.0}
@@ -149,7 +161,9 @@ def test_render_text_report_no_differences(report_generator, mock_session, mock_
     mock_analysis.comprehensive_summary = "综合总结"
     mock_analysis.final_conclusion = "最终结论"
 
-    content = report_generator._render_text_report(mock_session, mock_tool_results, mock_analysis)
+    content = report_generator._render_text_report(
+        mock_session, mock_tool_results, mock_analysis
+    )
 
     assert "无明显分歧" in content
 
@@ -164,7 +178,7 @@ def test_save_report_with_path(report_generator, tmp_path):
         consensus_analysis={},
         comprehensive_summary="总结",
         final_conclusion="结论",
-        content="报告内容"
+        content="报告内容",
     )
 
     file_path = tmp_path / "test_report.txt"
@@ -185,7 +199,7 @@ def test_save_report_without_path(report_generator):
         consensus_analysis={},
         comprehensive_summary="总结",
         final_conclusion="结论",
-        content="报告内容"
+        content="报告内容",
     )
 
     saved_path = report_generator.save_report(report)
@@ -194,7 +208,9 @@ def test_save_report_without_path(report_generator):
     assert saved_path.endswith(".txt")
 
 
-def test_get_report_content_success(report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis):
+def test_get_report_content_success(
+    report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis
+):
     session_id = 1
 
     mock_data_manager.get_session.return_value = mock_session
@@ -217,7 +233,9 @@ def test_get_report_content_failure(report_generator, mock_data_manager):
     assert content is None
 
 
-def test_export_report_text_format(report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis):
+def test_export_report_text_format(
+    report_generator, mock_data_manager, mock_session, mock_tool_results, mock_analysis
+):
     session_id = 1
 
     mock_data_manager.get_session.return_value = mock_session

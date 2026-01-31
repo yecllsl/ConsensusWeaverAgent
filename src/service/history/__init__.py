@@ -1,9 +1,9 @@
 from .history_manager import (
     HistoryManager,
+    SessionDetails,
     SessionFilter,
     SessionSummary,
-    SessionDetails,
-    SortOrder
+    SortOrder,
 )
 
 __all__ = [
@@ -11,5 +11,5 @@ __all__ = [
     "SessionFilter",
     "SessionSummary",
     "SessionDetails",
-    "SortOrder"
+    "SortOrder",
 ]

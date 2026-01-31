@@ -1,11 +1,13 @@
 import time
+
 import pytest
+
 from src.infrastructure.cache.cache_manager import (
-    CacheManager,
     CacheConfig,
-    MemoryCache,
+    CacheManager,
     LLMCache,
-    ToolCache
+    MemoryCache,
+    ToolCache,
 )
 
 
@@ -254,11 +256,7 @@ class TestCacheConfig:
         assert config.default_ttl == 3600
 
     def test_custom_values(self):
-        config = CacheConfig(
-            enabled=False,
-            max_size=500,
-            default_ttl=7200
-        )
+        config = CacheConfig(enabled=False, max_size=500, default_ttl=7200)
 
         assert config.enabled is False
         assert config.max_size == 500

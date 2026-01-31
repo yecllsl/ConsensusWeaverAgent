@@ -1,23 +1,22 @@
 import json
 import os
-import tempfile
 from datetime import datetime
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 import pytest
 
 from src.core.reporter.multi_format_reporter import MultiFormatReporter, ReportFormat
 from src.infrastructure.data.data_manager import (
+    AnalysisResultRecord,
     SessionRecord,
     ToolResultRecord,
-    AnalysisResultRecord,
 )
 
 
 @pytest.fixture
 def mock_data_manager():
     data_manager = Mock()
-    
+
     session = SessionRecord(
         id=1,
         original_question="测试问题",
@@ -25,7 +24,7 @@ def mock_data_manager():
         timestamp=datetime.now(),
         completed=True,
     )
-    
+
     tool_results = [
         ToolResultRecord(
             id=1,
@@ -48,7 +47,7 @@ def mock_data_manager():
             timestamp=datetime.now(),
         ),
     ]
-    
+
     analysis = AnalysisResultRecord(
         id=1,
         session_id=1,
@@ -63,11 +62,11 @@ def mock_data_manager():
         final_conclusion="这是最终结论",
         timestamp=datetime.now(),
     )
-    
+
     data_manager.get_session.return_value = session
     data_manager.get_tool_results.return_value = tool_results
     data_manager.get_analysis_result.return_value = analysis
-    
+
     return data_manager
 
 
@@ -82,7 +81,7 @@ def test_multi_format_reporter_initialization(multi_format_reporter, mock_data_m
 
 def test_generate_text_report(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.TEXT)
-    
+
     assert report.session_id == 1
     assert report.original_question == "测试问题"
     assert "智能问答协调终端 - 分析报告" in report.content
@@ -93,7 +92,7 @@ def test_generate_text_report(multi_format_reporter):
 
 def test_generate_markdown_report(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.MARKDOWN)
-    
+
     assert report.session_id == 1
     assert report.original_question == "测试问题"
     assert "# 智能问答协调终端 - 分析报告" in report.content
@@ -107,7 +106,7 @@ def test_generate_markdown_report(multi_format_reporter):
 
 def test_generate_html_report(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.HTML)
-    
+
     assert report.session_id == 1
     assert report.original_question == "测试问题"
     assert "<!DOCTYPE html>" in report.content
@@ -120,10 +119,10 @@ def test_generate_html_report(multi_format_reporter):
 
 def test_generate_json_report(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.JSON)
-    
+
     assert report.session_id == 1
     assert report.original_question == "测试问题"
-    
+
     report_data = json.loads(report.content)
     assert report_data["session_id"] == 1
     assert report_data["original_question"] == "测试问题"
@@ -136,7 +135,7 @@ def test_generate_json_report(multi_format_reporter):
 
 def test_generate_pdf_report(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.PDF)
-    
+
     assert report.session_id == 1
     assert report.original_question == "测试问题"
     assert isinstance(report.content, (str, bytes))
@@ -149,98 +148,100 @@ def test_generate_unsupported_format(multi_format_reporter):
 
 def test_save_text_report(multi_format_reporter, tmp_path):
     report = multi_format_reporter.generate_report(1, ReportFormat.TEXT)
-    
+
     file_path = os.path.join(str(tmp_path), "test_report.txt")
     saved_path = multi_format_reporter.save_report(report, file_path, ReportFormat.TEXT)
-    
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
-    
+
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     assert "智能问答协调终端 - 分析报告" in content
 
 
 def test_save_markdown_report(multi_format_reporter, tmp_path):
     report = multi_format_reporter.generate_report(1, ReportFormat.MARKDOWN)
-    
+
     file_path = os.path.join(str(tmp_path), "test_report.md")
-    saved_path = multi_format_reporter.save_report(report, file_path, ReportFormat.MARKDOWN)
-    
+    saved_path = multi_format_reporter.save_report(
+        report, file_path, ReportFormat.MARKDOWN
+    )
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
-    
+
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     assert "# 智能问答协调终端 - 分析报告" in content
 
 
 def test_save_html_report(multi_format_reporter, tmp_path):
     report = multi_format_reporter.generate_report(1, ReportFormat.HTML)
-    
+
     file_path = os.path.join(str(tmp_path), "test_report.html")
     saved_path = multi_format_reporter.save_report(report, file_path, ReportFormat.HTML)
-    
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
-    
+
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     assert "<!DOCTYPE html>" in content
 
 
 def test_save_json_report(multi_format_reporter, tmp_path):
     report = multi_format_reporter.generate_report(1, ReportFormat.JSON)
-    
+
     file_path = os.path.join(str(tmp_path), "test_report.json")
     saved_path = multi_format_reporter.save_report(report, file_path, ReportFormat.JSON)
-    
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
-    
+
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     data = json.loads(content)
     assert data["session_id"] == 1
 
 
 def test_save_pdf_report(multi_format_reporter, tmp_path):
     report = multi_format_reporter.generate_report(1, ReportFormat.PDF)
-    
+
     file_path = os.path.join(str(tmp_path), "test_report.pdf")
     saved_path = multi_format_reporter.save_report(report, file_path, ReportFormat.PDF)
-    
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
 
 
 def test_save_report_auto_filename(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.TEXT)
-    
+
     saved_path = multi_format_reporter.save_report(report, format=ReportFormat.TEXT)
-    
+
     assert os.path.exists(saved_path)
     assert saved_path.startswith("reports/report_1_")
     assert saved_path.endswith(".txt")
-    
+
     os.unlink(saved_path)
 
 
 def test_export_report(multi_format_reporter, tmp_path):
     file_path = os.path.join(str(tmp_path), "exported_report.txt")
     saved_path = multi_format_reporter.export_report(1, ReportFormat.TEXT, file_path)
-    
+
     assert saved_path == file_path
     assert os.path.exists(file_path)
 
 
 def test_get_supported_formats(multi_format_reporter):
     formats = multi_format_reporter.get_supported_formats()
-    
+
     assert ReportFormat.TEXT in formats
     assert ReportFormat.MARKDOWN in formats
     assert ReportFormat.HTML in formats
@@ -252,7 +253,7 @@ def test_get_supported_formats(multi_format_reporter):
 def test_generate_report_session_not_found(mock_data_manager):
     mock_data_manager.get_session.return_value = None
     reporter = MultiFormatReporter(mock_data_manager)
-    
+
     with pytest.raises(ValueError, match="会话 1 不存在"):
         reporter.generate_report(1, ReportFormat.TEXT)
 
@@ -260,14 +261,14 @@ def test_generate_report_session_not_found(mock_data_manager):
 def test_generate_report_no_analysis_result(mock_data_manager):
     mock_data_manager.get_analysis_result.return_value = None
     reporter = MultiFormatReporter(mock_data_manager)
-    
+
     with pytest.raises(ValueError, match="会话 1 没有分析结果"):
         reporter.generate_report(1, ReportFormat.TEXT)
 
 
 def test_markdown_report_contains_tool_details(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.MARKDOWN)
-    
+
     assert "### test_tool1" in report.content
     assert "### test_tool2" in report.content
     assert "✅ 成功" in report.content
@@ -277,7 +278,7 @@ def test_markdown_report_contains_tool_details(multi_format_reporter):
 
 def test_html_report_contains_styling(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.HTML)
-    
+
     assert "<style>" in report.content
     assert "body {" in report.content
     assert "h1 {" in report.content
@@ -288,7 +289,7 @@ def test_html_report_contains_styling(multi_format_reporter):
 def test_json_report_structure(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.JSON)
     data = json.loads(report.content)
-    
+
     assert "session_id" in data
     assert "original_question" in data
     assert "refined_question" in data
@@ -301,7 +302,7 @@ def test_json_report_structure(multi_format_reporter):
 
 def test_text_report_contains_all_sections(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.TEXT)
-    
+
     assert "# 智能问答协调终端 - 分析报告" in report.content
     assert "## 1. 基本信息" in report.content
     assert "## 2. 问题描述" in report.content

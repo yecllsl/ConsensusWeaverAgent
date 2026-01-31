@@ -1,20 +1,21 @@
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock
 
-from src.core.executor.query_executor import QueryExecutor, QueryExecutionResult
+import pytest
+
+from src.core.executor.query_executor import QueryExecutor
 from src.infrastructure.tools.tool_manager import ToolResult
 
 
 @pytest.fixture
 def mock_tool_manager():
     tool_manager = Mock()
-    
+
     tool1 = Mock()
     tool1.name = "tool1"
     tool2 = Mock()
     tool2.name = "tool2"
-    
+
     tool_manager.enabled_tools = [tool1, tool2]
     tool_manager.run_multiple_tools = AsyncMock()
     tool_manager.run_tool = AsyncMock()
@@ -35,7 +36,9 @@ def query_executor(mock_tool_manager, mock_data_manager):
 
 
 @pytest.mark.asyncio
-async def test_execute_queries_success(query_executor, mock_tool_manager, mock_data_manager):
+async def test_execute_queries_success(
+    query_executor, mock_tool_manager, mock_data_manager
+):
     session_id = 1
     question = "测试问题"
     tools = ["tool1", "tool2"]
@@ -47,7 +50,7 @@ async def test_execute_queries_success(query_executor, mock_tool_manager, mock_d
             answer="答案1",
             error_message=None,
             execution_time=1.0,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         ),
         ToolResult(
             tool_name="tool2",
@@ -55,8 +58,8 @@ async def test_execute_queries_success(query_executor, mock_tool_manager, mock_d
             answer="答案2",
             error_message=None,
             execution_time=1.0,
-            timestamp=datetime.now().isoformat()
-        )
+            timestamp=datetime.now().isoformat(),
+        ),
     ]
 
     result = await query_executor.execute_queries(session_id, question, tools)
@@ -71,7 +74,9 @@ async def test_execute_queries_success(query_executor, mock_tool_manager, mock_d
 
 
 @pytest.mark.asyncio
-async def test_execute_queries_partial_failure(query_executor, mock_tool_manager, mock_data_manager):
+async def test_execute_queries_partial_failure(
+    query_executor, mock_tool_manager, mock_data_manager
+):
     session_id = 1
     question = "测试问题"
     tools = ["tool1", "tool2"]
@@ -83,7 +88,7 @@ async def test_execute_queries_partial_failure(query_executor, mock_tool_manager
             answer="答案1",
             error_message=None,
             execution_time=1.0,
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
         ),
         ToolResult(
             tool_name="tool2",
@@ -91,8 +96,8 @@ async def test_execute_queries_partial_failure(query_executor, mock_tool_manager
             answer=None,
             error_message="错误",
             execution_time=1.0,
-            timestamp=datetime.now().isoformat()
-        )
+            timestamp=datetime.now().isoformat(),
+        ),
     ]
 
     result = await query_executor.execute_queries(session_id, question, tools)
@@ -114,7 +119,9 @@ async def test_execute_queries_exception(query_executor, mock_tool_manager):
 
 
 @pytest.mark.asyncio
-async def test_execute_single_query_success(query_executor, mock_tool_manager, mock_data_manager):
+async def test_execute_single_query_success(
+    query_executor, mock_tool_manager, mock_data_manager
+):
     session_id = 1
     question = "测试问题"
     tool_name = "tool1"
@@ -125,7 +132,7 @@ async def test_execute_single_query_success(query_executor, mock_tool_manager, m
         answer="答案",
         error_message=None,
         execution_time=1.0,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
     )
 
     result = await query_executor.execute_single_query(session_id, question, tool_name)
