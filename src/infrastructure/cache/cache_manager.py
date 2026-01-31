@@ -185,7 +185,6 @@ class LLMCache:
         self.cache_manager.set(key, response, ttl)
 
     def invalidate_model(self, model: str = "default") -> int:
-        pattern = f"llm:{model}:"
         keys_to_delete = []
         for (prompt, mod), key in list(self._prompt_keys.items()):
             if mod == model:

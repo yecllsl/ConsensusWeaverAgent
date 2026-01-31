@@ -163,7 +163,8 @@ class HistoryManager:
 
                 cursor.execute(
                     """
-                    SELECT id as session_id, original_question as question, refined_question, timestamp as created_at
+                    SELECT id as session_id, original_question as question,
+                           refined_question, timestamp as created_at
                     FROM sessions
                     WHERE id = ?
                 """,
@@ -176,7 +177,8 @@ class HistoryManager:
 
                 cursor.execute(
                     """
-                    SELECT tool_name, success, answer, error_message, execution_time, timestamp
+                    SELECT tool_name, success, answer, error_message,
+                           execution_time, timestamp
                     FROM tool_results
                     WHERE session_id = ?
                 """,
@@ -198,7 +200,8 @@ class HistoryManager:
 
                 cursor.execute(
                     """
-                    SELECT similarity_matrix, consensus_scores, key_points, differences, final_conclusion
+                    SELECT similarity_matrix, consensus_scores, key_points,
+                           differences, final_conclusion
                     FROM analysis_results
                     WHERE session_id = ?
                 """,

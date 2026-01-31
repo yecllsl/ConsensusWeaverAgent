@@ -26,7 +26,7 @@ def temp_db():
     if os.path.exists(db_path):
         try:
             os.unlink(db_path)
-        except:
+        except Exception:
             pass
 
 
@@ -95,11 +95,11 @@ def populated_db(temp_db):
         """,
             ("测试问题2", datetime.now().isoformat()),
         )
-        session_id2 = cursor.lastrowid
 
         cursor.execute(
             """
-            INSERT INTO tool_results (session_id, tool_name, success, answer, error_message, execution_time, timestamp)
+            INSERT INTO tool_results (session_id, tool_name, success, answer,
+                                     error_message, execution_time, timestamp)
             VALUES (?, 'tool1', 1, '答案1', NULL, 1.0, ?)
         """,
             (session_id1, datetime.now().isoformat()),
@@ -108,8 +108,9 @@ def populated_db(temp_db):
         cursor.execute(
             """
             INSERT INTO analysis_results (
-                session_id, similarity_matrix, consensus_scores, 
-                key_points, differences, comprehensive_summary, final_conclusion, timestamp
+                session_id, similarity_matrix, consensus_scores,
+                key_points, differences, comprehensive_summary,
+                final_conclusion, timestamp
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (

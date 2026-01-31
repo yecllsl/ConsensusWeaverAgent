@@ -278,10 +278,12 @@ class MultiFormatReporter:
         html_parts.append("    <title>智能问答协调终端 - 分析报告</title>")
         html_parts.append("    <style>")
         html_parts.append(
-            "        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }"
+            "        body { font-family: Arial, sans-serif; "
+            "margin: 40px; line-height: 1.6; }"
         )
         html_parts.append(
-            "        h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }"
+            "        h1 { color: #333; border-bottom: 2px solid #333; "
+            "padding-bottom: 10px; }"
         )
         html_parts.append("        h2 { color: #555; margin-top: 30px; }")
         html_parts.append("        h3 { color: #666; margin-top: 20px; }")
@@ -295,10 +297,12 @@ class MultiFormatReporter:
         html_parts.append("        .success { color: green; }")
         html_parts.append("        .failure { color: red; }")
         html_parts.append(
-            "        .code-block { background-color: #f5f5f5; padding: 10px; border-radius: 5px; }"
+            "        .code-block { background-color: #f5f5f5; "
+            "padding: 10px; border-radius: 5px; }"
         )
         html_parts.append(
-            "        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; }"
+            "        .footer { margin-top: 40px; padding-top: 20px; "
+            "border-top: 1px solid #ccc; color: #666; }"
         )
         html_parts.append("    </style>")
         html_parts.append("</head>")
@@ -308,7 +312,8 @@ class MultiFormatReporter:
         html_parts.append("    <h2>1. 基本信息</h2>")
         html_parts.append("    <ul>")
         html_parts.append(
-            f"        <li><strong>报告生成时间</strong>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>"
+            f"        <li><strong>报告生成时间</strong>: "
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>"
         )
         html_parts.append(f"        <li><strong>会话ID</strong>: {session.id}</li>")
         html_parts.append("    </ul>")
@@ -320,7 +325,8 @@ class MultiFormatReporter:
         )
         if session.refined_question:
             html_parts.append(
-                f"        <li><strong>重构问题</strong>: {session.refined_question}</li>"
+                f"        <li><strong>重构问题</strong>: "
+                f"{session.refined_question}</li>"
             )
         html_parts.append("    </ul>")
 
@@ -331,10 +337,12 @@ class MultiFormatReporter:
             status_class = "success" if result.success else "failure"
             status_text = "成功" if result.success else "失败"
             html_parts.append(
-                f"        <li><strong>执行状态</strong>: <span class='{status_class}'>{status_text}</span></li>"
+                f"        <li><strong>执行状态</strong>: "
+                f"<span class='{status_class}'>{status_text}</span></li>"
             )
             html_parts.append(
-                f"        <li><strong>执行时间</strong>: {result.execution_time:.2f}秒</li>"
+                f"        <li><strong>执行时间</strong>: "
+                f"{result.execution_time:.2f}秒</li>"
             )
             if result.success:
                 html_parts.append("        <li><strong>回答</strong>:</li>")
@@ -343,7 +351,8 @@ class MultiFormatReporter:
                 )
             else:
                 html_parts.append(
-                    f"        <li><strong>错误信息</strong>: {result.error_message}</li>"
+                    f"        <li><strong>错误信息</strong>: "
+                    f"{result.error_message}</li>"
                 )
             html_parts.append("    </ul>")
 
