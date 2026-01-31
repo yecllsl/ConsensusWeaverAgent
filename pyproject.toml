@@ -103,6 +103,7 @@ consensusweaver = "src.main:main"
 dev = [
     "mypy>=1.9.0",
     "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.5.5",
