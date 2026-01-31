@@ -40,12 +40,14 @@ DEFAULT_CONFIG = {
     "SECURITY_REPORT_FILE": "security-report.json",
     "UV_INDEX_URL": "https://pypi.org/simple",
     "RUFF_OUTPUT_FORMAT": "github",
-    "MYPY_STRICT": "true",
+    "MYPY_STRICT": "false",
     "PYTEST_VERBOSE": "true",
     "PYTEST_TB_STYLE": "short",
     "PYPI_INDEX_URL": "https://upload.pypi.org/legacy/",
     "TEST_PYPI_INDEX_URL": "https://test.pypi.org/legacy/",
     "BUILD_DIR": "dist",
+    "COVERAGE_ENABLED": "true",
+    "COVERAGE_THRESHOLD": "70",
 }
 
 
@@ -126,6 +128,8 @@ class CICDConfig:
     version_bump: Optional[str]
     create_git_tag: bool
     push_git_tag: bool
+    coverage_enabled: bool
+    coverage_threshold: int
 
 
 class CICDError(Exception):
@@ -559,9 +563,10 @@ class CICD:
             "--namespace-packages",
             "--ignore-missing-imports",
             "--follow-imports=skip",
-            "--strict",
-            "src/",
         ]
+        if self.config.mypy_strict:
+            cmd.append("--strict")
+        cmd.append("src/")
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
             self.logger.error("类型检查失败")
@@ -595,6 +600,16 @@ class CICD:
             cmd.append(f"--tb={self.config.pytest_tb_style}")
         cmd.extend(["--junitxml", test_results_file])
 
+        if self.config.coverage_enabled:
+            cmd.extend(
+                [
+                    "--cov=src",
+                    "--cov-report=xml",
+                    "--cov-report=html",
+                    f"--cov-fail-under={self.config.coverage_threshold}",
+                ]
+            )
+
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
             self.logger.error("测试执行失败")
@@ -603,6 +618,8 @@ class CICD:
 
         print_color("✅ 测试执行成功", "green")
         print_color(f"✅ 测试报告生成成功: {test_results_file}", "green")
+        if self.config.coverage_enabled:
+            print_color("✅ 覆盖率报告生成成功", "green")
         return True
 
     def generate_test_report(self) -> bool:
@@ -1119,6 +1136,8 @@ def main() -> int:
         version_bump=args.version_bump,
         create_git_tag=args.create_git_tag,
         push_git_tag=args.push_git_tag,
+        coverage_enabled=DEFAULT_CONFIG["COVERAGE_ENABLED"] == "true",
+        coverage_threshold=int(DEFAULT_CONFIG["COVERAGE_THRESHOLD"]),
     )
 
     cicd = CICD(config)

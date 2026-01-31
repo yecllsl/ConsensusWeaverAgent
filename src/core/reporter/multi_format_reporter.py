@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import List, Optional, cast
+from typing import List, Optional
 
 from src.core.reporter.report_generator import Report
 from src.infrastructure.data.data_manager import (

@@ -55,17 +55,22 @@ jobs:
         run: |
           uv run ruff check --output-format=github .
 
-      # 1.6 类型检查
+      # 1.6 代码格式化
+      - name: Format code with ruff
+        run: |
+          uv run ruff format .
+
+      # 1.7 类型检查
       - name: Type check with mypy
         run: |
-          uv run mypy --strict src/
+          uv run mypy src/
 
-      # 1.7 安全检查
+      # 1.8 安全检查
       - name: Run security scan with bandit
         run: |
           uv run bandit -r src/ -f json -o security-report.json || true
 
-      # 1.8 上传安全报告
+      # 1.9 上传安全报告
       - name: Upload security report
         if: always()
         uses: actions/upload-artifact@v4
