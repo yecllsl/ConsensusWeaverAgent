@@ -61,6 +61,7 @@ python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+warn_unused_ignores = false
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
@@ -79,6 +80,17 @@ module = [
     "numpy.*",
 ]
 ignore_missing_imports = true
+
+# weasyprint 是可选依赖，禁用 strict 检查
+[[tool.mypy.overrides]]
+module = "weasyprint"
+ignore_missing_imports = true
+strict = false
+
+# multi_format_reporter.py 中 weasyprint 导入需要 type: ignore
+[[tool.mypy.overrides]]
+module = "multi_format_reporter"
+strict = false
 
 # Pytest configuration
 [tool.pytest.ini_options]

@@ -74,3 +74,4 @@ ehthumbs.db
 *.old
 *.orig
 
+coverage.xml
