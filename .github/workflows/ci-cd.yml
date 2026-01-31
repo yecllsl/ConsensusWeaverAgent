@@ -2,12 +2,12 @@ name: CI/CD - ConsensusWeaverAgent
 
 # 工作流触发条件
 on:
-  # 代码推送到main分支
+  # 代码推送到main或develop分支
   push:
-    branches: [ main ]
-  # Pull Request到main分支
+    branches: [ main, develop ]
+  # Pull Request到main或develop分支
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   # 允许手动触发
   workflow_dispatch:
 
