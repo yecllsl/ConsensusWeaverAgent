@@ -175,7 +175,7 @@ jobs:
       # 3.6 构建Wheel包
       - name: Build Wheel package
         run: |
-          uv run build --wheel
+          uv run python -m build --wheel
 
       # 3.7 验证构建产物
       - name: Verify build artifacts
