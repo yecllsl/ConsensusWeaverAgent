@@ -122,12 +122,11 @@ jobs:
           # 安装pytest-cov用于生成覆盖率报告
           uv pip install pytest-cov==5.0.0
 
-      # 2.5.1 macOS 特殊处理：重新安装 llama-cpp-python 使用预编译包
-      - name: Reinstall llama-cpp-python for macOS
+      # 2.5.1 macOS 特殊处理：使用 pip 安装预编译的 llama-cpp-python
+      - name: Install llama-cpp-python for macOS
         if: runner.os == 'macOS'
         run: |
-          uv pip uninstall -y llama-cpp-python
-          uv pip install --only-binary :all: llama-cpp-python>=0.2.72
+          python -m pip install --only-binary :all: llama-cpp-python>=0.2.72
 
       # 2.6 运行测试并生成覆盖率报告
       - name: Run tests with coverage
