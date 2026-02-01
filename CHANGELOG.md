@@ -8,6 +8,24 @@
 
 ---
 
+## [0.2.1] - 2026-02-01
+
+### 修复
+
+- **CI/CD 改进**
+  - 添加 develop 分支支持，CI/CD 现在推送到 develop 分支时自动触发
+  - 修复虚拟环境创建问题，确保 `uv run` 命令正常工作
+  - 修复目录创建竞态条件，使用 `exist_ok=True` 避免并发问题
+  - 修复 Windows PowerShell 语法错误，将多行命令改为单行格式
+  - 移除 macOS 平台测试，避免 llama-cpp-python 安装问题
+  - 修复 build-verify 作业，添加虚拟环境创建步骤
+  - 修复 build 命令调用，使用 `python -m build` 而不是 `build`
+
+- **日志系统修复**
+  - 修复日志目录创建逻辑，避免 `FileExistsError` 错误
+
+---
+
 ## [0.2.0] - 2025-01-31
 
 ### 新功能
