@@ -86,7 +86,7 @@ jobs:
     # 矩阵策略
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
       fail-fast: false
     
     # 依赖关系
