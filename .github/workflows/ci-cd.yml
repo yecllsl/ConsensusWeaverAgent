@@ -127,7 +127,7 @@ jobs:
       # 2.6 安装项目依赖
       - name: Install project dependencies
         run: |
-          uv pip install -e . --group dev --exclude llama-cpp-python
+          uv pip install -e . --group dev
           # 安装pytest-cov用于生成覆盖率报告
           uv pip install pytest-cov==5.0.0
 
