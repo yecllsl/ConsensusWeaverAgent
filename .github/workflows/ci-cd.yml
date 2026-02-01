@@ -4,10 +4,10 @@ name: CI/CD - ConsensusWeaverAgent
 on:
   # 代码推送到main或develop分支
   push:
-    branches: [ main, develop ]
-  # Pull Request到main或develop分支
+    branches: [ main ]
+  # Pull Request到main分支
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   # 允许手动触发
   workflow_dispatch:
 
