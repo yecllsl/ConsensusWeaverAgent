@@ -115,16 +115,7 @@ jobs:
         run: |
           uv venv
 
-      # 2.5 macOS 特殊处理：先安装预编译的 llama-cpp-python
-      - name: Install llama-cpp-python for macOS
-        if: runner.os == 'macOS'
-        env:
-          LLAMA_CPP_PYTHON_SKIP_BUILD: 1
-          FORCE_BINARY: 1
-        run: |
-          python -m pip install --only-binary :all: --force-reinstall llama-cpp-python>=0.2.72
-
-      # 2.6 安装项目依赖
+      # 2.5 安装项目依赖
       - name: Install project dependencies
         run: |
           uv pip install -e . --group dev
