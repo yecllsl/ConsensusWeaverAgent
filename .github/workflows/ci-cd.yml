@@ -161,18 +161,23 @@ jobs:
         run: |
           python -m pip install uv==${{ env.UV_VERSION }}
 
-      # 3.4 安装项目依赖和构建工具
+      # 3.4 创建虚拟环境
+      - name: Create virtual environment
+        run: |
+          uv venv
+
+      # 3.5 安装项目依赖和构建工具
       - name: Install project dependencies and build tools
         run: |
-          uv pip install -e . --group dev --system
+          uv pip install -e . --group dev
           uv pip install build==1.2.0
 
-      # 3.5 构建Wheel包
+      # 3.6 构建Wheel包
       - name: Build Wheel package
         run: |
-          python -m build --wheel
+          uv run build --wheel
 
-      # 3.6 验证构建产物
+      # 3.7 验证构建产物
       - name: Verify build artifacts
         run: |
           # 检查Wheel包是否生成
@@ -183,7 +188,7 @@ jobs:
           echo "Build verification passed: Wheel package generated successfully!"
           ls -la dist/
 
-      # 3.7 上传构建产物
+      # 3.8 上传构建产物
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
