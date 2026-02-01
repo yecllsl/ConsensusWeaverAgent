@@ -52,8 +52,8 @@ class Logger:
 
         # 确保日志文件目录存在
         log_dir = os.path.dirname(self.log_file)
-        if log_dir and not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
 
         # 创建文件处理器（带轮转）
         file_handler = logging.handlers.RotatingFileHandler(
