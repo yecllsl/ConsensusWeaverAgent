@@ -1,12 +1,13 @@
 import os
 
+import pytest
+
 from src.infrastructure.logging.logger import get_logger
 
 
 # 测试日志记录功能
 def test_logger_basic(tmp_path):
-    log_file = tmp_pa@pytest.mark.unit
-th / "test.log"
+    log_file = tmp_path / "test.log"
     logger = get_logger(log_file=str(log_file), log_level="info")
 
     # 记录不同级别的日志
@@ -33,8 +34,7 @@ th / "test.log"
 
 # 测试日志级别设置
 def test_logger_level(tmp_path):
-   @pytest.mark.unit
- log_file = tmp_path / "test_level.log"
+    log_file = tmp_path / "test_level.log"
 
     # 设置debug级别
     logger = get_logger(log_file=str(log_file), log_level="debug")
@@ -62,8 +62,7 @@ def test_logger_level(tmp_path):
 
 
 # 测试异常日志记录
-def test_logger_ex@pytest.mark.unit
-ception(tmp_path):
+def test_logger_exception(tmp_path):
     log_file = tmp_path / "test_exception.log"
     logger = get_logger(log_file=str(log_file), log_level="error")
 

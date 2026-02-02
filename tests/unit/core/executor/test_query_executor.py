@@ -157,8 +157,7 @@ async def test_execute_single_query_exception(query_executor, mock_tool_manager)
 def test_get_query_results(query_executor, mock_data_manager):
     session_id = 1
 
-    moc@pytest.mark.unit
-k_db_result = Mock()
+    mock_db_result = Mock()
     mock_db_result.tool_name = "tool1"
     mock_db_result.success = True
     mock_db_result.answer = "答案"
@@ -176,8 +175,7 @@ k_db_result = Mock()
 
 
 def test_validate_query_params_valid(query_executor):
-    question = "测试@pytest.mark.unit
-问题"
+    question = "测试问题"
     tools = ["tool1", "tool2"]
 
     is_valid, message = query_executor.validate_query_params(question, tools)
@@ -186,8 +184,7 @@ def test_validate_query_params_valid(query_executor):
     assert "验证通过" in message
 
 
-def test_validate_query_params_empty_question(query_ex@pytest.mark.unit
-ecutor):
+def test_validate_query_params_empty_question(query_executor):
     question = ""
     tools = ["tool1"]
 
@@ -197,8 +194,7 @@ ecutor):
     assert "不能为空" in message
 
 
-def test_validate_query_params_no_to@pytest.mark.unit
-ols(query_executor):
+def test_validate_query_params_no_tools(query_executor):
     question = "测试问题"
     tools = []
 
@@ -208,8 +204,7 @@ ols(query_executor):
     assert "至少需要" in message
 
 
-def test_validate_@pytest.mark.unit
-query_params_invalid_tool(query_executor):
+def test_validate_query_params_invalid_tool(query_executor):
     question = "测试问题"
     tools = ["invalid_tool"]
 

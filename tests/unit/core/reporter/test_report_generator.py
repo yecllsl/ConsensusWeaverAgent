@@ -80,8 +80,7 @@ def test_generate_report_success(
 
 
 def test_generate_report_session_not_found(report_generator, mock_data_manager):
-    sessi@pytest.mark.unit
-on_id = 999
+    session_id = 999
 
     mock_data_manager.get_session.return_value = None
 
@@ -134,8 +133,7 @@ def test_render_text_report_no_refined_question(
     assert "重构问题" not in content
 
 
-def test_render_text_report_failed_tool(report_generator, mock_session, @pytest.mark.unit
-mock_analysis):
+def test_render_text_report_failed_tool(report_generator, mock_session, mock_analysis):
     failed_result = Mock()
     failed_result.tool_name = "failed_tool"
     failed_result.success = False
@@ -170,8 +168,7 @@ def test_render_text_report_no_differences(
     assert "无明显分歧" in content
 
 
-def test_save_report_with_path(report_generator, tmp_p@pytest.mark.unit
-ath):
+def test_save_report_with_path(report_generator, tmp_path):
     report = Report(
         session_id=1,
         original_question="测试问题",
@@ -192,8 +189,7 @@ ath):
     assert file_path.read_text(encoding="utf-8") == "报告内容"
 
 
-def test_save_report_without_path(re@pytest.mark.unit
-port_generator):
+def test_save_report_without_path(report_generator):
     report = Report(
         session_id=1,
         original_question="测试问题",
@@ -227,8 +223,7 @@ def test_get_report_content_success(
     assert "# 智能问答协调终端" in content
 
 
-def test_get_repor@pytest.mark.unit
-t_content_failure(report_generator, mock_data_manager):
+def test_get_report_content_failure(report_generator, mock_data_manager):
     session_id = 999
 
     mock_data_manager.get_session.return_value = None
