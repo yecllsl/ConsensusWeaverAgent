@@ -55,7 +55,8 @@ def test_create_execution_plan_simple(execution_strategy_manager, mock_llm_servi
 
     assert plan.strategy == "direct_answer"
     assert plan.question == question
-    assert plan.tools == []
+    assert plan.tools == @pytest.mark.unit
+[]
 
 
 def test_create_execution_plan_complex(execution_strategy_manager, mock_llm_service):
@@ -67,7 +68,8 @@ def test_create_execution_plan_complex(execution_strategy_manager, mock_llm_serv
 
     assert plan.strategy == "parallel_query"
     assert plan.question == question
-    assert len(plan.tools) == 2
+    @pytest.mark.unit
+assert len(plan.tools) == 2
 
 
 def test_create_execution_plan_exception(execution_strategy_manager, mock_llm_service):
@@ -79,7 +81,8 @@ def test_create_execution_plan_exception(execution_strategy_manager, mock_llm_se
         execution_strategy_manager.create_execution_plan(question)
 
 
-def test_select_tools(execution_strategy_manager):
+def test_select_tools(exec@pytest.mark.unit
+ution_strategy_manager):
     question = "测试问题"
 
     tools = execution_strategy_manager._select_tools(question)
@@ -90,18 +93,21 @@ def test_select_tools(execution_strategy_manager):
 
 
 def test_select_tools_exception(execution_strategy_manager, mock_tool_manager):
-    mock_tool_manager.enabled_tools = None
+   @pytest.mark.unit
+ mock_tool_manager.enabled_tools = None
 
     with pytest.raises(Exception):
         execution_strategy_manager._select_tools("测试问题")
 
 
-def test_execute_plan_direct_answer(execution_strategy_manager, mock_llm_service):
+def test_execute_plan_direct_answer(execution_strategy_manager, mock_l@pytest.mark.unit
+lm_service):
     plan = ExecutionPlan(strategy="direct_answer", question="简单问题")
 
     mock_llm_service.answer_simple_question.return_value = "简单回答"
 
-    result = execution_strategy_manager.execute_plan(plan)
+    result = execution_strategy_manager.execute_pla@pytest.mark.unit
+n(plan)
 
     assert result["strategy"] == "direct_answer"
     assert result["success"] is True
@@ -116,7 +122,8 @@ def test_execute_plan_parallel_query(execution_strategy_manager):
 
     result = execution_strategy_manager.execute_plan(plan)
 
-    assert result["strategy"] == "parallel_query"
+    assert resul@pytest.mark.unit
+t["strategy"] == "parallel_query"
     assert result["success"] is True
     assert result["question"] == "复杂问题"
     assert result["tools"] == ["tool1", "tool2"]
@@ -127,7 +134,8 @@ def test_execute_plan_exception(execution_strategy_manager, mock_llm_service):
 
     mock_llm_service.answer_simple_question.side_effect = Exception("测试异常")
 
-    with pytest.raises(Exception):
+    with @pytest.mark.unit
+pytest.raises(Exception):
         execution_strategy_manager.execute_plan(plan)
 
 
@@ -136,7 +144,8 @@ def test_validate_plan_direct_answer(execution_strategy_manager):
 
     is_valid = execution_strategy_manager.validate_plan(plan)
 
-    assert is_valid is True
+    assert is_vali@pytest.mark.unit
+d is True
 
 
 def test_validate_plan_parallel_query_valid(execution_strategy_manager):
@@ -144,7 +153,8 @@ def test_validate_plan_parallel_query_valid(execution_strategy_manager):
         strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
     )
 
-    is_valid = execution_strategy_manager.validate_plan(plan)
+    is_valid = @pytest.mark.unit
+execution_strategy_manager.validate_plan(plan)
 
     assert is_valid is True
 
@@ -152,14 +162,16 @@ def test_validate_plan_parallel_query_valid(execution_strategy_manager):
 def test_validate_plan_parallel_query_no_tools(execution_strategy_manager):
     plan = ExecutionPlan(strategy="parallel_query", question="复杂问题", tools=[])
 
-    is_valid = execution_strategy_manager.validate_plan(plan)
+    is_valid = execution@pytest.mark.unit
+_strategy_manager.validate_plan(plan)
 
     assert is_valid is False
 
 
 def test_validate_plan_parallel_query_invalid_tool(execution_strategy_manager):
     plan = ExecutionPlan(
-        strategy="parallel_query", question="复杂问题", tools=["invalid_tool"]
+        strategy="parallel_query", question="复杂问题", tool@pytest.mark.unit
+s=["invalid_tool"]
     )
 
     is_valid = execution_strategy_manager.validate_plan(plan)
@@ -184,7 +196,8 @@ def test_validate_plan_parallel_query_no_internet(
 
 def test_validate_plan_exception(execution_strategy_manager, mock_tool_manager):
     plan = ExecutionPlan(
-        strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
+        strategy="parallel_query", qu@pytest.mark.unit
+estion="复杂问题", tools=["tool1", "tool2"]
     )
 
     mock_tool_manager.enabled_tools = None
@@ -194,7 +207,8 @@ def test_validate_plan_exception(execution_strategy_manager, mock_tool_manager):
 
 
 def test_adjust_plan_direct_answer_success(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="direct_answer", question="简单问题")
+    plan = ExecutionPlan(strategy="direct_answer", que@pytest.mark.unit
+stion="简单问题")
     feedback = {"success": True}
 
     adjusted_plan = execution_strategy_manager.adjust_plan(plan, feedback)
@@ -203,7 +217,8 @@ def test_adjust_plan_direct_answer_success(execution_strategy_manager):
 
 
 def test_adjust_plan_direct_answer_failure(execution_strategy_manager):
-    plan = ExecutionPlan(strategy="direct_answer", question="简单问题")
+    plan = ExecutionPlan(strategy="d@pytest.mark.unit
+irect_answer", question="简单问题")
     feedback = {"success": False}
 
     adjusted_plan = execution_strategy_manager.adjust_plan(plan, feedback)
@@ -213,7 +228,8 @@ def test_adjust_plan_direct_answer_failure(execution_strategy_manager):
 
 
 def test_adjust_plan_parallel_query_failure_reduce_tools(execution_strategy_manager):
-    plan = ExecutionPlan(
+    @pytest.mark.unit
+plan = ExecutionPlan(
         strategy="parallel_query", question="复杂问题", tools=["tool1", "tool2"]
     )
     feedback = {"success": False}
@@ -224,7 +240,8 @@ def test_adjust_plan_parallel_query_failure_reduce_tools(execution_strategy_mana
     assert len(adjusted_plan.tools) == 1
 
 
-def test_adjust_plan_parallel_query_failure_switch_strategy(execution_strategy_manager):
+def test_adjust_plan_parallel_query_failure_switch_strategy(execution_st@pytest.mark.unit
+rategy_manager):
     plan = ExecutionPlan(
         strategy="parallel_query", question="复杂问题", tools=["tool1"]
     )
@@ -235,7 +252,8 @@ def test_adjust_plan_parallel_query_failure_switch_strategy(execution_strategy_m
     assert adjusted_plan.strategy == "direct_answer"
 
 
-def test_adjust_plan_exception(execution_strategy_manager):
+def test_adjust_plan_exception(execution_strategy_mana@pytest.mark.unit
+ger):
     plan = ExecutionPlan(strategy="direct_answer", question="简单问题")
     feedback = {"success": False}
 
@@ -246,6 +264,7 @@ def test_adjust_plan_exception(execution_strategy_manager):
 
 
 def test_execution_plan_creation():
+@pytest.mark.unit
     plan = ExecutionPlan(strategy="direct_answer", question="测试问题")
 
     assert plan.strategy == "direct_answer"
@@ -253,7 +272,8 @@ def test_execution_plan_creation():
     assert plan.tools == []
 
 
-def test_execution_plan_creation_with_tools():
+def test_execution@pytest.mark.unit
+_plan_creation_with_tools():
     plan = ExecutionPlan(
         strategy="parallel_query", question="测试问题", tools=["tool1", "tool2"]
     )
@@ -288,6 +308,7 @@ def test_execution_strategy_manager_with_external_agent(
         assert mock_external_agent.classify_question_complexity.called
 
 
+@pytest.mark.unit
 def test_execute_plan_with_external_agent(mock_llm_service, mock_tool_manager):
     mock_external_agent = Mock()
     mock_external_agent.answer_simple_question = Mock(return_value="外部Agent回答")

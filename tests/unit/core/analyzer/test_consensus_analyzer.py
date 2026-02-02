@@ -6,10 +6,11 @@
 import json
 import os
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 
 # 将项目根目录添加到Python路径
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent))
 
 from src.core.analyzer.consensus_analyzer import ConsensusAnalyzer
 

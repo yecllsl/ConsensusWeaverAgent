@@ -8,7 +8,7 @@ import subprocess
 
 # 添加项目根目录到Python路径
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 from unittest.mock import MagicMock, patch
@@ -17,7 +17,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.infrastructure.config.config_manager import ConfigManager, ExternalToolConfig
+from src.infrastructure.config.config_manager import (
+    ConfigManager,
+    ExternalToolConfig,
+    RetryConfig,
+)
 from src.infrastructure.tools.tool_manager import ToolManager
 
 
@@ -32,8 +36,9 @@ class MockConfig:
         max_parallel_tools: int = 5
 
     external_tools: List[ExternalToolConfig]
-    network: NetworkConfig = NetworkConfig()
-    app: AppConfig = AppConfig()
+    network: NetworkConfig = field(default_factory=lambda: MockConfig.NetworkConfig())
+    app: AppConfig = field(default_factory=lambda: MockConfig.AppConfig())
+    retry: RetryConfig = field(default_factory=RetryConfig)
 
 
 @pytest.fixture
@@ -102,7 +107,7 @@ async def test_run_tool_timeout(tool_manager):
 
         # 验证结果
         assert result.success is False
-        assert "执行超时" in result.error_message
+        assert "超时错误" in result.error_message
 
 
 @pytest.mark.asyncio

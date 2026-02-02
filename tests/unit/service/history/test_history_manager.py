@@ -146,30 +146,35 @@ def test_query_sessions_empty(populated_history_manager):
     assert results == []
 
 
-def test_query_sessions_with_data(populated_history_manager):
+def test_query_sessions_with_data(populated_histo@pytest.mark.unit
+ry_manager):
     filters = SessionFilter()
-    results = populated_history_manager.query_sessions(filters)
+    results = populated_history_manager.query_sessions@pytest.mark.unit
+(filters)
 
     assert len(results) == 2
     assert all(isinstance(r, SessionSummary) for r in results)
 
 
 def test_query_sessions_with_keyword(populated_history_manager):
-    filters = SessionFilter(keyword="测试问题1")
+    filt@pytest.mark.unit
+ers = SessionFilter(keyword="测试问题1")
     results = populated_history_manager.query_sessions(filters)
 
     assert len(results) == 1
     assert "测试问题1" in results[0].question
 
 
-def test_query_sessions_with_consensus_filter(populated_history_manager):
+def test_query_sessions_with_consensus_filter(populated_hi@pytest.mark.unit
+story_manager):
     filters = SessionFilter(min_consensus=0.0, max_consensus=1.0)
     results = populated_history_manager.query_sessions(filters)
 
     assert len(results) >= 1
 
 
-def test_query_sessions_with_limit(populated_history_manager):
+def test_query_sessions_with_limit(populated_history@pytest.mark.unit
+_manager):
     filters = SessionFilter(limit=1)
     results = populated_history_manager.query_sessions(filters)
 
@@ -177,24 +182,28 @@ def test_query_sessions_with_limit(populated_history_manager):
 
 
 def test_query_sessions_with_sort_order(populated_history_manager):
-    filters = SessionFilter(sort_order=SortOrder.DATE_DESC)
+    fi@pytest.mark.unit
+lters = SessionFilter(sort_order=SortOrder.DATE_DESC)
     results = populated_history_manager.query_sessions(filters)
 
     assert len(results) == 2
 
 
-def test_get_session_details_not_found(populated_history_manager):
+def test_get_session_details@pytest.mark.unit
+_not_found(populated_history_manager):
     details = populated_history_manager.get_session_details(999)
 
     assert details is None
 
 
 def test_get_session_details_found(populated_history_manager):
-    details = populated_history_manager.get_session_details(1)
+    detai@pytest.mark.unit
+ls = populated_history_manager.get_session_details(1)
 
     assert details is not None
     assert isinstance(details, SessionDetails)
-    assert details.session_id == 1
+    assert @pytest.mark.unit
+details.session_id == 1
     assert details.question == "测试问题1"
 
 
@@ -204,7 +213,8 @@ def test_export_sessions_json(populated_history_manager, tmp_path):
             session_id=1,
             question="问题1",
             consensus_score=0.9,
-            created_at=datetime.now(),
+  @pytest.mark.unit
+          created_at=datetime.now(),
             tool_count=2,
         )
     ]
@@ -228,7 +238,8 @@ def test_export_sessions_csv(populated_history_manager, tmp_path):
         SessionSummary(
             session_id=1,
             question="问题1",
-            consensus_score=0.9,
+            consen@pytest.mark.unit
+sus_score=0.9,
             created_at=datetime.now(),
             tool_count=2,
         )
@@ -260,6 +271,7 @@ def test_export_sessions_unsupported_format(populated_history_manager, tmp_path)
 
     output_path = os.path.join(str(tmp_path), "export.txt")
 
+@pytest.mark.unit
     with pytest.raises(ValueError):
         populated_history_manager.export_sessions(
             sessions, format="txt", output_path=str(output_path)
@@ -270,7 +282,8 @@ def test_get_statistics(populated_history_manager):
     stats = populated_history_manager.get_statistics()
 
     assert isinstance(stats, dict)
-    assert "total_sessions" in stats
+ @pytest.mark.unit
+   assert "total_sessions" in stats
     assert "average_consensus_score" in stats
     assert "unique_tools_used" in stats
     assert "total_tool_executions" in stats
@@ -279,14 +292,16 @@ def test_get_statistics(populated_history_manager):
 
 
 def test_search_by_keyword(populated_history_manager):
-    results = populated_history_manager.search_by_keyword("测试", limit=10)
+    results = populated_history_manager.search_by_keyword("测试", limit=1@pytest.mark.unit
+0)
 
     assert len(results) >= 1
     assert all("测试" in r.question for r in results)
 
 
 def test_filter_by_consensus(populated_history_manager):
-    results = populated_history_manager.filter_by_consensus(
+    results = populated_history_manager.filter_by_c@pytest.mark.unit
+onsensus(
         0.0, max_score=1.0, limit=10
     )
 
@@ -294,19 +309,22 @@ def test_filter_by_consensus(populated_history_manager):
 
 
 def test_filter_by_consensus_no_max(populated_history_manager):
-    results = populated_history_manager.filter_by_consensus(0.0, limit=10)
+    results = populated_hi@pytest.mark.unit
+story_manager.filter_by_consensus(0.0, limit=10)
 
     assert isinstance(results, list)
 
 
 def test_get_recent_sessions(populated_history_manager):
-    results = populated_history_manager.get_recent_sessions(limit=10)
+    results = p@pytest.mark.unit
+opulated_history_manager.get_recent_sessions(limit=10)
 
     assert len(results) >= 1
 
 
 def test_session_filter_defaults():
-    filters = SessionFilter()
+    filters = Sess@pytest.mark.unit
+ionFilter()
 
     assert filters.start_date is None
     assert filters.end_date is None
@@ -318,7 +336,8 @@ def test_session_filter_defaults():
     assert filters.sort_order == SortOrder.DATE_DESC
 
 
-def test_session_summary_creation():
+def test_session_summary_creation():@pytest.mark.unit
+
     summary = SessionSummary(
         session_id=1,
         question="测试问题",
@@ -333,7 +352,8 @@ def test_session_summary_creation():
     assert summary.tool_count == 2
 
 
-def test_session_details_creation():
+def test_session_d@pytest.mark.unit
+etails_creation():
     details = SessionDetails(
         session_id=1,
         question="问题",
@@ -350,6 +370,7 @@ def test_session_details_creation():
     assert details.report == "报告"
 
 
+@pytest.mark.unit
 def test_ensure_indexes(populated_history_manager):
     with sqlite3.connect(populated_history_manager.db_path) as conn:
         cursor = conn.cursor()

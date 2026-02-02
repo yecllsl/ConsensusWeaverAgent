@@ -58,11 +58,23 @@ class AppConfig:
 
 
 @dataclass
+class RetryConfig:
+    enabled: bool = True
+    auto_retry: bool = True
+    max_retries: int = 3
+    retry_delay: int = 2
+    retry_on_timeout: bool = True
+    retry_on_error: bool = True
+    exponential_backoff: bool = False
+
+
+@dataclass
 class Config:
     local_llm: LocalLLMConfig
     external_tools: list[ExternalToolConfig]
     network: NetworkConfig
     app: AppConfig
+    retry: RetryConfig
 
 
 class ConfigManager:
@@ -97,11 +109,15 @@ class ConfigManager:
         # 解析应用配置
         app_config = AppConfig(**config_dict["app"])
 
+        # 解析重试配置
+        retry_config = RetryConfig(**config_dict.get("retry", {}))
+
         return Config(
             local_llm=llm_config,
             external_tools=tools_config,
             network=network_config,
             app=app_config,
+            retry=retry_config,
         )
 
     def _create_default_config(self) -> None:
@@ -143,6 +159,15 @@ class ConfigManager:
                 "log_file": "logs/consensusweaver.log",
                 "history_enabled": True,
                 "history_limit": 100,
+            },
+            "retry": {
+                "enabled": True,
+                "auto_retry": True,
+                "max_retries": 3,
+                "retry_delay": 2,
+                "retry_on_timeout": True,
+                "retry_on_error": True,
+                "exponential_backoff": False,
             },
         }
 

@@ -1,0 +1,29 @@
+{
+  "iflow": {
+    "total_calls": 4,
+    "successful_calls": 4,
+    "failed_calls": 0,
+    "total_execution_time": 175.18487119674683,
+    "average_execution_time": 43.79621779918671,
+    "success_rate": 1.0,
+    "last_used": "2026-02-02T19:32:39.615888"
+  },
+  "codebuddy": {
+    "total_calls": 4,
+    "successful_calls": 4,
+    "failed_calls": 0,
+    "total_execution_time": 172.0093913078308,
+    "average_execution_time": 43.0023478269577,
+    "success_rate": 1.0,
+    "last_used": "2026-02-02T19:32:53.958539"
+  },
+  "qwen": {
+    "total_calls": 2,
+    "successful_calls": 2,
+    "failed_calls": 0,
+    "total_execution_time": 74.08910346031189,
+    "average_execution_time": 37.044551730155945,
+    "success_rate": 1.0,
+    "last_used": "2026-02-02T19:32:37.730370"
+  }
+}

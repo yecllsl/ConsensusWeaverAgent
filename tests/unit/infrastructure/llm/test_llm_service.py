@@ -27,7 +27,8 @@ def llm_service():
 def test_analyze_question_empty_response(llm_service):
     """测试分析问题时LLM返回空响应的情况"""
     # 模拟空响应
-    with patch.object(llm_service, "generate_response", return_value=""):
+    with patch.object(llm_serv@pytest.mark.unit
+ice, "generate_response", return_value=""):
         result = llm_service.analyze_question("人工智能是什么？")
 
         # 验证返回默认结果
@@ -43,7 +44,8 @@ def test_analyze_question_empty_response(llm_service):
 def test_analyze_question_invalid_json(llm_service):
     """测试分析问题时LLM返回无效JSON的情况"""
     # 模拟无效JSON响应
-    with patch.object(
+    wi@pytest.mark.unit
+th patch.object(
         llm_service, "generate_response", return_value="这不是有效的JSON格式"
     ):
         result = llm_service.analyze_question("人工智能是什么？")
@@ -60,7 +62,8 @@ def test_analyze_question_invalid_json(llm_service):
 
 def test_analyze_question_valid_json(llm_service):
     """测试分析问题时LLM返回有效JSON的情况"""
-    # 模拟有效JSON响应
+    # 模@pytest.mark.unit
+拟有效JSON响应
     valid_json = """{
         "is_complete": true,
         "is_clear": true,
@@ -83,7 +86,8 @@ def test_analyze_question_valid_json(llm_service):
 
 
 def test_analyze_question_with_chinese_commas(llm_service):
-    """测试分析问题时LLM返回包含中文逗号的JSON的情况"""
+    """测试分析问@pytest.mark.unit
+题时LLM返回包含中文逗号的JSON的情况"""
     # 模拟包含中文逗号的JSON响应
     json_with_chinese_commas = """{
         "is_complete": true, 
@@ -108,7 +112,8 @@ def test_analyze_question_with_chinese_commas(llm_service):
         }
 
 
-def test_analyze_question_with_extra_text(llm_service):
+def test_analyze_question_with_extra_text(llm_service)@pytest.mark.unit
+:
     """测试分析问题时LLM返回包含额外文本的JSON的情况"""
     # 模拟包含额外文本的JSON响应
     json_with_extra_text = """{
@@ -134,7 +139,8 @@ def test_analyze_question_with_extra_text(llm_service):
         }
 
 
-def test_refine_question_with_clarifications(llm_service):
+def test_refine_question_with_clarif@pytest.mark.unit
+ications(llm_service):
     """测试重构问题时包含澄清信息的情况"""
     # 模拟有效的重构问题响应
     with patch.object(
@@ -153,7 +159,8 @@ def test_refine_question_with_clarifications(llm_service):
         assert "适用场景" in result
 
 
-def test_refine_question_with_prefix(llm_service):
+def test_refine_qu@pytest.mark.unit
+estion_with_prefix(llm_service):
     """测试重构问题时LLM返回包含前缀的响应"""
     # 模拟包含前缀的重构问题响应
     with patch.object(
@@ -171,6 +178,7 @@ def test_refine_question_with_prefix(llm_service):
         assert "开发框架" in result
 
 
+@pytest.mark.unit
 def test_refine_question_failure(llm_service):
     """测试重构问题失败的情况"""
     # 模拟重构失败
