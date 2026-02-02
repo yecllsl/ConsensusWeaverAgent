@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 外部工具调用测试脚本
-用于验证iflow和codebuddy的调用是否正常工作
+用于验证iflow、codebuddy和qwen的调用是否正常工作
 """
 
 import asyncio
@@ -27,25 +27,24 @@ async def test_single_tool_call():
     # 测试问题
     test_question = "推荐三个开发AI Agent的开发框架，并比较他们的优缺点和擅长领域"
 
-    # 测试iflow工具
-    print("\n1. 测试iflow工具:")
-    result = await tool_manager.run_tool("iflow", test_question)
-    print(f"   结果: {'成功' if result.success else '失败'}")
-    print(f"   执行时间: {result.execution_time:.2f}秒")
-    if result.success:
-        print(f"   回答: {result.answer[:100]}...")
-    else:
-        print(f"   错误: {result.error_message}")
+    # 测试工具列表
+    tools_to_test = ["iflow", "codebuddy", "qwen"]
 
-    # 测试codebuddy工具
-    print("\n2. 测试codebuddy工具:")
-    result = await tool_manager.run_tool("codebuddy", test_question)
-    print(f"   结果: {'成功' if result.success else '失败'}")
-    print(f"   执行时间: {result.execution_time:.2f}秒")
-    if result.success:
-        print(f"   回答: {result.answer[:100]}...")
-    else:
-        print(f"   错误: {result.error_message}")
+    for i, tool_name in enumerate(tools_to_test, 1):
+        print(f"\n{i}. 测试{tool_name}工具:")
+        try:
+            result = await tool_manager.run_tool(tool_name, test_question)
+            print(f"   结果: {'成功' if result.success else '失败'}")
+            print(f"   执行时间: {result.execution_time:.2f}秒")
+            if result.success:
+                print(f"   回答: {result.answer[:100]}...")
+            else:
+                print(f"   错误: {result.error_message}")
+        except Exception as e:
+            print("   结果: 异常")
+            print(f"   错误: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
 
 async def test_parallel_tool_call():
@@ -61,17 +60,22 @@ async def test_parallel_tool_call():
 
     # 并行调用所有启用的工具
     print("并行调用所有启用的工具...")
-    results = await tool_manager.run_multiple_tools(test_question)
+    try:
+        results = await tool_manager.run_multiple_tools(test_question)
 
-    # 输出结果
-    for result in results:
-        print(f"\n工具 {result.tool_name}:")
-        print(f"   结果: {'成功' if result.success else '失败'}")
-        print(f"   执行时间: {result.execution_time:.2f}秒")
-        if result.success:
-            print(f"   回答: {result.answer[:100]}...")
-        else:
-            print(f"   错误: {result.error_message}")
+        # 输出结果
+        for result in results:
+            print(f"\n工具 {result.tool_name}:")
+            print(f"   结果: {'成功' if result.success else '失败'}")
+            print(f"   执行时间: {result.execution_time:.2f}秒")
+            if result.success:
+                print(f"   回答: {result.answer[:100]}...")
+            else:
+                print(f"   错误: {result.error_message}")
+    except Exception as e:
+        print(f"并行调用失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 
 async def test_tool_availability():
