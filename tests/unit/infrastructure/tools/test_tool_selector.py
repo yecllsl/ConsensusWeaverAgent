@@ -1,13 +1,9 @@
-import json
-import os
-import tempfile
 from unittest.mock import MagicMock
 
 import pytest
 
 from src.infrastructure.config.config_manager import ConfigManager, ExternalToolConfig
 from src.infrastructure.tools.tool_selector import (
-    ToolPerformanceMetrics,
     ToolRecommendation,
     ToolSelector,
     ToolUsageStats,

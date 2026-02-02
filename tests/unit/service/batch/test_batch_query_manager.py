@@ -1,14 +1,14 @@
 import json
 import os
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from src.service.batch.batch_query_manager import (
-    BatchQuestion,
     BatchQueryManager,
     BatchQueryResult,
+    BatchQuestion,
 )
 
 

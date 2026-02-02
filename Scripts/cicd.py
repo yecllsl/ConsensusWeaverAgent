@@ -130,6 +130,7 @@ class CICDConfig:
     push_git_tag: bool
     coverage_enabled: bool
     coverage_threshold: int
+    auto_fix: bool
 
 
 class CICDError(Exception):
@@ -460,6 +461,16 @@ class CICD:
             return True
 
         print_section("代码格式检查")
+
+        if self.config.auto_fix:
+            print_subsection("使用ruff自动修复代码问题")
+            cmd = ["uv", "run", "ruff", "check", "--fix", "."]
+            success, output = self._run_command(cmd, cwd=self.config.project_dir)
+            if not success:
+                self.logger.error("代码格式自动修复失败")
+                print_color("❌ 代码格式自动修复失败", "red")
+                return False
+            print_color("✅ 代码格式自动修复完成", "green")
 
         print_subsection("使用ruff检查代码格式")
         cmd = [
@@ -1076,6 +1087,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--auto-fix", action="store_true", help="自动修复代码格式问题（仅本地开发使用）"
+    )
+
+    parser.add_argument(
         "--use-test-pypi", action="store_true", help="发布到TestPyPI而非PyPI"
     )
     parser.add_argument(
@@ -1138,6 +1153,7 @@ def main() -> int:
         push_git_tag=args.push_git_tag,
         coverage_enabled=DEFAULT_CONFIG["COVERAGE_ENABLED"] == "true",
         coverage_threshold=int(DEFAULT_CONFIG["COVERAGE_THRESHOLD"]),
+        auto_fix=args.auto_fix,
     )
 
     cicd = CICD(config)

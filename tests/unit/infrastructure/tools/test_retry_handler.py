@@ -1,12 +1,11 @@
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.infrastructure.tools.retry_handler import (
     RetryConfig,
     RetryHandler,
-    RetryResult,
 )
 
 

@@ -1,13 +1,8 @@
-import json
-import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.infrastructure.monitoring.performance_monitor import (
-    PerformanceAlert,
-    PerformanceMetric,
     PerformanceMonitor,
     PerformanceReport,
     PerformanceThresholds,

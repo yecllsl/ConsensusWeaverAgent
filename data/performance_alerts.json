@@ -1,11 +1,20 @@
 [
   {
-    "alert_id": "response_time_1770034511",
-    "alert_type": "response_time",
+    "alert_id": "memory_usage_1770035235",
+    "alert_type": "memory_usage",
     "severity": "warning",
-    "message": "响应时间超过阈值",
-    "timestamp": "2026-02-02T20:15:11.885138",
-    "metric_value": 2.0,
-    "threshold": 1.0
+    "message": "内存使用超过阈值",
+    "timestamp": "2026-02-02T20:27:15.035807",
+    "metric_value": 16954.71484375,
+    "threshold": 1024.0
+  },
+  {
+    "alert_id": "memory_usage_1770035235",
+    "alert_type": "memory_usage",
+    "severity": "warning",
+    "message": "内存使用超过阈值",
+    "timestamp": "2026-02-02T20:27:15.147461",
+    "metric_value": 16948.25390625,
+    "threshold": 1024.0
   }
 ]
