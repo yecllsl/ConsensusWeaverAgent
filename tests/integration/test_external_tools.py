@@ -5,7 +5,6 @@
 """
 
 import asyncio
-import subprocess
 import sys
 from pathlib import Path
 
@@ -78,46 +77,12 @@ async def test_parallel_tool_call():
         traceback.print_exc()
 
 
-async def test_tool_availability():
-    """测试工具是否可用"""
-    print("\n=== 测试工具可用性 ===")
-
-    # 初始化配置和工具管理器
-    config_manager = ConfigManager()
-    tool_manager = ToolManager(config_manager)
-
-    # 获取所有启用的工具
-    enabled_tools = tool_manager.get_enabled_tools()
-    print(f"启用的工具数量: {len(enabled_tools)}")
-
-    for tool in enabled_tools:
-        print(f"\n工具 {tool['name']}:")
-        print(f"   命令: {tool['command']}")
-        print(f"   参数: {tool['args']}")
-        print(f"   需要互联网: {tool['needs_internet']}")
-
-        # 检查工具是否可以正常执行
-        try:
-            result = subprocess.run(
-                [tool["command"], "--help"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                print("   可用性: ✅ 可用")
-            else:
-                print(f"   可用性: ❌ 不可用 (返回码: {result.returncode})")
-        except Exception as e:
-            print(f"   可用性: ❌ 不可用 (错误: {str(e)})")
-
-
 async def main():
     """主测试函数"""
     print("外部工具调用测试")
     print("=" * 50)
 
     try:
-        # 测试工具可用性
-        await test_tool_availability()
-
         # 测试单个工具调用
         await test_single_tool_call()
 
