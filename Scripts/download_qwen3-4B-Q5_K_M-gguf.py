@@ -13,8 +13,8 @@ download_dir = os.path.join(project_root, ".models", "qwen")
 os.makedirs(download_dir, exist_ok=True)
 
 # 指定要下载的文件
-model_id = "Qwen/Qwen3-8B-GGUF"
-target_file = "Qwen3-8B-Q5_K_M.gguf"  # 从ModelScope模型页面获取的准确文件名
+model_id = "Qwen/Qwen3-4B-GGUF"
+target_file = "Qwen3-4B-Q5_K_M.gguf"  # 从ModelScope模型页面获取的准确文件名
 
 # 使用model_file_download精确下载单个文件
 print(f"开始下载模型文件 {target_file}...")
