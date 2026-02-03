@@ -21,6 +21,10 @@ def llm_service():
         # 调用__init__方法（会调用_init_llm，但我们已经模拟了它）
         llm_service_instance.__init__(MagicMock())
 
+        # __init__方法会重新设置llm和chat_llm为None，所以需要重新设置
+        llm_service_instance.llm = MagicMock()
+        llm_service_instance.chat_llm = MagicMock()
+
         yield llm_service_instance
 
 
@@ -369,7 +373,7 @@ def test_answer_simple_question_success(llm_service):
     with patch.object(
         llm_service, "generate_response", return_value="Python是一种编程语言"
     ):
-        result = llm_service().answer_simple_question("什么是Python？")
+        result = llm_service.answer_simple_question("什么是Python？")
 
         assert result == "Python是一种编程语言"
 
@@ -387,9 +391,11 @@ def test_update_config(llm_service):
     """测试更新配置"""
     mock_config_manager = MagicMock()
     mock_config = MagicMock()
+    mock_local_llm = MagicMock()
+    mock_config.local_llm = mock_local_llm
     mock_config_manager.get_config.return_value = mock_config
 
     with patch.object(llm_service, "_init_llm"):
         llm_service.update_config(mock_config_manager)
 
-        assert llm_service.config == mock_config
+        assert llm_service.config == mock_local_llm

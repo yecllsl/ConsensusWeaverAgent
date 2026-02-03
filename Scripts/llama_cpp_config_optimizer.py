@@ -153,7 +153,7 @@ class HardwareDetector:
                     features.append("AVX2")
                 if "AVX512" in capabilities:
                     features.append("AVX512")
-        except:
+        except Exception:
             pass
 
         architecture = platform.machine()
@@ -645,24 +645,26 @@ class LlamaCppConfigOptimizer:
 
         cpu = self.hardware.cpu
         gpu = self.hardware.gpu
-        memory = self.hardware.memory
 
         current_n_threads = self.current_config.get("n_threads")
         if current_n_threads:
             if current_n_threads > cpu.threads:
                 issues.append(
-                    f"线程数 ({current_n_threads}) 超过CPU逻辑线程数 ({cpu.threads})，可能导致性能下降"
+                    f"线程数 ({current_n_threads}) 超过CPU逻辑线程数 "
+                    f"({cpu.threads})，可能导致性能下降"
                 )
             elif current_n_threads == cpu.threads:
                 warnings.append(
-                    f"线程数 ({current_n_threads}) 等于CPU逻辑线程数，建议预留1个线程给系统"
+                    f"线程数 ({current_n_threads}) 等于CPU逻辑线程数，"
+                    f"建议预留1个线程给系统"
                 )
 
         current_n_batch = self.current_config.get("n_batch")
         if current_n_batch:
             if gpu and gpu.vram_gb >= 8.0 and current_n_batch < 256:
                 suggestions.append(
-                    f"GPU显存充足 ({gpu.vram_gb:.1f}GB)，建议增加批处理大小到256或512以提升吞吐量"
+                    f"GPU显存充足 ({gpu.vram_gb:.1f}GB)，"
+                    f"建议增加批处理大小到256或512以提升吞吐量"
                 )
             elif not gpu and current_n_batch > 256:
                 warnings.append(
@@ -675,18 +677,21 @@ class LlamaCppConfigOptimizer:
                 warnings.append(f"上下文窗口 ({current_n_ctx}) 较大，将占用更多内存")
             if current_n_ctx < 2048:
                 suggestions.append(
-                    f"上下文窗口 ({current_n_ctx}) 较小，对于长文本生成建议增加到4096或8192"
+                    f"上下文窗口 ({current_n_ctx}) 较小，"
+                    f"对于长文本生成建议增加到4096或8192"
                 )
 
         current_n_gpu_layers = self.current_config.get("n_gpu_layers")
         if current_n_gpu_layers is not None:
             if gpu and gpu.vram_gb >= 8.0 and current_n_gpu_layers == 0:
                 issues.append(
-                    f"GPU显存充足 ({gpu.vram_gb:.1f}GB)，但GPU层数设置为0，建议启用GPU加速"
+                    f"GPU显存充足 ({gpu.vram_gb:.1f}GB)，"
+                    f"但GPU层数设置为0，建议启用GPU加速"
                 )
             elif gpu and gpu.vram_gb < 4.0 and current_n_gpu_layers > 30:
                 warnings.append(
-                    f"GPU显存较小 ({gpu.vram_gb:.1f}GB)，GPU层数 ({current_n_gpu_layers}) 可能导致显存不足"
+                    f"GPU显存较小 ({gpu.vram_gb:.1f}GB)，"
+                    f"GPU层数 ({current_n_gpu_layers}) 可能导致显存不足"
                 )
 
         is_valid = len(issues) == 0
@@ -984,7 +989,8 @@ class LlamaCppConfigOptimizer:
         if gpu.vendor == GPUVendor.NVIDIA and gpu.vram_gb >= 8.0:
             split_mode = "layer"
             reasoning.append(
-                f"使用分层分割模式（NVIDIA GPU显存充足{gpu.vram_gb:.1f}GB，分层分割优化性能）"
+                f"使用分层分割模式（NVIDIA GPU显存充足{gpu.vram_gb:.1f}GB，"
+                f"分层分割优化性能）"
             )
             return split_mode
 
@@ -998,7 +1004,10 @@ class LlamaCppConfigOptimizer:
             if gpu.vram_gb >= 16.0:
                 return "高性能：GPU加速推理，预期生成速度30-50 tokens/秒，适合实时对话"
             elif gpu.vram_gb >= 8.0:
-                return "中高性能：GPU+CPU混合推理，预期生成速度20-30 tokens/秒，适合交互式应用"
+                return (
+                    "中高性能：GPU+CPU混合推理，"
+                    "预期生成速度20-30 tokens/秒，适合交互式应用"
+                )
             else:
                 return (
                     "中等性能：GPU辅助推理，预期生成速度10-20 tokens/秒，适合批处理任务"

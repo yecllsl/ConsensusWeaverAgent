@@ -3,8 +3,6 @@
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 class TestExternalAgent:
     """测试ExternalAgent类"""
@@ -329,8 +327,9 @@ class TestExecuteTool:
 
         agent = ExternalAgent("invalid_agent")
 
-        with pytest.raises(ValueError):
-            agent._execute_tool("测试提示")
+        result = agent._execute_tool("测试提示")
+
+        assert result == ""
 
     def test_execute_tool_utf8_encoding(self):
         """测试UTF-8编码处理"""

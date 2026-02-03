@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 # 将项目根目录添加到Python路径
@@ -74,13 +75,11 @@ def test_difference_identification():
         differences = analyzer._identify_differences(tool_results)
         print("测试成功！")
         print(f"解析后的分歧点: {json.dumps(differences, indent=2)}")
-        return True
     except Exception as e:
         print(f"测试失败: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
 
 
 class TestConsensusAnalyzer:
@@ -118,7 +117,7 @@ class TestConsensusAnalyzer:
             patch.object(
                 self.analyzer,
                 "_calculate_similarity_matrix",
-                return_value=[[1.0, 0.8], [0.8, 1.0]],
+                return_value=np.array([[1.0, 0.8], [0.8, 1.0]]),
             ),
             patch.object(
                 self.analyzer,
@@ -171,8 +170,8 @@ class TestConsensusAnalyzer:
         similarity_matrix = self.analyzer._calculate_similarity_matrix(tool_results)
 
         assert similarity_matrix.shape == (2, 2)
-        assert similarity_matrix[0, 0] == 1.0
-        assert similarity_matrix[1, 1] == 1.0
+        assert np.isclose(similarity_matrix[0, 0], 1.0)
+        assert np.isclose(similarity_matrix[1, 1], 1.0)
 
     def test_calculate_consensus_scores(self):
         """测试计算共识度评分"""

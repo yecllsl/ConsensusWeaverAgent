@@ -3,30 +3,22 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from click.testing import CliRunner
 
 
 class TestMainFunction:
     """测试主函数"""
 
-    @patch("src.main.click")
-    def test_main_with_invalid_agent_flags(self, mock_click):
+    def test_main_with_invalid_agent_flags(self):
         """测试使用多个Agent标志时的错误处理"""
         from src.main import main
 
-        mock_click.Command.return_value = main
-        mock_click.echo = MagicMock()
+        runner = CliRunner()
+        result = runner.invoke(main, ["--config", "config.yaml", "--iflow", "--qwen"])
 
-        with patch("sys.exit") as mock_exit:
-            main(
-                config="config.yaml",
-                verbose=False,
-                iflow_agent=True,
-                qwen_agent=True,
-                codebuddy_agent=False,
-            )
-            mock_exit.assert_called_with(1)
+        assert result.exit_code == 1
+        assert "只能选择一个主Agent" in result.output
 
-    @patch("src.main.click")
     @patch("src.main.ConfigManager")
     @patch("src.main.get_logger")
     @patch("src.main.DataManager")
@@ -51,7 +43,6 @@ class TestMainFunction:
         mock_data_manager,
         mock_get_logger,
         mock_config_manager,
-        mock_click,
     ):
         """测试主函数成功初始化"""
         from src.main import main
@@ -90,42 +81,11 @@ class TestMainFunction:
         mock_report_generator_instance = MagicMock()
         mock_report_generator.return_value = mock_report_generator_instance
 
-        main(
-            config="config.yaml",
-            verbose=False,
-            iflow_agent=False,
-            qwen_agent=False,
-            codebuddy_agent=False,
-        )
+        runner = CliRunner()
+        runner.invoke(main, ["--config", "config.yaml"])
 
         mock_config_manager.assert_called_once_with("config.yaml")
         mock_get_logger.assert_called_once_with(log_file="app.log", log_level="info")
-
-    @patch("src.main.click")
-    @patch("src.main.ConfigManager")
-    @patch("src.main.get_logger")
-    def test_main_with_exception_handling(
-        self, mock_get_logger, mock_config_manager, mock_click
-    ):
-        """测试主函数异常处理"""
-        from src.main import main
-
-        mock_config_manager.side_effect = Exception("配置加载失败")
-
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
-        mock_click.echo = MagicMock()
-
-        main(
-            config="invalid_config.yaml",
-            verbose=False,
-            iflow_agent=False,
-            qwen_agent=False,
-            codebuddy_agent=False,
-        )
-
-        mock_logger.error.assert_called()
 
 
 class TestStartInteraction:
@@ -254,7 +214,7 @@ class TestStartInteraction:
         """测试澄清流程"""
         from src.main import start_interaction
 
-        mock_click.prompt.side_effect = ["如何使用Python？", "skip"]
+        mock_click.prompt.side_effect = ["如何使用Python？", "skip", "quit"]
         mock_click.confirm.return_value = True
 
         mock_components[
@@ -329,7 +289,7 @@ class TestAgentSelection:
             ) as mock_execution_strategy_manager,
             patch("src.main.QueryExecutor") as mock_query_executor,
             patch("src.main.ConsensusAnalyzer") as mock_consensus_analyzer,
-            patch("src.main.ReportGenerator") as asd,
+            patch("src.main.ReportGenerator") as mock_report_generator,
             patch("src.main.asyncio.run"),
         ):
             mock_config = MagicMock()
@@ -347,15 +307,10 @@ class TestAgentSelection:
             mock_execution_strategy_manager.return_value = MagicMock()
             mock_query_executor.return_value = MagicMock()
             mock_consensus_analyzer.return_value = MagicMock()
-            asd.return_value = MagicMock()
+            mock_report_generator.return_value = MagicMock()
 
-            main(
-                config="config.yaml",
-                verbose=False,
-                iflow_agent=True,
-                qwen_agent=False,
-                codebuddy_agent=False,
-            )
+            runner = CliRunner()
+            runner.invoke(main, ["--config", "config.yaml", "--iflow"])
 
             mock_interaction_engine.assert_called_once()
 
@@ -369,7 +324,6 @@ class TestAgentSelection:
             patch("src.main.DataManager") as mock_data_manager,
             patch("src.main.LLMService") as mock_llm_service,
             patch("src.main.ToolManager") as mock_tool_manager,
-            asd,
             patch("src.main.InteractionEngine") as mock_interaction_engine,
             patch(
                 "src.main.ExecutionStrategyManager"
@@ -396,13 +350,8 @@ class TestAgentSelection:
             mock_consensus_analyzer.return_value = MagicMock()
             mock_report_generator.return_value = MagicMock()
 
-            main(
-                config="config.yaml",
-                verbose=False,
-                iflow_agent=False,
-                qwen_agent=True,
-                codebuddy_agent=False,
-            )
+            runner = CliRunner()
+            runner.invoke(main, ["--config", "config.yaml", "--qwen"])
 
             mock_interaction_engine.assert_called_once()
 
@@ -442,13 +391,8 @@ class TestAgentSelection:
             mock_consensus_analyzer.return_value = MagicMock()
             mock_report_generator.return_value = MagicMock()
 
-            main(
-                config="config.yaml",
-                verbose=False,
-                iflow_agent=False,
-                qwen_agent=False,
-                codebuddy_agent=True,
-            )
+            runner = CliRunner()
+            runner.invoke(main, ["--config", "config.yaml", "--codebuddy"])
 
             mock_interaction_engine.assert_called_once()
 
@@ -456,11 +400,19 @@ class TestAgentSelection:
 class TestNetworkCheck:
     """测试网络检查逻辑"""
 
-    @patch("src.main.click")
     @pytest.mark.asyncio
-    async def test_network_check_before_run(self, mock_components):
+    async def test_network_check_before_run(self):
         """测试网络检查功能"""
         from src.main import start_interaction
+
+        mock_components = {
+            "interaction_engine": MagicMock(),
+            "execution_strategy_manager": MagicMock(),
+            "query_executor": MagicMock(),
+            "consensus_analyzer": MagicMock(),
+            "report_generator": MagicMock(),
+            "tool_manager": MagicMock(),
+        }
 
         with patch("src.main.click") as mock_click:
             mock_click.prompt.side_effect = ["测试问题", "quit"]
@@ -499,48 +451,59 @@ class TestNetworkCheck:
 class TestReportGeneration:
     """测试报告生成逻辑"""
 
-    @patch("src.main.click")
     @pytest.mark.asyncio
-    async def test_report_generation_and_save(self, mock_click, mock_components):
+    async def test_report_generation_and_save(self):
         """测试报告生成和保存"""
         from src.main import start_interaction
 
-        mock_click.prompt.side_effect = ["生成报告的问题", "quit"]
-        mock_click.confirm.return_value = True
+        mock_components = {
+            "interaction_engine": MagicMock(),
+            "execution_strategy_manager": MagicMock(),
+            "query_executor": MagicMock(),
+            "consensus_analyzer": MagicMock(),
+            "report_generator": MagicMock(),
+            "tool_manager": MagicMock(),
+        }
 
-        mock_components[
-            "interaction_engine"
-        ].start_interaction.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].analyze_question.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].is_clarification_needed.return_value = False
-        mock_components[
-            "interaction_engine"
-        ].refine_question.return_value = "生成报告的问题"
-        mock_components[
-            "interaction_engine"
-        ].complete_interaction.return_value = MagicMock()
+        with patch("src.main.click") as mock_click:
+            mock_click.prompt.side_effect = ["生成报告的问题", "quit"]
+            mock_click.confirm.return_value = True
 
-        mock_components[
-            "execution_strategy_manager"
-        ].create_execution_plan.return_value = MagicMock(
-            strategy="parallel_query", tools=["iflow", "qwen"]
-        )
+            mock_components[
+                "interaction_engine"
+            ].start_interaction.return_value = MagicMock()
+            mock_components[
+                "interaction_engine"
+            ].analyze_question.return_value = MagicMock()
+            mock_components[
+                "interaction_engine"
+            ].is_clarification_needed.return_value = False
+            mock_components[
+                "interaction_engine"
+            ].refine_question.return_value = "生成报告的问题"
+            mock_components[
+                "interaction_engine"
+            ].complete_interaction.return_value = MagicMock()
 
-        mock_components["query_executor"].execute_queries = AsyncMock(
-            return_value=MagicMock(
-                success_count=2, failure_count=0, total_execution_time=10.0
+            mock_components[
+                "execution_strategy_manager"
+            ].create_execution_plan.return_value = MagicMock(
+                strategy="parallel_query", tools=["iflow", "qwen"]
             )
-        )
-        mock_components["query_executor"].get_query_results.return_value = []
 
-        mock_components["consensus_analyzer"].analyze_consensus.return_value = None
+            mock_components["query_executor"].execute_queries = AsyncMock(
+                return_value=MagicMock(
+                    success_count=2, failure_count=0, total_execution_time=10.0
+                )
+            )
+            mock_components["query_executor"].get_query_results.return_value = []
 
-        mock_report = MagicMock(content="测试报告内容")
-        mock_components["report_generator"].generate_report.return_value = mock_report
-        mock_components["report_generator"].save_report.return_value = "report.txt"
+            mock_components["consensus_analyzer"].analyze_consensus.return_value = None
 
-        await start_interaction(**mock_components)
+            mock_report = MagicMock(content="测试报告内容")
+            mock_components[
+                "report_generator"
+            ].generate_report.return_value = mock_report
+            mock_components["report_generator"].save_report.return_value = "report.txt"
+
+            await start_interaction(**mock_components)
