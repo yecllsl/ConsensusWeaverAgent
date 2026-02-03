@@ -50,13 +50,13 @@ jobs:
         run: |
           uv pip install -e . --group dev --system
 
-      # 1.5.1 代码格式检查
-      - name: Check code format with ruff
+      # 1.5.1 代码规范检查（Linting）
+      - name:  Check code style, errors & security (ruff check)
         run: |
           uv run ruff check --output-format=github .
 
-      # 1.5.2 代码格式化检查
-      - name: Check code formatting with ruff
+      # 1.5.2 代码格式验证（Formatting）
+      - name: Verify code style consistency (ruff format --check)
         run: |
           uv run ruff format --check .
 
