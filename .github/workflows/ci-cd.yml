@@ -18,7 +18,7 @@ env:
   PROJECT_DIR: "."
   UV_INDEX_URL: "https://pypi.org/simple"
   # 测试覆盖率阈值
-  COVERAGE_THRESHOLD: "70"
+  COVERAGE_THRESHOLD: "80"
 
 # 作业定义
 jobs:
@@ -50,15 +50,15 @@ jobs:
         run: |
           uv pip install -e . --group dev --system
 
-      # 1.5 代码格式检查
-      - name: Check code format with ruff
+      # 1.5.1 代码规范检查（Linting）
+      - name:  Check code style, errors & security (ruff check)
         run: |
           uv run ruff check --output-format=github .
 
-      # 1.6 代码格式化
-      - name: Format code with ruff
+      # 1.5.2 代码格式验证（Formatting）
+      - name: Verify code style consistency (ruff format --check)
         run: |
-          uv run ruff format .
+          uv run ruff format --check .
 
       # 1.7 类型检查
       - name: Type check with mypy
@@ -121,6 +121,11 @@ jobs:
           uv pip install -e . --group dev
           # 安装pytest-cov用于生成覆盖率报告
           uv pip install pytest-cov==5.0.0
+
+      # 2.5.1 下载NLTK数据
+      - name: Download NLTK data
+        run: |
+          uv run python -c "import nltk; nltk.download('wordnet'); nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger')"
 
       # 2.6 运行测试并生成覆盖率报告
       - name: Run tests with coverage

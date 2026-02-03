@@ -214,6 +214,7 @@ def test_validate_query_params_invalid_tool(query_executor):
     assert "不可用" in message
 
 
+@pytest.mark.unit
 def test_cancel_queries(query_executor):
     session_id = 1
 

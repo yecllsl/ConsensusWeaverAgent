@@ -300,6 +300,7 @@ def test_json_report_structure(multi_format_reporter):
     assert "final_conclusion" in data
 
 
+@pytest.mark.unit
 def test_text_report_contains_all_sections(multi_format_reporter):
     report = multi_format_reporter.generate_report(1, ReportFormat.TEXT)
 

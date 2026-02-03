@@ -30,6 +30,9 @@ reports/
 *.sqlite
 *.sqlite3
 
+# 数据文件
+data/
+
 # 构建和分发
 build/
 dist/

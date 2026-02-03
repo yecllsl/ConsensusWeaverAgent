@@ -2,10 +2,13 @@ import asyncio
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional, cast
 
 from src.infrastructure.config.config_manager import ConfigManager
 from src.infrastructure.logging.logger import get_logger
+from src.infrastructure.tools.retry_handler import RetryHandler
+from src.infrastructure.tools.tool_selector import ToolSelector
 
 
 @dataclass
@@ -26,13 +29,12 @@ class ToolManager:
             tool for tool in self.config.external_tools if tool.enabled
         ]
         self.enabled_tools.sort(key=lambda x: x.priority)
+        self.retry_handler = RetryHandler(self.config.retry)
+        self.tool_selector = ToolSelector(config_manager)
         self.logger.info(f"已加载 {len(self.enabled_tools)} 个外部工具")
 
     async def run_tool(self, tool_name: str, question: str) -> ToolResult:
         """运行单个外部工具"""
-        import time
-        from datetime import datetime
-
         tool_config = next(
             (tool for tool in self.enabled_tools if tool.name == tool_name), None
         )
@@ -47,6 +49,52 @@ class ToolManager:
                 timestamp=datetime.now().isoformat(),
             )
 
+        retry_result = await self.retry_handler.execute_with_retry(
+            self._execute_tool_internal,
+            tool_config,
+            question,
+        )
+
+        if retry_result.success:
+            if retry_result.value is None:
+                return ToolResult(
+                    tool_name=tool_name,
+                    success=False,
+                    answer="",
+                    error_message="执行结果为空",
+                    execution_time=retry_result.total_time,
+                    timestamp=datetime.now().isoformat(),
+                )
+            result = cast(ToolResult, retry_result.value)
+            self.tool_selector.record_tool_execution(
+                tool_name=tool_name,
+                success=result.success,
+                execution_time=result.execution_time,
+            )
+            return result
+        else:
+            self.tool_selector.record_tool_execution(
+                tool_name=tool_name,
+                success=False,
+                execution_time=retry_result.total_time,
+            )
+            return ToolResult(
+                tool_name=tool_name,
+                success=False,
+                answer="",
+                error_message=retry_result.error or "执行失败",
+                execution_time=retry_result.total_time,
+                timestamp=datetime.now().isoformat(),
+            )
+
+    async def _execute_tool_internal(
+        self, tool_config: Any, question: str
+    ) -> ToolResult:
+        """内部执行工具方法（不带重试）"""
+        import time
+        from datetime import datetime
+
+        tool_name = tool_config.name
         start_time = time.time()
         timestamp = datetime.now().isoformat()
 
@@ -140,25 +188,11 @@ class ToolManager:
             self.logger.error(
                 f"工具 {tool_name} 执行超时 ({self.config.network.timeout} 秒)"
             )
-            return ToolResult(
-                tool_name=tool_name,
-                success=False,
-                answer="",
-                error_message=f"执行超时 ({self.config.network.timeout} 秒)",
-                execution_time=execution_time,
-                timestamp=timestamp,
-            )
+            raise
         except Exception as e:
             execution_time = time.time() - start_time
             self.logger.error(f"工具 {tool_name} 执行异常: {e}")
-            return ToolResult(
-                tool_name=tool_name,
-                success=False,
-                answer="",
-                error_message=str(e),
-                execution_time=execution_time,
-                timestamp=timestamp,
-            )
+            raise
 
     async def run_multiple_tools(
         self, question: str, tool_names: Optional[List[str]] = None
@@ -211,6 +245,8 @@ class ToolManager:
             tool for tool in self.config.external_tools if tool.enabled
         ]
         self.enabled_tools.sort(key=lambda x: x.priority)
+        self.retry_handler = RetryHandler(self.config.retry)
+        self.tool_selector = ToolSelector(config_manager)
         self.logger.info(
             f"已更新工具配置，当前启用 {len(self.enabled_tools)} 个外部工具"
         )

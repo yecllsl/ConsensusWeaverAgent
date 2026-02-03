@@ -261,6 +261,7 @@ def test_interaction_state_defaults():
     assert state.completed is False
 
 
+@pytest.mark.unit
 def test_interaction_engine_with_external_agent(mock_data_manager):
     mock_external_agent = Mock()
     mock_external_agent.analyze_question = Mock(

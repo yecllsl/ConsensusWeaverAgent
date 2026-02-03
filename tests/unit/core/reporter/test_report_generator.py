@@ -247,6 +247,7 @@ def test_export_report_text_format(
     assert file_path.startswith("reports/report_1_")
 
 
+@pytest.mark.unit
 def test_export_report_unsupported_format(report_generator):
     session_id = 1
 

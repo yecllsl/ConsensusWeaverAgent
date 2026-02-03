@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from src.infrastructure.logging.logger import get_logger
 
 
@@ -81,6 +83,7 @@ def test_logger_exception(tmp_path):
 
 
 # 测试日志文件切换
+@pytest.mark.unit
 def test_logger_file_switch(tmp_path):
     log_file1 = tmp_path / "test_file1.log"
     log_file2 = tmp_path / "test_file2.log"

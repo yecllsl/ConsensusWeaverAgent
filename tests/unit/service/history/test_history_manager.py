@@ -350,6 +350,7 @@ def test_session_details_creation():
     assert details.report == "报告"
 
 
+@pytest.mark.unit
 def test_ensure_indexes(populated_history_manager):
     with sqlite3.connect(populated_history_manager.db_path) as conn:
         cursor = conn.cursor()

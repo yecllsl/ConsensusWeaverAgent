@@ -288,6 +288,7 @@ def test_execution_strategy_manager_with_external_agent(
         assert mock_external_agent.classify_question_complexity.called
 
 
+@pytest.mark.unit
 def test_execute_plan_with_external_agent(mock_llm_service, mock_tool_manager):
     mock_external_agent = Mock()
     mock_external_agent.answer_simple_question = Mock(return_value="外部Agent回答")
