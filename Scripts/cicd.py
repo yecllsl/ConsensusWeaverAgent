@@ -47,7 +47,7 @@ DEFAULT_CONFIG = {
     "TEST_PYPI_INDEX_URL": "https://test.pypi.org/legacy/",
     "BUILD_DIR": "dist",
     "COVERAGE_ENABLED": "true",
-    "COVERAGE_THRESHOLD": "70",
+    "COVERAGE_THRESHOLD": "80",
 }
 
 
@@ -455,24 +455,27 @@ class CICD:
         return True
 
     def check_code_format(self) -> bool:
-        """代码格式检查（共享功能）"""
+        """代码规范检查Linting（共享功能）"""
         if self.config.skip_format:
-            self.logger.info("跳过代码格式检查")
+            self.logger.info("跳过代码规范检查")
             return True
 
-        print_section("代码格式检查")
+        print_section("代码规范检查Linting")
 
         if self.config.auto_fix:
-            print_subsection("使用ruff自动修复代码问题")
+            print_subsection("使用ruff自动修复代码规范问题")
+            print_subsection(
+                "注意：自动修复只能解决部分问题（如未使用的导入、变量、导入排序等）"
+            )
             cmd = ["uv", "run", "ruff", "check", "--fix", "."]
             success, output = self._run_command(cmd, cwd=self.config.project_dir)
             if not success:
-                self.logger.error("代码格式自动修复失败")
-                print_color("❌ 代码格式自动修复失败", "red")
+                self.logger.error("代码规范规范修复失败")
+                print_color("❌ 代码规范自动修复失败", "red")
                 return False
-            print_color("✅ 代码格式自动修复完成", "green")
+            print_color("✅ 代码规范自动修复完成", "green")
 
-        print_subsection("使用ruff检查代码格式")
+        print_subsection("使用ruff检查代码规范")
         cmd = [
             "uv",
             "run",
@@ -483,11 +486,11 @@ class CICD:
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
-            self.logger.error("代码格式检查失败")
-            print_color("❌ 代码格式检查失败", "red")
+            self.logger.error("代码规范检查失败")
+            print_color("❌ 代码规范检查失败", "red")
             return False
 
-        print_color("✅ 代码格式检查通过", "green")
+        print_color("✅ 代码规范检查通过", "green")
         return True
 
     def format_code(self) -> bool:
@@ -496,7 +499,7 @@ class CICD:
             self.logger.info("跳过代码格式化")
             return True
 
-        print_section("代码格式化")
+        print_section("代码格式化（Formatting）")
 
         print_subsection("使用ruff格式化代码")
         cmd = ["uv", "run", "ruff", "format", "."]
@@ -556,7 +559,7 @@ class CICD:
 
         print_section("运行代码检查")
 
-        print_subsection("使用ruff检查代码格式")
+        print_subsection("使用ruff代码规范检查（Linting）")
         cmd = ["uv", "run", "ruff", "check", "--output-format=github", "."]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
@@ -595,6 +598,17 @@ class CICD:
             return True
 
         print_section("运行测试")
+
+        print_subsection("下载NLTK数据")
+        nltk_download_cmd = ["uv", "run", "python", "Scripts/download_nltk_data.py"]
+        nltk_success, nltk_output = self._run_command(
+            nltk_download_cmd, cwd=self.config.project_dir
+        )
+        if not nltk_success:
+            self.logger.warning("NLTK数据下载失败，继续执行测试")
+            print_color("⚠️ NLTK数据下载失败，继续执行测试", "yellow")
+        else:
+            print_color("✅ NLTK数据下载成功", "green")
 
         test_results_dir = os.path.join(
             self.config.project_dir, "reports", "test-results"
@@ -889,7 +903,7 @@ class CICD:
         stages = [
             ("环境准备", self.setup_environment),
             ("依赖安装", self.install_dependencies),
-            ("代码格式检查", self.check_code_format),
+            ("代码规范检查", self.check_code_format),
             ("代码格式化", self.format_code),
             ("类型检查", self.type_check),
             ("测试执行", self.run_tests),
@@ -973,7 +987,7 @@ class CICD:
         stages = [
             ("环境准备", self.setup_environment),
             ("依赖安装", self.install_dependencies),
-            ("代码格式检查", self.check_code_format),
+            ("代码规范检查", self.check_code_format),
             ("代码格式化", self.format_code),
             ("类型检查", self.type_check),
             ("测试执行", self.run_tests),
@@ -1087,7 +1101,9 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--auto-fix", action="store_true", help="自动修复代码格式问题（仅本地开发使用）"
+        "--no-auto-fix",
+        action="store_true",
+        help="禁用自动修复代码格式问题（本地CI默认启用）",
     )
 
     parser.add_argument(
@@ -1118,6 +1134,8 @@ def main() -> int:
         mypy_strict = False
 
     skip_publish = not args.publish
+
+    auto_fix = not args.no_auto_fix
 
     config = CICDConfig(
         python_version=args.python_version,
@@ -1153,7 +1171,7 @@ def main() -> int:
         push_git_tag=args.push_git_tag,
         coverage_enabled=DEFAULT_CONFIG["COVERAGE_ENABLED"] == "true",
         coverage_threshold=int(DEFAULT_CONFIG["COVERAGE_THRESHOLD"]),
-        auto_fix=args.auto_fix,
+        auto_fix=auto_fix,
     )
 
     cicd = CICD(config)

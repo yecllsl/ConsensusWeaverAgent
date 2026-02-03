@@ -18,7 +18,7 @@ env:
   PROJECT_DIR: "."
   UV_INDEX_URL: "https://pypi.org/simple"
   # 测试覆盖率阈值
-  COVERAGE_THRESHOLD: "70"
+  COVERAGE_THRESHOLD: "80"
 
 # 作业定义
 jobs:

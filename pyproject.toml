@@ -2,7 +2,7 @@
 
 [project]
 name = "consensusweaveragent"
-version = "0.3.0.dev0"
+version = "0.3.0"
 description = "智能问答协调终端应用"
 authors = [
     { name = "Colin", email = "yecllsl@outlook.com" },
@@ -127,6 +127,7 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.5.5",
+    "twine>=6.2.0",
     "types-click>=7.1.8",
     "types-psutil>=7.2.2.20260130",
 ]
