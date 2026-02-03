@@ -1,7 +1,6 @@
 """测试外部Agent模块"""
 
 import json
-import subprocess
 from unittest.mock import MagicMock, patch
 
 import pytest

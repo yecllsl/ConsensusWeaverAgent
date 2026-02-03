@@ -1,7 +1,5 @@
 """测试主模块"""
 
-import asyncio
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

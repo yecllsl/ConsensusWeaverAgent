@@ -43,6 +43,7 @@ async def test_single_tool_call():
             print("   结果: 异常")
             print(f"   错误: {str(e)}")
             import traceback
+
             traceback.print_exc()
 
 
@@ -74,6 +75,7 @@ async def test_parallel_tool_call():
     except Exception as e:
         print(f"并行调用失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
 
 

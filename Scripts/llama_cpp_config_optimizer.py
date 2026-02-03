@@ -1,12 +1,13 @@
-import platform
-import subprocess
-import re
 import json
-import yaml
 import os
+import platform
+import re
+import subprocess
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
+from typing import List, Optional
+
+import yaml
 
 
 class OS(Enum):
@@ -353,9 +354,9 @@ class HardwareDetector:
                     model = nvidia_match.group(1)
                     vram_gb = int(nvidia_match.group(2)) / 1024.0
                     print(f"  GPU型号: {model}")
-                    print(f"  厂商: NVIDIA")
+                    print("  厂商: NVIDIA")
                     print(f"  显存: {vram_gb:.1f} GB")
-                    print(f"  类型: 独立显卡")
+                    print("  类型: 独立显卡")
                     return GPUInfo(
                         vendor=GPUVendor.NVIDIA, model=model, vram_gb=vram_gb
                     )
@@ -367,12 +368,10 @@ class HardwareDetector:
                     model = amd_match.group(1)
                     vram_gb = int(amd_match.group(2)) / 1024.0
                     print(f"  GPU型号: {model}")
-                    print(f"  厂商: AMD")
+                    print("  厂商: AMD")
                     print(f"  显存: {vram_gb:.1f} GB")
-                    print(f"  类型: 独立显卡")
-                    return GPUInfo(
-                        vendor=GPUVendor.AMD, model=model, vram_gb=vram_gb
-                    )
+                    print("  类型: 独立显卡")
+                    return GPUInfo(vendor=GPUVendor.AMD, model=model, vram_gb=vram_gb)
 
         except Exception as e:
             print(f"  Linux GPU检测失败: {e}")
@@ -397,7 +396,7 @@ class HardwareDetector:
                     vram_gb = vram_mb / 1024.0
 
                     print(f"  GPU型号: {model}")
-                    print(f"  厂商: Apple")
+                    print("  厂商: Apple")
                     print(f"  显存: {vram_gb:.1f} GB")
                     print(f"  类型: {'独立显卡' if vram_gb > 1.0 else '集成显卡'}")
 
@@ -416,7 +415,11 @@ class HardwareDetector:
 
     def _detect_gpu_vendor(self, gpu_name: str) -> GPUVendor:
         gpu_name_lower = gpu_name.lower()
-        if "nvidia" in gpu_name_lower or "geforce" in gpu_name_lower or "rtx" in gpu_name_lower:
+        if (
+            "nvidia" in gpu_name_lower
+            or "geforce" in gpu_name_lower
+            or "rtx" in gpu_name_lower
+        ):
             return GPUVendor.NVIDIA
         elif "amd" in gpu_name_lower or "radeon" in gpu_name_lower:
             return GPUVendor.AMD
@@ -627,7 +630,9 @@ class LlamaCppConfigOptimizer:
         except Exception as e:
             print(f"加载配置文件失败: {e}")
 
-    def validate_current_config(self, recommended_config: LlamaCppConfig) -> ConfigValidation:
+    def validate_current_config(
+        self, recommended_config: LlamaCppConfig
+    ) -> ConfigValidation:
         """验证当前配置并提供建议"""
         issues = []
         warnings = []
@@ -667,9 +672,7 @@ class LlamaCppConfigOptimizer:
         current_n_ctx = self.current_config.get("n_ctx")
         if current_n_ctx:
             if current_n_ctx > 8192:
-                warnings.append(
-                    f"上下文窗口 ({current_n_ctx}) 较大，将占用更多内存"
-                )
+                warnings.append(f"上下文窗口 ({current_n_ctx}) 较大，将占用更多内存")
             if current_n_ctx < 2048:
                 suggestions.append(
                     f"上下文窗口 ({current_n_ctx}) 较小，对于长文本生成建议增加到4096或8192"
@@ -786,7 +789,10 @@ class LlamaCppConfigOptimizer:
         print(command)
 
         return ConfigRecommendation(
-            config=config, reasoning=reasoning, performance_expectation=performance, command_template=command
+            config=config,
+            reasoning=reasoning,
+            performance_expectation=performance,
+            command_template=command,
         )
 
     def _calculate_optimal_config(self, reasoning: List[str]) -> LlamaCppConfig:
@@ -823,7 +829,9 @@ class LlamaCppConfigOptimizer:
         )
         return n_threads
 
-    def _calculate_batch_size(self, cpu: CPUInfo, gpu: Optional[GPUInfo], reasoning: List[str]) -> int:
+    def _calculate_batch_size(
+        self, cpu: CPUInfo, gpu: Optional[GPUInfo], reasoning: List[str]
+    ) -> int:
         if gpu and gpu.vram_gb >= 8.0:
             n_batch = 512
             reasoning.append(
@@ -842,7 +850,9 @@ class LlamaCppConfigOptimizer:
 
         return n_batch
 
-    def _calculate_context_size(self, memory: MemoryInfo, gpu: Optional[GPUInfo], reasoning: List[str]) -> int:
+    def _calculate_context_size(
+        self, memory: MemoryInfo, gpu: Optional[GPUInfo], reasoning: List[str]
+    ) -> int:
         if gpu and gpu.vram_gb >= 16.0:
             n_ctx = 8192
             reasoning.append(
@@ -866,7 +876,9 @@ class LlamaCppConfigOptimizer:
 
         return n_ctx
 
-    def _calculate_gpu_layers(self, gpu: Optional[GPUInfo], reasoning: List[str]) -> int:
+    def _calculate_gpu_layers(
+        self, gpu: Optional[GPUInfo], reasoning: List[str]
+    ) -> int:
         if not gpu:
             n_gpu_layers = 0
             reasoning.append("GPU层数设置为0（未检测到独立GPU，使用纯CPU推理）")
@@ -893,7 +905,9 @@ class LlamaCppConfigOptimizer:
 
         return n_gpu_layers
 
-    def _calculate_quantization(self, memory: MemoryInfo, gpu: Optional[GPUInfo], reasoning: List[str]) -> str:
+    def _calculate_quantization(
+        self, memory: MemoryInfo, gpu: Optional[GPUInfo], reasoning: List[str]
+    ) -> str:
         if gpu and gpu.vram_gb >= 16.0:
             quantization = "Q4_K_M"
             reasoning.append(
@@ -944,7 +958,9 @@ class LlamaCppConfigOptimizer:
 
         return use_mlock
 
-    def _should_use_low_vram(self, gpu: Optional[GPUInfo], memory: MemoryInfo, reasoning: List[str]) -> bool:
+    def _should_use_low_vram(
+        self, gpu: Optional[GPUInfo], memory: MemoryInfo, reasoning: List[str]
+    ) -> bool:
         if not gpu:
             low_vram = False
             reasoning.append("禁用低显存模式（未检测到GPU）")
@@ -953,11 +969,15 @@ class LlamaCppConfigOptimizer:
             reasoning.append(f"禁用低显存模式（GPU显存充足{gpu.vram_gb:.1f}GB）")
         else:
             low_vram = True
-            reasoning.append(f"启用低显存模式（GPU显存较小{gpu.vram_gb:.1f}GB，减少显存占用）")
+            reasoning.append(
+                f"启用低显存模式（GPU显存较小{gpu.vram_gb:.1f}GB，减少显存占用）"
+            )
 
         return low_vram
 
-    def _calculate_split_mode(self, gpu: Optional[GPUInfo], reasoning: List[str]) -> Optional[str]:
+    def _calculate_split_mode(
+        self, gpu: Optional[GPUInfo], reasoning: List[str]
+    ) -> Optional[str]:
         if not gpu:
             return None
 
@@ -980,7 +1000,9 @@ class LlamaCppConfigOptimizer:
             elif gpu.vram_gb >= 8.0:
                 return "中高性能：GPU+CPU混合推理，预期生成速度20-30 tokens/秒，适合交互式应用"
             else:
-                return "中等性能：GPU辅助推理，预期生成速度10-20 tokens/秒，适合批处理任务"
+                return (
+                    "中等性能：GPU辅助推理，预期生成速度10-20 tokens/秒，适合批处理任务"
+                )
         else:
             if cpu.threads >= 8:
                 return "中等性能：纯CPU推理，预期生成速度5-10 tokens/秒，适合离线处理"
@@ -990,7 +1012,7 @@ class LlamaCppConfigOptimizer:
     def _generate_command(self, config: LlamaCppConfig) -> str:
         command_parts = ["llama-cli"]
 
-        command_parts.append(f"-m model.gguf")
+        command_parts.append("-m model.gguf")
         command_parts.append(f"-t {config.n_threads}")
         command_parts.append(f"-b {config.n_batch}")
         command_parts.append(f"-c {config.n_ctx}")
@@ -1011,7 +1033,6 @@ class LlamaCppConfigOptimizer:
 
 
 def main():
-    import sys
     import argparse
 
     parser = argparse.ArgumentParser(description="llama-cpp 配置优化器")
