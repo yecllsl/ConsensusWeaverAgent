@@ -1,8 +1,13 @@
+import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import yaml
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -77,20 +82,32 @@ class Config:
     retry: RetryConfig
 
 
+class ConfigFileHandler(FileSystemEventHandler):
+    """配置文件变更处理器"""
+
+    def __init__(self, callback: Callable[[], None]) -> None:
+        self.callback = callback
+
+    def on_modified(self, event: Any) -> None:
+        """文件修改事件"""
+        if event.is_directory:
+            return
+
+        if event.src_path.endswith("config.yaml"):
+            self.callback()
+
+
 class ConfigManager:
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = config_path
         self.config: Optional[Config] = None
+        self._reload_callbacks: List[Callable[[], None]] = []
+        self._observer: Optional[Any] = None
         self.load_config()
 
     def load_config(self) -> None:
         """加载配置文件"""
-        if not os.path.exists(self.config_path):
-            self._create_default_config()
-
-        with open(self.config_path, "r", encoding="utf-8") as f:
-            config_dict = yaml.safe_load(f)
-
+        config_dict = self._load_config_dict()
         self.config = self._parse_config(config_dict)
 
     def _parse_config(self, config_dict: Dict[str, Any]) -> Config:
@@ -184,3 +201,51 @@ class ConfigManager:
     def reload_config(self) -> None:
         """重新加载配置文件"""
         self.load_config()
+
+    def enable_hot_reload(self) -> None:
+        """启用配置热重载"""
+        if self._observer is not None:
+            return
+
+        self._observer = Observer()
+        handler = ConfigFileHandler(self._on_config_changed)
+        self._observer.schedule(
+            handler, os.path.dirname(self.config_path), recursive=False
+        )
+        self._observer.start()
+
+    def disable_hot_reload(self) -> None:
+        """禁用配置热重载"""
+        if self._observer is not None:
+            self._observer.stop()
+            self._observer.join()
+            self._observer = None
+
+    def _on_config_changed(self) -> None:
+        """配置文件变更回调"""
+        try:
+            new_config = self._parse_config(self._load_config_dict())
+            self.config = new_config
+
+            for callback in self._reload_callbacks:
+                callback()
+
+        except Exception as e:
+            logger.error(f"重新加载配置失败: {e}")
+
+    def _load_config_dict(self) -> Dict[str, Any]:
+        """加载配置字典"""
+        if not os.path.exists(self.config_path):
+            self._create_default_config()
+
+        with open(self.config_path, "r", encoding="utf-8") as f:
+            return cast(Dict[str, Any], yaml.safe_load(f))
+
+    def register_reload_callback(self, callback: Callable[[], None]) -> None:
+        """注册配置重载回调"""
+        self._reload_callbacks.append(callback)
+
+    def unregister_reload_callback(self, callback: Callable[[], None]) -> None:
+        """取消注册配置重载回调"""
+        if callback in self._reload_callbacks:
+            self._reload_callbacks.remove(callback)
