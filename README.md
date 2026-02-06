@@ -170,21 +170,28 @@ python scripts/download_qwen3-8b-gguf.py
 ### 基本命令语法
 
 ```powershell
-consensusweaver [选项]
+python -m src.main [全局选项] 命令 [命令选项] [参数]
 ```
 
-### 可用选项
+### 全局选项
 
 | 选项 | 别名 | 类型 | 必需 | 默认值 | 描述 |
 |------|------|------|------|--------|------|
 | `--config` | `-c` | PATH | 否 | `config.yaml` | 指定配置文件路径 |
 | `--verbose` | `-v` | FLAG | 否 | `False` | 启用详细日志输出 |
-| `--iflow` | `--i` | FLAG | 否 | `False` | 使用iflow作为主Agent |
-| `--qwen` | `--q` | FLAG | 否 | `False` | 使用qwen作为主Agent |
-| `--codebuddy` | `--b` | FLAG | 否 | `False` | 使用codebuddy作为主Agent |
 | `--help` | `-h` | FLAG | 否 | - | 显示帮助信息 |
 
-### 参数说明
+### 可用命令
+
+| 命令 | 描述 |
+|------|------|
+| `run` | 运行交互式问答会话 |
+| `ask` | 直接询问单个问题 |
+| `check` | 检查系统环境和依赖 |
+| `version` | 显示版本信息 |
+| `tui` | 启动TUI界面 |
+
+### 全局选项说明
 
 #### --config / -c
 - **类型**：文件路径（PATH）
@@ -193,8 +200,8 @@ consensusweaver [选项]
 - **使用场景**：当需要使用不同的配置文件时
 - **示例**：
   ```powershell
-  consensusweaver --config my_config.yaml
-  consensusweaver -c /path/to/custom_config.yaml
+  python -m src.main --config my_config.yaml run
+  python -m src.main -c /path/to/custom_config.yaml ask "问题"
   ```
 
 #### --verbose / -v
@@ -204,133 +211,107 @@ consensusweaver [选项]
 - **使用场景**：开发调试、问题排查
 - **示例**：
   ```powershell
-  consensusweaver --verbose
-  consensusweaver -v
+  python -m src.main --verbose run
+  python -m src.main -v check
   ```
-
-#### --iflow / --i
-- **类型**：标志（FLAG）
-- **描述**：使用iflow作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--qwen`和`--codebuddy`互斥，只能选择一个
-- **使用场景**：需要使用iflow工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --iflow
-  consensusweaver --i
-  ```
-
-#### --qwen / --q
-- **类型**：标志（FLAG）
-- **描述**：使用qwen作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--iflow`和`--codebuddy`互斥，只能选择一个
-- **使用场景**：需要使用qwen工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --qwen
-  consensusweaver --q
-  ```
-
-#### --codebuddy / --b
-- **类型**：标志（FLAG）
-- **描述**：使用codebuddy作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--iflow`和`--qwen`互斥，只能选择一个
-- **使用场景**：需要使用codebuddy工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --codebuddy
-  consensusweaver --b
-  ```
-
-### 参数依赖关系
-
-以下参数之间存在互斥关系，**不能同时使用**：
-
-- `--iflow` / `--i`
-- `--qwen` / `--q`
-- `--codebuddy` / `--b`
-
-**错误示例**：
-```powershell
-# 错误：同时指定了多个Agent
-consensusweaver --iflow --qwen
-```
-
-**正确示例**：
-```powershell
-# 正确：只指定一个Agent
-consensusweaver --iflow
-```
 
 ### 使用示例
 
 #### 基础使用场景
 
-**场景1：使用默认配置启动应用**
+**场景1：查看帮助信息**
 
 ```powershell
-consensusweaver
+# 查看全局帮助
+python -m src.main --help
+
+# 查看特定命令帮助
+python -m src.main run --help
+python -m src.main ask --help
 ```
 
-**场景2：使用自定义配置文件**
+**场景2：运行交互式问答会话**
 
 ```powershell
-# 使用项目根目录下的自定义配置
-consensusweaver --config my_config.yaml
+# 使用默认配置运行交互式会话
+python -m src.main run
 
-# 使用绝对路径的配置文件
-consensusweaver -c /home/user/configs/production.yaml
+# 使用特定Agent运行
+python -m src.main run --iflow
+python -m src.main run --qwen
+python -m src.main run --codebuddy
 ```
 
-**场景3：启用详细日志进行调试**
+**场景3：直接询问单个问题**
 
 ```powershell
-# 启用详细日志
-consensusweaver --verbose
+# 直接询问问题
+python -m src.main ask "什么是Python？"
 
-# 结合自定义配置使用
-consensusweaver -c config.yaml -v
+# 询问问题并保存结果
+python -m src.main ask "什么是机器学习？" --output result.txt
+
+# 使用特定Agent询问
+python -m src.main ask "如何使用Git？" --iflow
+```
+
+**场景4：检查系统环境**
+
+```powershell
+# 检查系统环境和依赖
+python -m src.main check
+```
+
+**场景5：查看版本信息**
+
+```powershell
+# 查看版本信息
+python -m src.main version
+```
+
+**场景6：启动TUI界面**
+
+```powershell
+# 启动TUI界面
+python -m src.main tui
+
+# 在TUI界面中选择tui子命令启动TUI
+python -m src.main tui tui
 ```
 
 #### 高级使用场景
 
-**场景4：使用特定工具作为主Agent**
+**场景7：使用自定义配置文件**
 
 ```powershell
-# 使用iflow作为主Agent
-consensusweaver --iflow
-
-# 使用qwen作为主Agent
-consensusweaver --qwen
-
-# 使用codebuddy作为主Agent
-consensusweaver --codebuddy
+# 使用自定义配置文件
+python -m src.main --config my_config.yaml run
+python -m src.main -c /path/to/config.yaml ask "问题"
 ```
 
-**场景5：组合使用多个选项**
+**场景8：启用详细日志进行调试**
+
+```powershell
+# 启用详细日志
+python -m src.main --verbose run
+python -m src.main -v check
+```
+
+**场景9：组合使用多个选项**
 
 ```powershell
 # 使用自定义配置 + 详细日志 + 特定Agent
-consensusweaver --config production.yaml --verbose --iflow
-
-# 简写形式
-consensusweaver -c prod.yaml -v -i
-```
-
-**场景6：开发环境调试**
-
-```powershell
-# 开发调试模式
-consensusweaver --config dev_config.yaml --verbose
+python -m src.main --config production.yaml --verbose
+python -m src.main run --iflow
 ```
 
 ### 交互流程
 
-1. **启动应用**
+#### 使用run命令进行交互式问答
+
+1. **启动交互式会话**
    ```powershell
-   consensusweaver
+   python -m src.main run
    ```
 
 2. **输入问题**
@@ -361,6 +342,38 @@ consensusweaver --config dev_config.yaml --verbose
 7. **继续使用**
    - 可以继续提问或退出应用
    - 历史记录会自动保存
+
+#### 使用ask命令直接提问
+
+1. **直接提问**
+   ```powershell
+   python -m src.main ask "你的问题"
+   ```
+
+2. **查看结果**
+   - 系统会自动执行查询和分析
+   - 显示完整的分析结果和报告
+
+3. **保存报告（可选）**
+   ```powershell
+   python -m src.main ask "你的问题" --output report.txt
+   ```
+
+#### 使用TUI界面
+
+1. **启动TUI界面**
+   ```powershell
+   python -m src.main tui
+   ```
+
+2. **在TUI界面中选择命令**
+   - 使用键盘或鼠标导航
+   - 选择要执行的命令（run、ask、check等）
+   - 配置命令选项
+
+3. **执行命令**
+   - 在TUI界面中执行选定的命令
+   - 查看执行结果和输出
 
 ## 配置管理
 

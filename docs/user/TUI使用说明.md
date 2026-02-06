@@ -14,6 +14,7 @@ ConsensusWeaverAgent 0.4.0版本引入了基于Trogon的终端用户界面(TUI)�
 ### 2. 主题支持
 - 深色主题（默认）
 - 浅色主题
+- Monokai主题
 
 ### 3. 鼠标支持
 - 支持鼠标操作
@@ -25,13 +26,10 @@ ConsensusWeaverAgent 0.4.0版本引入了基于Trogon的终端用户界面(TUI)�
 
 ```bash
 # 启动TUI界面（默认深色主题）
-consensusweaver tui
+python -m src.main tui
 
-# 使用浅色主题
-consensusweaver tui --theme light
-
-# 禁用鼠标支持
-consensusweaver tui --mouse false
+# 启动TUI子命令
+python -m src.main tui tui
 ```
 
 ### 传统CLI模式
@@ -40,19 +38,19 @@ TUI集成不影响原有的纯命令行操作模式，所有命令仍然可以�
 
 ```bash
 # 查看帮助
-consensusweaver --help
+python -m src.main --help
 
 # 运行交互式会话
-consensusweaver run
+python -m src.main run
 
 # 询问单个问题
-consensusweaver ask "什么是Python？"
+python -m src.main ask "什么是Python？"
 
 # 检查系统环境
-consensusweaver check
+python -m src.main check
 
 # 查看版本信息
-consensusweaver version
+python -m src.main version
 ```
 
 ## 命令说明
@@ -69,10 +67,10 @@ consensusweaver version
 **示例：**
 ```bash
 # 传统CLI模式
-consensusweaver run --iflow
+python -m src.main run --iflow
 
 # TUI模式
-consensusweaver tui
+python -m src.main tui
 # 然后在TUI界面中选择run命令并配置选项
 ```
 
@@ -92,10 +90,10 @@ consensusweaver tui
 **示例：**
 ```bash
 # 传统CLI模式
-consensusweaver ask "什么是Python？" --output result.txt
+python -m src.main ask "什么是Python？" --output result.txt
 
 # TUI模式
-consensusweaver tui
+python -m src.main tui
 # 然后在TUI界面中选择ask命令并配置选项
 ```
 
@@ -106,10 +104,10 @@ consensusweaver tui
 **示例：**
 ```bash
 # 传统CLI模式
-consensusweaver check
+python -m src.main check
 
 # TUI模式
-consensusweaver tui
+python -m src.main tui
 # 然后在TUI界面中选择check命令
 ```
 
@@ -120,10 +118,10 @@ consensusweaver tui
 **示例：**
 ```bash
 # 传统CLI模式
-consensusweaver version
+python -m src.main version
 
 # TUI模式
-consensusweaver tui
+python -m src.main tui
 # 然后在TUI界面中选择version命令
 ```
 
@@ -135,7 +133,7 @@ consensusweaver tui
 
 **示例：**
 ```bash
-consensusweaver --config custom.yaml run
+python -m src.main --config custom.yaml run
 ```
 
 ### --verbose, -v
@@ -144,7 +142,7 @@ consensusweaver --config custom.yaml run
 
 **示例：**
 ```bash
-consensusweaver --verbose run
+python -m src.main --verbose run
 ```
 
 ## 环境要求
@@ -167,7 +165,7 @@ TUI界面需要支持以下特性的终端：
 使用check命令检查环境兼容性：
 
 ```bash
-consensusweaver check
+python -m src.main check
 ```
 
 ## 键盘快捷键
@@ -259,7 +257,7 @@ uv run pytest
 - 引入基于Trogon的TUI界面
 - 支持深色和浅色主题
 - 支持鼠标操作
-- 保持与原有CLI模式的完全兼容性
+- 保持与原有CLI模式的完全完全兼容性
 
 ## 反馈与支持
 

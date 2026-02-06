@@ -19,7 +19,6 @@ from src.service.strategy.execution_strategy import (
     ExecutionStrategyManager,
 )
 from src.ui.rich_console import RichConsole
-from src.ui.tui_manager import setup_tui
 
 
 @click.group()
@@ -127,12 +126,10 @@ def check(ctx: click.Context) -> None:
         _data_manager = DataManager()
         rich_console.print_info("✓ 数据管理器初始化成功")
 
-        from src.ui.tui_manager import get_tui_manager
-
-        tui_manager = get_tui_manager()
-        if tui_manager.is_trogon_available():
+        try:
+            import trogon  # type: ignore
             rich_console.print_info("✓ Trogon可用")
-        else:
+        except ImportError:
             rich_console.print_warning("✗ Trogon不可用")
 
         rich_console.print_info("所有检查通过！")
@@ -557,11 +554,12 @@ async def start_interaction(
 
 def main() -> None:
     """主函数"""
-    # 设置TUI
-    setup_tui(cli, enable=True)
-
-    # 运行CLI
-    cli()
+    try:
+        import trogon  # type: ignore
+        cli_with_tui = trogon.tui()(cli)
+        cli_with_tui()
+    except ImportError:
+        cli()
 
 
 if __name__ == "__main__":

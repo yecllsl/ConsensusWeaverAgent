@@ -59,25 +59,11 @@ class TUIManager:
             import trogon  # type: ignore
 
             @click.command()
-            @click.option(
-                "--theme",
-                default="dark",
-                type=click.Choice(["dark", "light", "monokai"]),
-                help="TUI主题",
-            )
-            @click.option(
-                "--mouse",
-                is_flag=True,
-                default=True,
-                help="启用鼠标支持",
-            )
-            def tui(theme: str, mouse: bool) -> None:
-                """启动TUI界面"""
+            def tui() -> None:
+                """启动TUI界面 - 为所有命令提供可视化表单界面"""
                 pass
 
-            tui_command = trogon.tui(
-                name="consensusweaver", command="tui", help="启动TUI界面"
-            )(tui)
+            tui_command = trogon.tui()(tui)
             cli_group.add_command(tui_command, name="tui")
             self.console.print("[green]TUI命令已添加到CLI组[/green]")
 
@@ -139,7 +125,7 @@ _tui_manager: Optional[TUIManager] = None
 
 
 def get_tui_manager() -> TUIManager:
-    """获取TUI管理器单例"""
+    """获取T获取TUI管理器单例"""
     global _tui_manager
     if _tui_manager is None:
         _tui_manager = TUIManager()
