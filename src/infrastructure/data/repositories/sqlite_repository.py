@@ -63,7 +63,9 @@ class SqliteSessionRepository(ISessionRepository):
             (
                 entity.original_question,
                 entity.refined_question,
-                entity.timestamp.isoformat(),
+                entity.timestamp.isoformat()
+                if entity.timestamp
+                else datetime.now().isoformat(),
                 entity.completed,
             ),
         )
@@ -158,7 +160,9 @@ class SqliteToolResultRepository(IToolResultRepository):
                 entity.answer,
                 entity.error_message,
                 entity.execution_time,
-                entity.timestamp.isoformat(),
+                entity.timestamp.isoformat()
+                if entity.timestamp
+                else datetime.now().isoformat(),
             ),
         )
         return cursor.lastrowid
@@ -180,7 +184,9 @@ class SqliteToolResultRepository(IToolResultRepository):
                     entity.answer,
                     entity.error_message,
                     entity.execution_time,
-                    entity.timestamp.isoformat(),
+                    entity.timestamp.isoformat()
+                    if entity.timestamp
+                    else datetime.now().isoformat(),
                 ),
             )
             ids.append(cursor.lastrowid)
@@ -235,7 +241,9 @@ class SqliteToolResultRepository(IToolResultRepository):
                     result.answer,
                     result.error_message,
                     result.execution_time,
-                    result.timestamp.isoformat(),
+                    result.timestamp.isoformat()
+                    if result.timestamp
+                    else datetime.now().isoformat(),
                 ),
             )
             ids.append(cursor.lastrowid)
@@ -292,7 +300,9 @@ class SqliteAnalysisResultRepository(IAnalysisResultRepository):
                 json.dumps(entity.differences),
                 entity.comprehensive_summary,
                 entity.final_conclusion,
-                entity.timestamp.isoformat(),
+                entity.timestamp.isoformat()
+                if entity.timestamp
+                else datetime.now().isoformat(),
             ),
         )
         return cursor.lastrowid

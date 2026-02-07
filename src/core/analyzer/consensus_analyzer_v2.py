@@ -66,7 +66,7 @@ class ConsensusAnalyzerV2:
         self.retry_handler = RetryHandler(max_retries=3, base_delay=1.0)
         self._init_nltk()
 
-    def _init_nltk(self):
+    def _init_nltk(self) -> None:
         """初始化NLTK组件"""
         try:
             self.stop_words = set(stopwords.words("english"))
@@ -254,7 +254,7 @@ class ConsensusAnalyzerV2:
     ) -> List[Dict[str, Any]]:
         """识别工具结果之间的分歧点"""
         try:
-            differences = []
+            differences: List[Dict[str, Any]] = []
             if len(tool_results) < 2:
                 return differences
 

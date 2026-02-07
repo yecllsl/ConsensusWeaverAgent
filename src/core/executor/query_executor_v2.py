@@ -164,6 +164,7 @@ class QueryExecutorV2:
                         answer=entity.answer,
                         error_message=entity.error_message,
                         execution_time=entity.execution_time,
+                        timestamp=entity.timestamp,
                     )
                     for entity in entities
                 ]

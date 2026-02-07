@@ -28,10 +28,12 @@ class TransactionManager:
             self._conn = sqlite3.connect(self.db_path)
             self._initialize_database()
             self._configure_database()
+        assert self._conn is not None
         return self._conn
 
     def _initialize_database(self) -> None:
         """初始化数据库表结构"""
+        assert self._conn is not None
         cursor = self._conn.cursor()
 
         cursor.execute(
@@ -83,6 +85,7 @@ class TransactionManager:
 
     def _configure_database(self) -> None:
         """配置数据库优化选项"""
+        assert self._conn is not None
         cursor = self._conn.cursor()
 
         cursor.execute("PRAGMA foreign_keys = ON")
@@ -95,6 +98,7 @@ class TransactionManager:
 
     def _create_indexes(self) -> None:
         """创建数据库索引"""
+        assert self._conn is not None
         cursor = self._conn.cursor()
 
         cursor.execute(
