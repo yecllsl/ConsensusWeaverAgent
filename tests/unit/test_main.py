@@ -1,509 +1,221 @@
 """测试主模块"""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
+from src.ui.tui_manager import get_tui_manager
 
-class TestMainFunction:
-    """测试主函数"""
 
-    def test_main_with_invalid_agent_flags(self):
-        """测试使用多个Agent标志时的错误处理"""
-        from src.main import main
+class TestCLICommands:
+    """测试CLI命令"""
 
-        runner = CliRunner()
-        result = runner.invoke(main, ["--config", "config.yaml", "--iflow", "--qwen"])
-
-        assert result.exit_code == 1
-        assert "只能选择一个主Agent" in result.output
-
-    @patch("src.main.ConfigManager")
-    @patch("src.main.get_logger")
-    @patch("src.main.DataManager")
-    @patch("src.main.LLMService")
-    @patch("src.main.ToolManager")
-    @patch("src.main.InteractionEngine")
-    @patch("src.main.ExecutionStrategyManager")
-    @patch("src.main.QueryExecutor")
-    @patch("src.main.ConsensusAnalyzer")
-    @patch("src.main.ReportGenerator")
-    @patch("src.main.asyncio.run")
-    def test_main_initialization_success(
-        self,
-        mock_asyncio_run,
-        mock_report_generator,
-        mock_consensus_analyzer,
-        mock_query_executor,
-        mock_execution_strategy_manager,
-        mock_interaction_engine,
-        mock_tool_manager,
-        mock_llm_service,
-        mock_data_manager,
-        mock_get_logger,
-        mock_config_manager,
-    ):
-        """测试主函数成功初始化"""
-        from src.main import main
-
-        mock_config = MagicMock()
-        mock_config.app.log_level = "info"
-        mock_config.app.log_file = "app.log"
-        mock_config_manager.return_value.get_config.return_value = mock_config
-
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
-        mock_data_manager_instance = MagicMock()
-        mock_data_manager.return_value = mock_data_manager_instance
-
-        mock_llm_service_instance = MagicMock()
-        mock_llm_service.return_value = mock_llm_service_instance
-
-        mock_tool_manager_instance = MagicMock()
-        mock_tool_manager.return_value = mock_tool_manager_instance
-
-        mock_interaction_engine_instance = MagicMock()
-        mock_interaction_engine.return_value = mock_interaction_engine_instance
-
-        mock_execution_strategy_manager_instance = MagicMock()
-        mock_execution_strategy_manager.return_value = (
-            mock_execution_strategy_manager_instance
-        )
-
-        mock_query_executor_instance = MagicMock()
-        mock_query_executor.return_value = mock_query_executor_instance
-
-        mock_consensus_analyzer_instance = MagicMock()
-        mock_consensus_analyzer.return_value = mock_consensus_analyzer_instance
-
-        mock_report_generator_instance = MagicMock()
-        mock_report_generator.return_value = mock_report_generator_instance
+    def test_cli_help(self):
+        """测试CLI帮助"""
+        from src.main import cli
 
         runner = CliRunner()
-        runner.invoke(main, ["--config", "config.yaml"])
+        result = runner.invoke(cli, ["--help"])
 
-        mock_config_manager.assert_called_once_with("config.yaml")
-        mock_get_logger.assert_called_once_with(log_file="app.log", log_level="info")
+        assert result.exit_code == 0
+        assert "智能问答协调终端应用" in result.output
 
+    def test_run_command_help(self):
+        """测试run命令帮助"""
+        from src.main import cli
 
-class TestStartInteraction:
-    """测试交互启动函数"""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--help"])
 
-    @pytest.fixture
-    def mock_components(self):
-        """创建模拟组件"""
-        return {
-            "interaction_engine": MagicMock(),
-            "execution_strategy_manager": MagicMock(),
-            "query_executor": MagicMock(),
-            "consensus_analyzer": MagicMock(),
-            "report_generator": MagicMock(),
-            "tool_manager": MagicMock(),
-        }
+        assert result.exit_code == 0
+        assert "运行交互式问答会话" in result.output
 
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_quit_command(self, mock_click, mock_components):
-        """测试退出命令"""
-        from src.main import start_interaction
+    def test_ask_command_help(self):
+        """测试ask命令帮助"""
+        from src.main import cli
 
-        mock_click.prompt.side_effect = ["quit"]
+        runner = CliRunner()
+        result = runner.invoke(cli, ["ask", "--help"])
 
-        await start_interaction(**mock_components)
+        assert result.exit_code == 0
+        assert "直接询问单个问题" in result.output
 
-        mock_click.echo.assert_called()
+    def test_check_command_help(self):
+        """测试check命令帮助"""
+        from src.main import cli
 
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_empty_question(self, mock_click, mock_components):
-        """测试空问题处理"""
-        from src.main import start_interaction
+        runner = CliRunner()
+        result = runner.invoke(cli, ["check", "--help"])
 
-        mock_click.prompt.side_effect = ["   ", "quit"]
+        assert result.exit_code == 0
+        assert "检查系统环境和依赖" in result.output
 
-        await start_interaction(**mock_components)
+    def test_version_command_help(self):
+        """测试version命令帮助"""
+        from src.main import cli
 
-        mock_click.echo.assert_called()
+        runner = CliRunner()
+        result = runner.invoke(cli, ["version", "--help"])
 
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_simple_question(self, mock_click, mock_components):
-        """测试简单问题处理"""
-        from src.main import start_interaction
+        assert result.exit_code == 0
+        assert "显示版本信息" in result.output
 
-        mock_click.prompt.side_effect = ["什么是Python？", "quit"]
-        mock_click.confirm.return_value = True
+    def test_version_command(self):
+        """测试version命令"""
+        from src.main import cli
 
-        mock_components[
-            "interaction_engine"
-        ].start_interaction.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].analyze_question.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].is_clarification_needed.return_value = False
-        mock_components[
-            "interaction_engine"
-        ].refine_question.return_value = "什么是Python？"
-        mock_components[
-            "interaction_engine"
-        ].complete_interaction.return_value = MagicMock()
+        runner = CliRunner()
+        result = runner.invoke(cli, ["version"])
 
-        mock_components[
-            "execution_strategy_manager"
-        ].create_execution_plan.return_value = MagicMock(strategy="direct_answer")
-
-        mock_components[
-            "interaction_engine"
-        ].llm_service.answer_simple_question.return_value = "Python是一种编程语言"
-
-        await start_interaction(**mock_components)
-
-        mock_click.echo.assert_called()
-
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_complex_question(
-        self, mock_click, mock_components
-    ):
-        """测试复杂问题处理"""
-        from src.main import start_interaction
-
-        mock_click.prompt.side_effect = ["比较Python和Java的优缺点", "quit"]
-        mock_click.confirm.return_value = False
-
-        mock_components[
-            "interaction_engine"
-        ].start_interaction.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].analyze_question.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].is_clarification_needed.return_value = False
-        mock_components[
-            "interaction_engine"
-        ].refine_question.return_value = "比较Python和Java的优缺点"
-        mock_components[
-            "interaction_engine"
-        ].complete_interaction.return_value = MagicMock()
-
-        mock_components[
-            "execution_strategy_manager"
-        ].create_execution_plan.return_value = MagicMock(
-            strategy="parallel_query", tools=["iflow", "qwen"]
-        )
-
-        mock_components["query_executor"].execute_queries = AsyncMock(
-            return_value=MagicMock(
-                success_count=2, failure_count=0, total_execution_time=10.0
-            )
-        )
-        mock_components["query_executor"].get_query_results.return_value = []
-
-        await start_interaction(**mock_components)
-
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_with_clarification(
-        self, mock_click, mock_components
-    ):
-        """测试澄清流程"""
-        from src.main import start_interaction
-
-        mock_click.prompt.side_effect = ["如何使用Python？", "skip", "quit"]
-        mock_click.confirm.return_value = True
-
-        mock_components[
-            "interaction_engine"
-        ].start_interaction.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].analyze_question.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].is_clarification_needed.return_value = True
-        mock_components[
-            "interaction_engine"
-        ].generate_clarification.return_value = "您想了解Python的哪个方面？"
-        mock_components[
-            "interaction_engine"
-        ].handle_clarification_response.return_value = MagicMock()
-        mock_components[
-            "interaction_engine"
-        ].refine_question.return_value = "如何使用Python进行Web开发？"
-        mock_components[
-            "interaction_engine"
-        ].complete_interaction.return_value = MagicMock()
-        mock_components["interaction_engine"].max_clarification_rounds = 3
-
-        mock_components[
-            "execution_strategy_manager"
-        ].create_execution_plan.return_value = MagicMock(strategy="direct_answer")
-
-        mock_components[
-            "interaction_engine"
-        ].llm_service.answer_simple_question.return_value = "Python可以用于Web开发"
-
-        await start_interaction(**mock_components)
-
-    @patch("src.main.click")
-    @pytest.mark.asyncio
-    async def test_start_interaction_exception_handling(
-        self, mock_click, mock_components
-    ):
-        """测试异常处理"""
-        from src.main import start_interaction
-
-        mock_click.prompt.side_effect = ["测试问题", "quit"]
-        mock_click.echo = MagicMock()
-
-        mock_components["interaction_engine"].start_interaction.side_effect = Exception(
-            "处理失败"
-        )
-
-        await start_interaction(**mock_components)
-
-        mock_click.echo.assert_called()
+        assert result.exit_code == 0
+        assert "0.4.0.dev0" in result.output
 
 
 class TestAgentSelection:
-    """测试Agent选择逻辑"""
+    """测试Agent选择"""
 
-    def test_main_with_iflow_agent(self):
-        """测试选择iflow作为主Agent"""
-        from src.main import main
+    @patch("src.main.run_interactive_session")
+    def test_run_command_with_iflow_agent(self, mock_run_session):
+        """测试使用iflow agent"""
+        from src.main import cli
 
-        with (
-            patch("src.main.ConfigManager") as mock_config_manager,
-            patch("src.main.get_logger") as mock_get_logger,
-            patch("src.main.DataManager") as mock_data_manager,
-            patch("src.main.LLMService") as mock_llm_service,
-            patch("src.main.ToolManager") as mock_tool_manager,
-            patch("src.main.InteractionEngine") as mock_interaction_engine,
-            patch(
-                "src.main.ExecutionStrategyManager"
-            ) as mock_execution_strategy_manager,
-            patch("src.main.QueryExecutor") as mock_query_executor,
-            patch("src.main.ConsensusAnalyzer") as mock_consensus_analyzer,
-            patch("src.main.ReportGenerator") as mock_report_generator,
-            patch("src.main.asyncio.run"),
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--iflow"])
+
+        assert result.exit_code == 0
+
+    @patch("src.main.run_interactive_session")
+    def test_run_command_with_qwen_agent(self, mock_run_session):
+        """测试使用qwen agent"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--qwen"])
+
+        assert result.exit_code == 0
+
+    @patch("src.main.run_interactive_session")
+    def test_run_command_with_codebuddy_agent(self, mock_run_session):
+        """测试使用codebuddy agent"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["run", "--codebuddy"])
+
+        assert result.exit_code == 0
+
+
+class TestAskCommand:
+    """测试ask命令"""
+
+    @patch("src.main.run_single_question")
+    def test_ask_command_with_question(self, mock_run_single):
+        """测试ask命令带问题"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["ask", "什么是Python？"])
+
+        assert result.exit_code == 0
+
+    @patch("src.main.run_single_question")
+    def test_ask_command_with_output(self, mock_run_single):
+        """测试ask命令带输出文件"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["ask", "什么是Python？", "--output", "output.txt"])
+
+        assert result.exit_code == 0
+
+
+class TestCheckCommand:
+    """测试check命令"""
+
+    @patch("src.main.ConfigManager")
+    @patch("src.main.LLMService")
+    @patch("src.main.ToolManager")
+    @patch("src.main.DataManager")
+    def test_check_command_success(
+        self,
+        mock_data_manager,
+        mock_tool_manager,
+        mock_llm_service,
+        mock_config_manager,
+    ):
+        """测试check命令成功"""
+        from src.main import cli
+
+        mock_config = MagicMock()
+        mock_config_manager.return_value.get_config.return_value = mock_config
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["check"])
+
+        assert result.exit_code == 0
+
+
+class TestConfigOptions:
+    """测试配置选项"""
+
+    @patch("src.main.run_interactive_session")
+    def test_config_option(self, mock_run_session):
+        """测试配置选项"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--config", "test.yaml", "run"])
+
+        assert result.exit_code == 0
+
+    @patch("src.main.run_interactive_session")
+    def test_verbose_option(self, mock_run_session):
+        """测试详细日志选项"""
+        from src.main import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--verbose", "run"])
+
+        assert result.exit_code == 0
+
+
+class TestTUICommand:
+    """测试TUI命令"""
+
+    def test_tui_command_exists(self):
+        """测试TUI命令存在"""
+        from src.main import cli
+        from src.ui.tui_manager import get_tui_manager
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+
+        assert result.exit_code == 0
+
+        if (
+            get_tui_manager().is_trogon_available()
+            and get_tui_manager().is_tui_enabled()
         ):
-            mock_config = MagicMock()
-            mock_config.app.log_level = "info"
-            mock_config.app.log_file = "app.log"
-            mock_config_manager.return_value.get_config.return_value = mock_config
+            assert "tui" in result.output
+        else:
+            assert "tui" not in result.output
 
-            mock_logger = MagicMock()
-            mock_get_logger.return_value = mock_logger
+    @pytest.mark.skipif(
+        not get_tui_manager()._trogon_available,
+        reason="Trogon不可用",
+    )
+    def test_tui_command_help(self):
+        """测试TUI命令帮助"""
+        from src.main import cli
+        from src.ui.tui_manager import get_tui_manager
 
-            mock_data_manager.return_value = MagicMock()
-            mock_llm_service.return_value = MagicMock()
-            mock_tool_manager.return_value = MagicMock()
-            mock_interaction_engine.return_value = MagicMock()
-            mock_execution_strategy_manager.return_value = MagicMock()
-            mock_query_executor.return_value = MagicMock()
-            mock_consensus_analyzer.return_value = MagicMock()
-            mock_report_generator.return_value = MagicMock()
+        tui_manager = get_tui_manager()
+        tui_manager.enable_tui(cli)
+        tui_manager.add_tui_command_to_group(cli)
 
-            runner = CliRunner()
-            runner.invoke(main, ["--config", "config.yaml", "--iflow"])
+        runner = CliRunner()
+        result = runner.invoke(cli, ["tui", "--help"])
 
-            mock_interaction_engine.assert_called_once()
-
-    def test_main_with_qwen_agent(self):
-        """测试选择qwen作为主Agent"""
-        from src.main import main
-
-        with (
-            patch("src.main.ConfigManager") as mock_config_manager,
-            patch("src.main.get_logger") as mock_get_logger,
-            patch("src.main.DataManager") as mock_data_manager,
-            patch("src.main.LLMService") as mock_llm_service,
-            patch("src.main.ToolManager") as mock_tool_manager,
-            patch("src.main.InteractionEngine") as mock_interaction_engine,
-            patch(
-                "src.main.ExecutionStrategyManager"
-            ) as mock_execution_strategy_manager,
-            patch("src.main.QueryExecutor") as mock_query_executor,
-            patch("src.main.ConsensusAnalyzer") as mock_consensus_analyzer,
-            patch("src.main.ReportGenerator") as mock_report_generator,
-            patch("src.main.asyncio.run"),
-        ):
-            mock_config = MagicMock()
-            mock_config.app.log_level = "info"
-            mock_config.app.log_file = "app.log"
-            mock_config_manager.return_value.get_config.return_value = mock_config
-
-            mock_logger = MagicMock()
-            mock_get_logger.return_value = mock_logger
-
-            mock_data_manager.return_value = MagicMock()
-            mock_llm_service.return_value = MagicMock()
-            mock_tool_manager.return_value = MagicMock()
-            mock_interaction_engine.return_value = MagicMock()
-            mock_execution_strategy_manager.return_value = MagicMock()
-            mock_query_executor.return_value = MagicMock()
-            mock_consensus_analyzer.return_value = MagicMock()
-            mock_report_generator.return_value = MagicMock()
-
-            runner = CliRunner()
-            runner.invoke(main, ["--config", "config.yaml", "--qwen"])
-
-            mock_interaction_engine.assert_called_once()
-
-    def test_main_with_codebuddy_agent(self):
-        """测试选择codebuddy作为主Agent"""
-        from src.main import main
-
-        with (
-            patch("src.main.ConfigManager") as mock_config_manager,
-            patch("src.main.get_logger") as mock_get_logger,
-            patch("src.main.DataManager") as mock_data_manager,
-            patch("src.main.LLMService") as mock_llm_service,
-            patch("src.main.ToolManager") as mock_tool_manager,
-            patch("src.main.InteractionEngine") as mock_interaction_engine,
-            patch(
-                "src.main.ExecutionStrategyManager"
-            ) as mock_execution_strategy_manager,
-            patch("src.main.QueryExecutor") as mock_query_executor,
-            patch("src.main.ConsensusAnalyzer") as mock_consensus_analyzer,
-            patch("src.main.ReportGenerator") as mock_report_generator,
-            patch("src.main.asyncio.run"),
-        ):
-            mock_config = MagicMock()
-            mock_config.app.log_level = "info"
-            mock_config.app.log_file = "app.log"
-            mock_config_manager.return_value.get_config.return_value = mock_config
-
-            mock_logger = MagicMock()
-            mock_get_logger.return_value = mock_logger
-
-            mock_data_manager.return_value = MagicMock()
-            mock_llm_service.return_value = MagicMock()
-            mock_tool_manager.return_value = MagicMock()
-            mock_interaction_engine.return_value = MagicMock()
-            mock_execution_strategy_manager.return_value = MagicMock()
-            mock_query_executor.return_value = MagicMock()
-            mock_consensus_analyzer.return_value = MagicMock()
-            mock_report_generator.return_value = MagicMock()
-
-            runner = CliRunner()
-            runner.invoke(main, ["--config", "config.yaml", "--codebuddy"])
-
-            mock_interaction_engine.assert_called_once()
-
-
-class TestNetworkCheck:
-    """测试网络检查逻辑"""
-
-    @pytest.mark.asyncio
-    async def test_network_check_before_run(self):
-        """测试网络检查功能"""
-        from src.main import start_interaction
-
-        mock_components = {
-            "interaction_engine": MagicMock(),
-            "execution_strategy_manager": MagicMock(),
-            "query_executor": MagicMock(),
-            "consensus_analyzer": MagicMock(),
-            "report_generator": MagicMock(),
-            "tool_manager": MagicMock(),
-        }
-
-        with patch("src.main.click") as mock_click:
-            mock_click.prompt.side_effect = ["测试问题", "quit"]
-            mock_click.confirm.return_value = False
-
-            mock_components[
-                "interaction_engine"
-            ].start_interaction.return_value = MagicMock()
-            mock_components[
-                "interaction_engine"
-            ].analyze_question.return_value = MagicMock()
-            mock_components[
-                "interaction_engine"
-            ].is_clarification_needed.return_value = False
-            mock_components[
-                "interaction_engine"
-            ].refine_question.return_value = "测试问题"
-            mock_components[
-                "interaction_engine"
-            ].complete_interaction.return_value = MagicMock()
-
-            mock_components[
-                "execution_strategy_manager"
-            ].create_execution_plan.return_value = MagicMock(
-                strategy="parallel_query", tools=["iflow"]
-            )
-
-            mock_components["tool_manager"].config.network.check_before_run = True
-            mock_components[
-                "tool_manager"
-            ].check_internet_connection.return_value = False
-
-            await start_interaction(**mock_components)
-
-
-class TestReportGeneration:
-    """测试报告生成逻辑"""
-
-    @pytest.mark.asyncio
-    async def test_report_generation_and_save(self):
-        """测试报告生成和保存"""
-        from src.main import start_interaction
-
-        mock_components = {
-            "interaction_engine": MagicMock(),
-            "execution_strategy_manager": MagicMock(),
-            "query_executor": MagicMock(),
-            "consensus_analyzer": MagicMock(),
-            "report_generator": MagicMock(),
-            "tool_manager": MagicMock(),
-        }
-
-        with patch("src.main.click") as mock_click:
-            mock_click.prompt.side_effect = ["生成报告的问题", "quit"]
-            mock_click.confirm.return_value = True
-
-            mock_components[
-                "interaction_engine"
-            ].start_interaction.return_value = MagicMock()
-            mock_components[
-                "interaction_engine"
-            ].analyze_question.return_value = MagicMock()
-            mock_components[
-                "interaction_engine"
-            ].is_clarification_needed.return_value = False
-            mock_components[
-                "interaction_engine"
-            ].refine_question.return_value = "生成报告的问题"
-            mock_components[
-                "interaction_engine"
-            ].complete_interaction.return_value = MagicMock()
-
-            mock_components[
-                "execution_strategy_manager"
-            ].create_execution_plan.return_value = MagicMock(
-                strategy="parallel_query", tools=["iflow", "qwen"]
-            )
-
-            mock_components["query_executor"].execute_queries = AsyncMock(
-                return_value=MagicMock(
-                    success_count=2, failure_count=0, total_execution_time=10.0
-                )
-            )
-            mock_components["query_executor"].get_query_results.return_value = []
-
-            mock_components["consensus_analyzer"].analyze_consensus.return_value = None
-
-            mock_report = MagicMock(content="测试报告内容")
-            mock_components[
-                "report_generator"
-            ].generate_report.return_value = mock_report
-            mock_components["report_generator"].save_report.return_value = "report.txt"
-
-            await start_interaction(**mock_components)
+        assert result.exit_code == 0
+        assert "启动TUI界面" in result.output

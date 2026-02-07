@@ -8,11 +8,15 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
 
 ### 最新功能
 
+- **批量查询模式**：支持从文件批量导入问题，并发处理多个查询
+- **智能工具选择器**：根据问题类型自动选择最适合的工具
+- **性能监控和统计**：实时监控系统性能指标，生成性能报告
+- **外部Agent调用重试机制**：提高系统容错能力
 - **统一的 CI/CD 脚本**：整合 CI 和 CD 流程到单一脚本
 - **历史记录管理**：查询、导出和统计分析历史会话记录
 - **多格式报告生成**：支持TEXT、Markdown、HTML、JSON、PDF五种报告格式
 - **智能缓存机制**：LLM响应缓存和工具结果缓存，提升性能
-- **增强的测试覆盖**：73.70%代码覆盖率，确保质量稳定
+- **增强的测试覆盖**：80.00%代码覆盖率，确保质量稳定
 
 ## 核心功能
 
@@ -48,6 +52,24 @@ ConsensusWeaverAgent是一款先进的本地终端智能问答协调应用。该
 - 工具结果缓存，提升响应速度
 - 支持缓存过期和大小限制
 - 缓存命中统计和性能监控
+
+### 批量查询管理
+- 从JSON文件批量导入问题
+- 并发处理多个查询（可配置并发数）
+- 生成结构化的批量查询报告
+- 支持失败重试机制
+
+### 智能工具选择
+- 根据问题类型自动选择最适合的工具
+- 工具性能评分和推荐机制
+- 基于历史数据的智能推荐
+- 支持自定义工具选择策略
+
+### 性能监控
+- 实时监控系统性能指标（CPU、内存、磁盘、网络）
+- 性能阈值告警
+- 生成性能报告
+- 历史性能数据统计
 
 ## 技术栈
 
@@ -131,15 +153,15 @@ python scripts/download_qwen3-8b-gguf.py
 
 **方法2：手动下载**
 
-1. 访问 [ModelScope模型库](https://modelscope.cn/models/qwen/Qwen3-8B-GGUF)
-2. 下载Qwen3-8B-Q5_K_M.gguf模型文件
+1. 访问 [ModelScope模型库](https://modelscope.cn/models/qwen/Qwen3-4B-GGUF)
+2. 下载Qwen3-4B-Q5_K_M.gguf模型文件
 3. 创建.models/qwen/目录
 4. 将模型文件放置到该目录中
 
 **方法3：从Hugging Face下载**
 
-1. 访问 [Hugging Face模型库](https://huggingface.co/Qwen/Qwen3-8B-GGUF)
-2. 下载Qwen3-8B-Q5_K_M.gguf模型文件
+1. 访问 [Hugging Face模型库](https://huggingface.co/Qwen/Qwen3-4B-GGUF)
+2. 下载Qwen3-4B-Q5_K_M.gguf模型文件
 3. 创建.models/qwen/目录
 4. 将模型文件放置到该目录中
 
@@ -148,21 +170,28 @@ python scripts/download_qwen3-8b-gguf.py
 ### 基本命令语法
 
 ```powershell
-consensusweaver [选项]
+python -m src.main [全局选项] 命令 [命令选项] [参数]
 ```
 
-### 可用选项
+### 全局选项
 
 | 选项 | 别名 | 类型 | 必需 | 默认值 | 描述 |
 |------|------|------|------|--------|------|
 | `--config` | `-c` | PATH | 否 | `config.yaml` | 指定配置文件路径 |
 | `--verbose` | `-v` | FLAG | 否 | `False` | 启用详细日志输出 |
-| `--iflow` | `--i` | FLAG | 否 | `False` | 使用iflow作为主Agent |
-| `--qwen` | `--q` | FLAG | 否 | `False` | 使用qwen作为主Agent |
-| `--codebuddy` | `--b` | FLAG | 否 | `False` | 使用codebuddy作为主Agent |
 | `--help` | `-h` | FLAG | 否 | - | 显示帮助信息 |
 
-### 参数说明
+### 可用命令
+
+| 命令 | 描述 |
+|------|------|
+| `run` | 运行交互式问答会话 |
+| `ask` | 直接询问单个问题 |
+| `check` | 检查系统环境和依赖 |
+| `version` | 显示版本信息 |
+| `tui` | 启动TUI界面 |
+
+### 全局选项说明
 
 #### --config / -c
 - **类型**：文件路径（PATH）
@@ -171,8 +200,8 @@ consensusweaver [选项]
 - **使用场景**：当需要使用不同的配置文件时
 - **示例**：
   ```powershell
-  consensusweaver --config my_config.yaml
-  consensusweaver -c /path/to/custom_config.yaml
+  python -m src.main --config my_config.yaml run
+  python -m src.main -c /path/to/custom_config.yaml ask "问题"
   ```
 
 #### --verbose / -v
@@ -182,133 +211,107 @@ consensusweaver [选项]
 - **使用场景**：开发调试、问题排查
 - **示例**：
   ```powershell
-  consensusweaver --verbose
-  consensusweaver -v
+  python -m src.main --verbose run
+  python -m src.main -v check
   ```
-
-#### --iflow / --i
-- **类型**：标志（FLAG）
-- **描述**：使用iflow作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--qwen`和`--codebuddy`互斥，只能选择一个
-- **使用场景**：需要使用iflow工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --iflow
-  consensusweaver --i
-  ```
-
-#### --qwen / --q
-- **类型**：标志（FLAG）
-- **描述**：使用qwen作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--iflow`和`--codebuddy`互斥，只能选择一个
-- **使用场景**：需要使用qwen工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --qwen
-  consensusweaver --q
-  ```
-
-#### --codebuddy / --b
-- **类型**：标志（FLAG）
-- **描述**：使用codebuddy作为主Agent进行问题处理
-- **默认值**：`False`
-- **依赖关系**：与`--iflow`和`--qwen`互斥，只能选择一个
-- **使用场景**：需要使用codebuddy工具作为主要回答来源
-- **示例**：
-  ```powershell
-  consensusweaver --codebuddy
-  consensusweaver --b
-  ```
-
-### 参数依赖关系
-
-以下参数之间存在互斥关系，**不能同时使用**：
-
-- `--iflow` / `--i`
-- `--qwen` / `--q`
-- `--codebuddy` / `--b`
-
-**错误示例**：
-```powershell
-# 错误：同时指定了多个Agent
-consensusweaver --iflow --qwen
-```
-
-**正确示例**：
-```powershell
-# 正确：只指定一个Agent
-consensusweaver --iflow
-```
 
 ### 使用示例
 
 #### 基础使用场景
 
-**场景1：使用默认配置启动应用**
+**场景1：查看帮助信息**
 
 ```powershell
-consensusweaver
+# 查看全局帮助
+python -m src.main --help
+
+# 查看特定命令帮助
+python -m src.main run --help
+python -m src.main ask --help
 ```
 
-**场景2：使用自定义配置文件**
+**场景2：运行交互式问答会话**
 
 ```powershell
-# 使用项目根目录下的自定义配置
-consensusweaver --config my_config.yaml
+# 使用默认配置运行交互式会话
+python -m src.main run
 
-# 使用绝对路径的配置文件
-consensusweaver -c /home/user/configs/production.yaml
+# 使用特定Agent运行
+python -m src.main run --iflow
+python -m src.main run --qwen
+python -m src.main run --codebuddy
 ```
 
-**场景3：启用详细日志进行调试**
+**场景3：直接询问单个问题**
 
 ```powershell
-# 启用详细日志
-consensusweaver --verbose
+# 直接询问问题
+python -m src.main ask "什么是Python？"
 
-# 结合自定义配置使用
-consensusweaver -c config.yaml -v
+# 询问问题并保存结果
+python -m src.main ask "什么是机器学习？" --output result.txt
+
+# 使用特定Agent询问
+python -m src.main ask "如何使用Git？" --iflow
+```
+
+**场景4：检查系统环境**
+
+```powershell
+# 检查系统环境和依赖
+python -m src.main check
+```
+
+**场景5：查看版本信息**
+
+```powershell
+# 查看版本信息
+python -m src.main version
+```
+
+**场景6：启动TUI界面**
+
+```powershell
+# 启动TUI界面
+python -m src.main tui
+
+# 在TUI界面中选择tui子命令启动TUI
+python -m src.main tui tui
 ```
 
 #### 高级使用场景
 
-**场景4：使用特定工具作为主Agent**
+**场景7：使用自定义配置文件**
 
 ```powershell
-# 使用iflow作为主Agent
-consensusweaver --iflow
-
-# 使用qwen作为主Agent
-consensusweaver --qwen
-
-# 使用codebuddy作为主Agent
-consensusweaver --codebuddy
+# 使用自定义配置文件
+python -m src.main --config my_config.yaml run
+python -m src.main -c /path/to/config.yaml ask "问题"
 ```
 
-**场景5：组合使用多个选项**
+**场景8：启用详细日志进行调试**
+
+```powershell
+# 启用详细日志
+python -m src.main --verbose run
+python -m src.main -v check
+```
+
+**场景9：组合使用多个选项**
 
 ```powershell
 # 使用自定义配置 + 详细日志 + 特定Agent
-consensusweaver --config production.yaml --verbose --iflow
-
-# 简写形式
-consensusweaver -c prod.yaml -v -i
-```
-
-**场景6：开发环境调试**
-
-```powershell
-# 开发调试模式
-consensusweaver --config dev_config.yaml --verbose
+python -m src.main --config production.yaml --verbose
+python -m src.main run --iflow
 ```
 
 ### 交互流程
 
-1. **启动应用**
+#### 使用run命令进行交互式问答
+
+1. **启动交互式会话**
    ```powershell
-   consensusweaver
+   python -m src.main run
    ```
 
 2. **输入问题**
@@ -339,6 +342,38 @@ consensusweaver --config dev_config.yaml --verbose
 7. **继续使用**
    - 可以继续提问或退出应用
    - 历史记录会自动保存
+
+#### 使用ask命令直接提问
+
+1. **直接提问**
+   ```powershell
+   python -m src.main ask "你的问题"
+   ```
+
+2. **查看结果**
+   - 系统会自动执行查询和分析
+   - 显示完整的分析结果和报告
+
+3. **保存报告（可选）**
+   ```powershell
+   python -m src.main ask "你的问题" --output report.txt
+   ```
+
+#### 使用TUI界面
+
+1. **启动TUI界面**
+   ```powershell
+   python -m src.main tui
+   ```
+
+2. **在TUI界面中选择命令**
+   - 使用键盘或鼠标导航
+   - 选择要执行的命令（run、ask、check等）
+   - 配置命令选项
+
+3. **执行命令**
+   - 在TUI界面中执行选定的命令
+   - 查看执行结果和输出
 
 ## 配置管理
 
@@ -406,10 +441,10 @@ network:
 | 配置项 | 类型 | 默认值 | 描述 |
 |--------|------|----------|------|
 | `provider` | STRING | `llama-cpp` | LLM服务提供商 |
-| `model` | STRING | `Qwen3-8B-Q5_K_M.gguf` | 模型文件名 |
-| `model_path` | STRING | `.models/qwen/Qwen3-8B-Q5_K_M.gguf` | 模型文件完整路径 |
+| `model` | STRING | `Qwen3-4B-Q5_K_M.gguf` | 模型文件名 |
+| `model_path` | STRING | `.models/qwen/Qwen3-4B-Q5_K_M.gguf` | 模型文件完整路径 |
 | `n_ctx` | INTEGER | `4096` | 上下文窗口大小 |
-| `n_threads` | INTEGER | `6` | 线程数 |
+| `n_threads` | INTEGER | `16` | 线程数 |
 | `max_tokens` | INTEGER | `512` | 最大生成token数 |
 | `temperature` | FLOAT | `0.3` | 温度参数（0.0-1.0） |
 
@@ -651,25 +686,52 @@ MIT License
 
 ## 更新日志
 
-### v1.1.0 (最新版本)
+### v0.4.0 (开发中)
 
 **新增功能**：
+- rich库美化终端：提供美观的终端界面，支持进度条、表格、语法高亮等功能
+- 用户反馈学习系统：收集用户反馈，学习用户偏好，优化工具选择策略
+- 配置热重载：支持在运行时重新加载配置文件，无需重启应用
+- 错误处理和恢复机制：完善错误分类，实现自动恢复策略，提供友好的错误提示
+
+**改进**：
+- 测试覆盖率提升至80%以上
+- 终端交互体验优化
+- 配置管理灵活性提升
+- 系统稳定性增强
+
+**修复**：
+- 修复了配置热重载的状态不一致问题
+- 修复了错误恢复策略的边界情况
+
+### v0.3.0
+
+**新增功能**：
+- 批量查询模式：支持从文件批量导入问题，并发处理多个查询
+- 智能工具选择器：根据问题类型自动选择最适合的工具
+- 性能监控和统计：实时监控系统性能指标，生成性能报告
+- 外部Agent调用重试机制：提高系统容错能力
 - 历史记录管理功能
 - 多格式报告生成（TEXT、Markdown、HTML、JSON、PDF）
 - 智能缓存机制（LLM响应缓存、工具结果缓存）
-- 增强的测试覆盖率（70%）
+- 增强的测试覆盖率（73.70%）
 
 **改进**：
+- 工具选择算法优化
+- 性能监控精度提升
+- 批量查询性能优化
 - 数据库查询优化
 - 报告生成性能提升
 - 错误处理和日志改进
 
 **修复**：
+- 修复了批量查询的并发控制问题
+- 修复了性能监控的资源泄漏问题
 - 修复了历史记录查询的边界情况
 - 修复了缓存过期处理的bug
 - 修复了PDF生成的兼容性问题
 
-### v1.0.0
+### v0.2.0
 
 **初始版本**：
 - 智能交互引擎

@@ -563,11 +563,11 @@ class CICD:
         cmd = ["uv", "run", "ruff", "check", "--output-format=github", "."]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir)
         if not success:
-            self.logger.error("代码格式检查失败")
-            print_color("❌ 代码格式检查失败", "red")
+            self.logger.error("代码规范检查失败")
+            print_color("❌ 代码规范检查失败", "red")
             return False
 
-        print_color("✅ 代码格式检查通过", "green")
+        print_color("✅ 代码规范检查通过", "green")
 
         print_subsection("使用mypy进行类型检查")
         cmd = [
@@ -1070,7 +1070,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--skip-env-prep", action="store_true", help="跳过环境准备")
     parser.add_argument("--skip-deps", action="store_true", help="跳过依赖安装")
     parser.add_argument(
-        "--skip-format", action="store_true", help="跳过代码格式检查和格式化"
+        "--skip-format", action="store_true", help="跳过代码规范检查和格式化"
     )
     parser.add_argument("--skip-mypy", action="store_true", help="跳过类型检查")
     parser.add_argument("--skip-tests", action="store_true", help="跳过测试执行")
