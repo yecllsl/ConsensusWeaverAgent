@@ -138,7 +138,7 @@ class TestTUIIntegration:
         result = runner.invoke(cli, ["tui", "tui", "--help"])
 
         assert result.exit_code == 0
-        assert "启动TUI界面" in result.output
+        assert "Open Textual TUI" in result.output
 
 
 class TestCLIAndTUICompatibility:

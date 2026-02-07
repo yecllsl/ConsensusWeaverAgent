@@ -127,6 +127,7 @@ def check(ctx: click.Context) -> None:
         rich_console.print_info("✓ 数据管理器初始化成功")
 
         import importlib.util
+
         if importlib.util.find_spec("trogon"):
             rich_console.print_info("✓ Trogon可用")
         else:

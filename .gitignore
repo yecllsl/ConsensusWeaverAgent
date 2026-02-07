@@ -78,3 +78,5 @@ ehthumbs.db
 *.orig
 
 coverage.xml
+security-report.json
+.coverage.*
