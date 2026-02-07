@@ -5,7 +5,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar
 
 from src.models.entities import AnalysisResult, Session, ToolResult
 

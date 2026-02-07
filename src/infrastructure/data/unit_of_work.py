@@ -4,6 +4,7 @@
 """
 
 import sqlite3
+from typing import Any
 
 from src.infrastructure.data.data_validator import DataValidator
 from src.infrastructure.data.repositories.interfaces import (

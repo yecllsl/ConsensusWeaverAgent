@@ -6,7 +6,7 @@
 import json
 import sqlite3
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from src.infrastructure.data.data_validator import DataValidator
 from src.infrastructure.data.repositories.interfaces import (
