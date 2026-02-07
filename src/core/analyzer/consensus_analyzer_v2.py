@@ -2,6 +2,7 @@
 
 本模块实现了共识分析器，使用新的数据仓库架构和事务管理。
 """
+
 import os
 import sys
 from dataclasses import dataclass
@@ -38,6 +39,7 @@ for path in common_data_paths:
 @dataclass
 class ConsensusAnalysisResult:
     """共识分析结果"""
+
     session_id: int
     similarity_matrix: List[List[float]]
     consensus_scores: Dict[str, float]
@@ -49,7 +51,7 @@ class ConsensusAnalysisResult:
 
 class ConsensusAnalyzerV2:
     """共识分析器（新版本）
-    
+
     使用新的数据仓库架构和事务管理，提供更好的数据一致性保证。
     """
 
@@ -91,9 +93,7 @@ class ConsensusAnalyzerV2:
                     if token.isalpha() and token not in self.stop_words
                 ]
             else:
-                tokens = [
-                    token for token in tokens if token.isalpha()
-                ]
+                tokens = [token for token in tokens if token.isalpha()]
             return tokens
         except Exception:
             return text.lower().split()
@@ -119,9 +119,7 @@ class ConsensusAnalyzerV2:
                 return self._create_default_result(session_id)
 
             # 计算相似度矩阵
-            similarity_matrix = self._calculate_similarity_matrix(
-                successful_results
-            )
+            similarity_matrix = self._calculate_similarity_matrix(successful_results)
 
             # 计算共识得分
             consensus_scores = self._calculate_consensus_scores(
@@ -135,10 +133,8 @@ class ConsensusAnalyzerV2:
             differences = self._identify_differences(successful_results)
 
             # 生成综合总结
-            comprehensive_summary = (
-                self._generate_comprehensive_summary(
-                    question, successful_results, key_points, differences
-                )
+            comprehensive_summary = self._generate_comprehensive_summary(
+                question, successful_results, key_points, differences
             )
 
             # 生成最终结论
@@ -318,9 +314,7 @@ class ConsensusAnalyzerV2:
             if not consensus_scores:
                 return "由于数据不足，无法生成可靠的结论。"
 
-            avg_score = sum(consensus_scores.values()) / len(
-                consensus_scores
-            )
+            avg_score = sum(consensus_scores.values()) / len(consensus_scores)
 
             if avg_score > 0.7:
                 conclusion = "各工具结果高度一致，结论可信度高。"

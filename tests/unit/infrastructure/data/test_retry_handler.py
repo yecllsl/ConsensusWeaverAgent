@@ -1,7 +1,8 @@
 """测试重试处理器"""
+
 import asyncio
+
 import pytest
-from unittest.mock import Mock, patch
 
 from src.infrastructure.data.retry_handler import RetryHandler
 

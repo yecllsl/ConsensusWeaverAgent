@@ -1,8 +1,8 @@
 """测试领域模型"""
-import pytest
+
 from datetime import datetime
 
-from src.models.entities import Session, ToolResult, AnalysisResult
+from src.models.entities import AnalysisResult, Session, ToolResult
 
 
 class TestSession:

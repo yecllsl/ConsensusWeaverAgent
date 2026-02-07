@@ -2,6 +2,7 @@
 
 本模块实现了事务管理器，用于创建和管理数据库连接和工作单元。
 """
+
 import sqlite3
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -12,7 +13,7 @@ from src.infrastructure.data.unit_of_work import SqliteUnitOfWork
 
 class TransactionManager:
     """事务管理器
-    
+
     负责创建和管理数据库连接，提供工作单元的创建功能。
     """
 

@@ -2,6 +2,7 @@
 
 本模块实现了数据验证逻辑，确保数据完整性和一致性。
 """
+
 from typing import List
 
 from src.models.entities import AnalysisResult, Session, ToolResult
@@ -9,7 +10,7 @@ from src.models.entities import AnalysisResult, Session, ToolResult
 
 class DataValidator:
     """数据验证器
-    
+
     提供数据验证功能，确保数据符合业务规则。
     """
 

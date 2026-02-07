@@ -2,6 +2,7 @@
 
 本模块实现了工作单元模式，用于管理事务和协调多个仓库操作。
 """
+
 import sqlite3
 
 from src.infrastructure.data.data_validator import DataValidator
@@ -20,7 +21,7 @@ from src.infrastructure.data.repositories.sqlite_repository import (
 
 class SqliteUnitOfWork(IUnitOfWork):
     """SQLite工作单元实现
-    
+
     管理事务和协调多个仓库操作，确保数据一致性。
     """
 
@@ -32,9 +33,7 @@ class SqliteUnitOfWork(IUnitOfWork):
 
         self._sessions = SqliteSessionRepository(connection, validator)
         self._tool_results = SqliteToolResultRepository(connection, validator)
-        self._analysis_results = SqliteAnalysisResultRepository(
-            connection, validator
-        )
+        self._analysis_results = SqliteAnalysisResultRepository(connection, validator)
 
     async def __aenter__(self) -> "IUnitOfWork":
         """进入事务上下文"""

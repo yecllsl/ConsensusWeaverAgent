@@ -61,9 +61,7 @@ class RichConsole:
         """打印工具结果"""
         style = "green" if success else "red"
         icon = "✅" if success else "❌"
-        self.console.print(
-            Panel(result, title=f"{icon} {tool_name}", style=style)
-        )
+        self.console.print(Panel(result, title=f"{icon} {tool_name}", style=style))
 
     def print_consensus_analysis(self, analysis: Dict[str, Any]) -> None:
         """打印共识分析"""

@@ -35,9 +35,7 @@ class TUIManager:
     def enable_tui(self, cli_group: click.Group) -> None:
         """启用TUI模式"""
         if not self._trogon_available:
-            self.console.print(
-                "[yellow]警告: Trogon不可用，无法启用TUI模式[/yellow]"
-            )
+            self.console.print("[yellow]警告: Trogon不可用，无法启用TUI模式[/yellow]")
             return
 
         self._cli_group = cli_group
@@ -50,9 +48,7 @@ class TUIManager:
     def add_tui_command_to_group(self, cli_group: click.Group) -> None:
         """将TUI命令添加到Click组"""
         if not self._trogon_available:
-            self.console.print(
-                "[yellow]无法添加TUI命令: Trogon不可用[/yellow]"
-            )
+            self.console.print("[yellow]无法添加TUI命令: Trogon不可用[/yellow]")
             return
 
         try:

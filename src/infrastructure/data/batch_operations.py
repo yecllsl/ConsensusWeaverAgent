@@ -2,13 +2,14 @@
 
 本模块实现了批量数据操作，用于提高数据访问性能。
 """
+
 import sqlite3
 from typing import Any, Dict, List
 
 
 class BatchOperations:
     """批量操作类
-    
+
     提供批量插入、更新和删除操作，减少数据库I/O次数。
     """
 
@@ -38,13 +39,9 @@ class BatchOperations:
                 for r in results
             ],
         )
-        return [
-            cursor.lastrowid - len(results) + i + 1 for i in range(len(results))
-        ]
+        return [cursor.lastrowid - len(results) + i + 1 for i in range(len(results))]
 
-    async def batch_update_sessions(
-        self, updates: List[Dict[str, Any]]
-    ) -> None:
+    async def batch_update_sessions(self, updates: List[Dict[str, Any]]) -> None:
         """批量更新会话"""
         cursor = self._conn.cursor()
         for update in updates:
@@ -83,9 +80,7 @@ class BatchOperations:
             f"DELETE FROM sessions WHERE id IN ({placeholders})", session_ids
         )
 
-    async def batch_insert_sessions(
-        self, sessions: List[Dict[str, Any]]
-    ) -> List[int]:
+    async def batch_insert_sessions(self, sessions: List[Dict[str, Any]]) -> List[int]:
         """批量插入会话"""
         cursor = self._conn.cursor()
         cursor.executemany(
@@ -102,10 +97,7 @@ class BatchOperations:
                 for s in sessions
             ],
         )
-        return [
-            cursor.lastrowid - len(sessions) + i + 1
-            for i in range(len(sessions))
-        ]
+        return [cursor.lastrowid - len(sessions) + i + 1 for i in range(len(sessions))]
 
     async def batch_insert_analysis_results(
         self, results: List[Dict[str, Any]]
@@ -131,7 +123,4 @@ class BatchOperations:
                 for r in results
             ],
         )
-        return [
-            cursor.lastrowid - len(results) + i + 1
-            for i in range(len(results))
-        ]
+        return [cursor.lastrowid - len(results) + i + 1 for i in range(len(results))]

@@ -3,6 +3,7 @@
 本模块定义了所有数据仓库的抽象接口，遵循依赖倒置原则（DIP），
 确保高层模块不依赖低层模块，而是依赖抽象。
 """
+
 from abc import ABC, abstractmethod
 from typing import Generic, List, Optional, TypeVar
 
@@ -13,7 +14,7 @@ T = TypeVar("T")
 
 class IRepository(Generic[T], ABC):
     """通用仓库接口
-    
+
     定义了所有仓库必须实现的基本CRUD操作。
     """
 
@@ -50,7 +51,7 @@ class IRepository(Generic[T], ABC):
 
 class ISessionRepository(IRepository[Session]):
     """会话仓库接口
-    
+
     定义会话数据访问的特定操作。
     """
 
@@ -67,7 +68,7 @@ class ISessionRepository(IRepository[Session]):
 
 class IToolResultRepository(IRepository[ToolResult]):
     """工具结果仓库接口
-    
+
     定义工具结果数据访问的特定操作。
     """
 
@@ -86,7 +87,7 @@ class IToolResultRepository(IRepository[ToolResult]):
 
 class IAnalysisResultRepository(IRepository[AnalysisResult]):
     """分析结果仓库接口
-    
+
     定义分析结果数据访问的特定操作。
     """
 
@@ -98,7 +99,7 @@ class IAnalysisResultRepository(IRepository[AnalysisResult]):
 
 class IUnitOfWork(ABC):
     """工作单元接口（事务管理）
-    
+
     定义事务管理的基本操作，确保多个操作在一个事务中执行，
     要么全部成功，要么全部回滚。
     """

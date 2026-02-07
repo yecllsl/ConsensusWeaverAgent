@@ -128,6 +128,7 @@ def check(ctx: click.Context) -> None:
 
         try:
             import trogon  # type: ignore
+
             rich_console.print_info("✓ Trogon可用")
         except ImportError:
             rich_console.print_warning("✗ Trogon不可用")
@@ -407,7 +408,9 @@ async def start_interaction(
     # 欢迎信息
     rich_console.print_welcome()
     rich_console.print_info("欢迎使用智能问答协调终端！")
-    rich_console.print_info("我可以帮您分析问题并获取多个AI工具的回答，最终生成综合报告。")
+    rich_console.print_info(
+        "我可以帮您分析问题并获取多个AI工具的回答，最终生成综合报告。"
+    )
     rich_console.print_info("请输入您的问题，或输入 'quit' 退出应用。")
 
     while True:
@@ -487,7 +490,9 @@ async def start_interaction(
                 rich_console.print_info(f"直接回答：\n{answer}")
             else:
                 # 复杂问题，执行并行查询
-                rich_console.print_info("识别为复杂问题，正在调用外部工具进行并行查询...")
+                rich_console.print_info(
+                    "识别为复杂问题，正在调用外部工具进行并行查询..."
+                )
                 rich_console.print_info(f"使用工具数量: {len(execution_plan.tools)}")
                 rich_console.print_info(f"使用工具: {', '.join(execution_plan.tools)}")
 
@@ -495,7 +500,9 @@ async def start_interaction(
                 if tool_manager.config.network.check_before_run:
                     has_internet = tool_manager.check_internet_connection()
                     if not has_internet:
-                        rich_console.print_warning("警告：网络连接不可用，外部工具可能无法正常工作")
+                        rich_console.print_warning(
+                            "警告：网络连接不可用，外部工具可能无法正常工作"
+                        )
                         proceed = rich_console.input("是否继续？(y/n): ")
                         if proceed.lower() != "y":
                             rich_console.print_info("操作已取消")
@@ -556,6 +563,7 @@ def main() -> None:
     """主函数"""
     try:
         import trogon  # type: ignore
+
         cli_with_tui = trogon.tui()(cli)
         cli_with_tui()
     except ImportError:

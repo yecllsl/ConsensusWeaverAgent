@@ -1,16 +1,18 @@
 """测试数据仓库"""
-import sqlite3
-import pytest
-from datetime import datetime
-from unittest.mock import Mock, MagicMock
 
-from src.models.entities import Session, ToolResult, AnalysisResult
+import sqlite3
+from datetime import datetime
+from unittest.mock import Mock
+
+import pytest
+
 from src.infrastructure.data.data_validator import DataValidator
 from src.infrastructure.data.repositories.sqlite_repository import (
+    SqliteAnalysisResultRepository,
     SqliteSessionRepository,
     SqliteToolResultRepository,
-    SqliteAnalysisResultRepository,
 )
+from src.models.entities import AnalysisResult, Session, ToolResult
 
 
 @pytest.fixture

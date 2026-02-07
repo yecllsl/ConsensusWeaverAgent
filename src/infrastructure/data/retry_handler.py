@@ -2,6 +2,7 @@
 
 本模块实现了重试机制，用于处理临时性错误和提高系统稳定性。
 """
+
 import asyncio
 import logging
 import random
@@ -13,7 +14,7 @@ T = TypeVar("T")
 
 class RetryHandler:
     """重试处理器
-    
+
     提供指数退避重试机制，用于处理临时性错误。
     """
 
@@ -33,7 +34,7 @@ class RetryHandler:
     def calculate_delay(self, attempt: int) -> float:
         """计算退避延迟（指数退避）"""
         base_delay = min(
-            self.base_delay * (self.exponential_base ** attempt), self.max_delay
+            self.base_delay * (self.exponential_base**attempt), self.max_delay
         )
         jitter = base_delay * 0.1 * random.random()
         return min(base_delay + jitter, self.max_delay)
@@ -61,9 +62,7 @@ class RetryHandler:
                     )
                     await asyncio.sleep(delay)
                 else:
-                    self.logger.error(
-                        f"操作失败，已达到最大重试次数：{e}"
-                    )
+                    self.logger.error(f"操作失败，已达到最大重试次数：{e}")
                     raise
 
         raise last_exception
@@ -84,9 +83,7 @@ class RetryHandler:
                     max_delay=self.max_delay,
                     exponential_base=self.exponential_base,
                 )
-                return await retry_handler.execute_with_retry(
-                    func, *args, **kwargs
-                )
+                return await retry_handler.execute_with_retry(func, *args, **kwargs)
 
             return wrapper
 
