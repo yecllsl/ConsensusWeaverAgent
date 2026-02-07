@@ -32,11 +32,11 @@ class RetryHandler:
 
     def calculate_delay(self, attempt: int) -> float:
         """计算退避延迟（指数退避）"""
-        delay = min(
+        base_delay = min(
             self.base_delay * (self.exponential_base ** attempt), self.max_delay
         )
-        jitter = delay * 0.1 * random.random()
-        return delay + jitter
+        jitter = base_delay * 0.1 * random.random()
+        return min(base_delay + jitter, self.max_delay)
 
     async def execute_with_retry(
         self, func: Callable[..., T], *args: Any, **kwargs: Any
