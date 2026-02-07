@@ -116,4 +116,5 @@ class RichConsole:
 
     def input(self, prompt: str = "") -> str:
         """输入"""
-        return self.console.input(prompt)
+        result = self.console.input(prompt)
+        return str(result) if result is not None else ""

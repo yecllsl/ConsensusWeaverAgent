@@ -82,7 +82,7 @@ class Config:
     retry: RetryConfig
 
 
-class ConfigFileHandler(FileSystemEventHandler):
+class ConfigFileHandler(FileSystemEventHandler):  # type: ignore[misc]
     """配置文件变更处理器"""
 
     def __init__(self, callback: Callable[[], None]) -> None:

@@ -48,9 +48,9 @@ class RetryHandler:
         for attempt in range(self.max_retries + 1):
             try:
                 if asyncio.iscoroutinefunction(func):
-                    return await func(*args, **kwargs)
+                    return await func(*args, **kwargs)  # type: ignore[no-any-return]
                 else:
-                    return func(*args, **kwargs)
+                    return func(*args, **kwargs)  # type: ignore[no-any-return]
             except Exception as e:
                 last_exception = e
 
@@ -73,10 +73,10 @@ class RetryHandler:
         self,
         max_retries: Optional[int] = None,
         base_delay: Optional[float] = None,
-    ):
+    ) -> Callable[..., Any]:
         """重试装饰器"""
 
-        def decorator(func):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
             async def wrapper(*args: Any, **kwargs: Any) -> T:
                 retry_handler = RetryHandler(

@@ -6,7 +6,7 @@
 import os
 import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, cast
 
 import nltk
 import numpy as np
@@ -206,7 +206,7 @@ class ConsensusAnalyzerV2:
                 return np.ones((len(answers), len(answers)))
 
             tfidf_matrix = self.vectorizer.fit_transform(answers)
-            similarity_matrix = cosine_similarity(tfidf_matrix)
+            similarity_matrix = cast(np.ndarray, cosine_similarity(tfidf_matrix))
 
             return similarity_matrix
         except Exception as e:

@@ -40,7 +40,7 @@ class BatchOperations:
             ],
         )
         last_rowid = cursor.lastrowid
-        if last_rowid is not None:
+        if last_rowid is None:
             last_rowid = 0
         return [last_rowid - len(results) + i + 1 for i in range(len(results))]
 
@@ -101,7 +101,7 @@ class BatchOperations:
             ],
         )
         last_rowid = cursor.lastrowid
-        if last_rowid is not None:
+        if last_rowid is None:
             last_rowid = 0
         return [last_rowid - len(sessions) + i + 1 for i in range(len(sessions))]
 
@@ -130,6 +130,6 @@ class BatchOperations:
             ],
         )
         last_rowid = cursor.lastrowid
-        if last_rowid is not None:
+        if last_rowid is None:
             last_rowid = 0
         return [last_rowid - len(results) + i + 1 for i in range(len(results))]

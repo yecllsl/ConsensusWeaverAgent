@@ -362,7 +362,7 @@ class SqliteAnalysisResultRepository(IAnalysisResultRepository):
             return self._row_to_entity(row)
         return None
 
-    def _row_to_entity(self, row) -> AnalysisResult:
+    def _row_to_entity(self, row: Any) -> AnalysisResult:
         """将数据库行转换为实体"""
         return AnalysisResult(
             id=row[0],
