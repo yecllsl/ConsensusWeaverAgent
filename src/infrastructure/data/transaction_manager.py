@@ -5,9 +5,10 @@
 
 import sqlite3
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from src.infrastructure.data.data_validator import DataValidator
+from src.infrastructure.data.repositories.interfaces import IUnitOfWork
 from src.infrastructure.data.unit_of_work import SqliteUnitOfWork
 
 
@@ -131,7 +132,7 @@ class TransactionManager:
         self._conn.commit()
 
     @asynccontextmanager
-    async def begin_transaction(self) -> AsyncGenerator[SqliteUnitOfWork, None]:
+    async def begin_transaction(self) -> AsyncGenerator[IUnitOfWork, None]:
         """开始事务"""
         conn = self._get_connection()
         unit_of_work = SqliteUnitOfWork(conn, self._validator)
@@ -144,8 +145,8 @@ class TransactionManager:
             self._conn.close()
             self._conn = None
 
-    def __enter__(self):
+    def __enter__(self) -> "TransactionManager":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()

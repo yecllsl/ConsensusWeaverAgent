@@ -110,7 +110,7 @@ class IUnitOfWork(ABC):
         pass
 
     @abstractmethod
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """退出事务上下文"""
         pass
 

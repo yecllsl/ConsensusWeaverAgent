@@ -69,7 +69,10 @@ class SqliteSessionRepository(ISessionRepository):
                 entity.completed,
             ),
         )
-        return cursor.lastrowid
+        result = cursor.lastrowid
+        if result is None:
+            result = 0
+        return result
 
     async def add_batch(self, entities: List[Session]) -> List[int]:
         ids = []
@@ -165,7 +168,10 @@ class SqliteToolResultRepository(IToolResultRepository):
                 else datetime.now().isoformat(),
             ),
         )
-        return cursor.lastrowid
+        result = cursor.lastrowid
+        if result is None:
+            result = 0
+        return result
 
     async def add_batch(self, entities: List[ToolResult]) -> List[int]:
         cursor = self._conn.cursor()
@@ -189,7 +195,10 @@ class SqliteToolResultRepository(IToolResultRepository):
                     else datetime.now().isoformat(),
                 ),
             )
-            ids.append(cursor.lastrowid)
+            lastrowid = cursor.lastrowid
+            if lastrowid is None:
+                lastrowid = 0
+            ids.append(lastrowid)
         return ids
 
     async def update(self, entity: ToolResult) -> None:
@@ -246,10 +255,13 @@ class SqliteToolResultRepository(IToolResultRepository):
                     else datetime.now().isoformat(),
                 ),
             )
-            ids.append(cursor.lastrowid)
+            lastrowid = cursor.lastrowid
+            if lastrowid is None:
+                lastrowid = 0
+            ids.append(lastrowid)
         return ids
 
-    def _row_to_entity(self, row) -> ToolResult:
+    def _row_to_entity(self, row: Any) -> ToolResult:
         """将数据库行转换为实体"""
         return ToolResult(
             id=row[0],
@@ -305,7 +317,10 @@ class SqliteAnalysisResultRepository(IAnalysisResultRepository):
                 else datetime.now().isoformat(),
             ),
         )
-        return cursor.lastrowid
+        result = cursor.lastrowid
+        if result is None:
+            result = 0
+        return result
 
     async def add_batch(self, entities: List[AnalysisResult]) -> List[int]:
         ids = []

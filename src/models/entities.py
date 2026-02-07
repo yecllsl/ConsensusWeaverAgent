@@ -25,7 +25,7 @@ class Session:
     timestamp: Optional[datetime] = None
     completed: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp is None:
             self.timestamp = datetime.now()
 
@@ -47,7 +47,7 @@ class ToolResult:
     execution_time: float = 0.0
     timestamp: Optional[datetime] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp is None:
             self.timestamp = datetime.now()
 
@@ -70,6 +70,6 @@ class AnalysisResult:
     final_conclusion: str = ""
     timestamp: Optional[datetime] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp is None:
             self.timestamp = datetime.now()

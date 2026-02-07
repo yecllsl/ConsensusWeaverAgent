@@ -39,7 +39,10 @@ class BatchOperations:
                 for r in results
             ],
         )
-        return [cursor.lastrowid - len(results) + i + 1 for i in range(len(results))]
+        last_rowid = cursor.lastrowid
+        if last_rowid is not None:
+            last_rowid = 0
+        return [last_rowid - len(results) + i + 1 for i in range(len(results))]
 
     async def batch_update_sessions(self, updates: List[Dict[str, Any]]) -> None:
         """批量更新会话"""
@@ -97,7 +100,10 @@ class BatchOperations:
                 for s in sessions
             ],
         )
-        return [cursor.lastrowid - len(sessions) + i + 1 for i in range(len(sessions))]
+        last_rowid = cursor.lastrowid
+        if last_rowid is not None:
+            last_rowid = 0
+        return [last_rowid - len(sessions) + i + 1 for i in range(len(sessions))]
 
     async def batch_insert_analysis_results(
         self, results: List[Dict[str, Any]]
@@ -123,4 +129,7 @@ class BatchOperations:
                 for r in results
             ],
         )
-        return [cursor.lastrowid - len(results) + i + 1 for i in range(len(results))]
+        last_rowid = cursor.lastrowid
+        if last_rowid is not None:
+            last_rowid = 0
+        return [last_rowid - len(results) + i + 1 for i in range(len(results))]

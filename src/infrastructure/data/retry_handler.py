@@ -43,7 +43,7 @@ class RetryHandler:
         self, func: Callable[..., T], *args: Any, **kwargs: Any
     ) -> T:
         """执行函数并在失败时重试"""
-        last_exception = None
+        last_exception: Optional[Exception] = None
 
         for attempt in range(self.max_retries + 1):
             try:
@@ -65,7 +65,9 @@ class RetryHandler:
                     self.logger.error(f"操作失败，已达到最大重试次数：{e}")
                     raise
 
-        raise last_exception
+        if last_exception is not None:
+            raise last_exception
+        raise RuntimeError("重试失败，但没有捕获到异常")
 
     def retry_decorator(
         self,
