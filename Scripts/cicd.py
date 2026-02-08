@@ -131,6 +131,8 @@ class CICDConfig:
     coverage_enabled: bool
     coverage_threshold: int
     auto_fix: bool
+    skip_nltk: bool
+    pytest_k: Optional[str]
 
 
 class CICDError(Exception):
@@ -599,16 +601,17 @@ class CICD:
 
         print_section("运行测试")
 
-        print_subsection("下载NLTK数据")
-        nltk_download_cmd = ["uv", "run", "python", "Scripts/download_nltk_data.py"]
-        nltk_success, nltk_output = self._run_command(
-            nltk_download_cmd, cwd=self.config.project_dir
-        )
-        if not nltk_success:
-            self.logger.warning("NLTK数据下载失败，继续执行测试")
-            print_color("⚠️ NLTK数据下载失败，继续执行测试", "yellow")
-        else:
-            print_color("✅ NLTK数据下载成功", "green")
+        if not self.config.skip_nltk:
+            print_subsection("下载NLTK数据")
+            nltk_download_cmd = ["uv", "run", "python", "Scripts/download_nltk_data.py"]
+            nltk_success, nltk_output = self._run_command(
+                nltk_download_cmd, cwd=self.config.project_dir
+            )
+            if not nltk_success:
+                self.logger.warning("NLTK数据下载失败，继续执行测试")
+                print_color("⚠️ NLTK数据下载失败，继续执行测试", "yellow")
+            else:
+                print_color("✅ NLTK数据下载成功", "green")
 
         test_results_dir = os.path.join(
             self.config.project_dir, "reports", "test-results"
@@ -624,6 +627,9 @@ class CICD:
         if self.config.pytest_tb_style:
             cmd.append(f"--tb={self.config.pytest_tb_style}")
         cmd.extend(["--junitxml", test_results_file])
+
+        if self.config.pytest_k:
+            cmd.extend(["-k", self.config.pytest_k])
 
         if self.config.coverage_enabled:
             cmd.extend(
@@ -1074,6 +1080,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--skip-mypy", action="store_true", help="跳过类型检查")
     parser.add_argument("--skip-tests", action="store_true", help="跳过测试执行")
+    parser.add_argument("--skip-nltk", action="store_true", help="跳过NLTK数据下载")
+    parser.add_argument("--pytest-k", type=str, help="pytest -k参数（过滤测试）")
     parser.add_argument("--skip-security", action="store_true", help="跳过安全检查")
     parser.add_argument("--skip-checks", action="store_true", help="跳过代码检查（CD）")
     parser.add_argument("--skip-build", action="store_true", help="跳过包构建")
@@ -1172,6 +1180,8 @@ def main() -> int:
         coverage_enabled=DEFAULT_CONFIG["COVERAGE_ENABLED"] == "true",
         coverage_threshold=int(DEFAULT_CONFIG["COVERAGE_THRESHOLD"]),
         auto_fix=auto_fix,
+        skip_nltk=args.skip_nltk,
+        pytest_k=args.pytest_k,
     )
 
     cicd = CICD(config)
