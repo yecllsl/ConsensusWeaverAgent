@@ -133,6 +133,7 @@ class CICDConfig:
     auto_fix: bool
     skip_nltk: bool
     pytest_k: Optional[str]
+    skip_coverage: bool
 
 
 class CICDError(Exception):
@@ -631,7 +632,7 @@ class CICD:
         if self.config.pytest_k:
             cmd.extend(["-k", self.config.pytest_k])
 
-        if self.config.coverage_enabled:
+        if self.config.coverage_enabled and not self.config.skip_coverage:
             cmd.extend(
                 [
                     "--cov=src",
@@ -1082,6 +1083,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--skip-tests", action="store_true", help="跳过测试执行")
     parser.add_argument("--skip-nltk", action="store_true", help="跳过NLTK数据下载")
     parser.add_argument("--pytest-k", type=str, help="pytest -k参数（过滤测试）")
+    parser.add_argument("--skip-coverage", action="store_true", help="跳过覆盖率检查")
     parser.add_argument("--skip-security", action="store_true", help="跳过安全检查")
     parser.add_argument("--skip-checks", action="store_true", help="跳过代码检查（CD）")
     parser.add_argument("--skip-build", action="store_true", help="跳过包构建")
@@ -1182,6 +1184,7 @@ def main() -> int:
         auto_fix=auto_fix,
         skip_nltk=args.skip_nltk,
         pytest_k=args.pytest_k,
+        skip_coverage=args.skip_coverage,
     )
 
     cicd = CICD(config)
