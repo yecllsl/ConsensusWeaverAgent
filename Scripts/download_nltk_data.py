@@ -79,9 +79,6 @@ def main():
 
     print("开始下载NLTK数据...")
 
-    print("清理清理损坏的zip文件...")
-    cleanup_corrupted_zip_files()
-
     success_count = 0
     for package in required_packages:
         if check_nltk_data_exists(package):
