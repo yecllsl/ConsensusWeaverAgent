@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from click.testing import CliRunner
 
@@ -98,6 +100,10 @@ class TestCLIIntegration:
         assert result.exit_code == 0
         assert "0.4.0.dev0" in result.output
 
+    @pytest.mark.skipif(
+        os.environ.get("CI") == "true",
+        reason="CI环境中没有本地模型文件",
+    )
     def test_check_command(self) -> None:
         """测试check命令"""
         runner = CliRunner()
@@ -106,6 +112,7 @@ class TestCLIIntegration:
         assert result.exit_code == 0
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestTUIIntegration:
     """测试TUI集成"""
 
@@ -165,6 +172,10 @@ class TestCLIAndTUICompatibility:
             result = runner.invoke(cli, [command, "--help"])
             assert result.exit_code == 0, f"命令 {command} 帮助信息不可用"
 
+    @pytest.mark.skipif(
+        os.environ.get("CI") == "true",
+        reason="CI环境中没有本地模型文件",
+    )
     def test_backward_compatibility(self) -> None:
         """测试向后兼容性"""
         runner = CliRunner()

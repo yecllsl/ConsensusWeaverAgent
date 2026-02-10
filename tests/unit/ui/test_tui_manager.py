@@ -144,6 +144,9 @@ class TestTUIManager:
         if manager.console.width < 80:
             pytest.skip("终端宽度不足，跳过此测试")
 
+        if not manager.console.is_terminal:
+            pytest.skip("非终端环境，跳过此测试")
+
         assert manager.is_compatible() is True
 
     def test_is_compatible_without_trogon(self) -> None:
