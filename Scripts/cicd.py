@@ -198,9 +198,16 @@ class CICD:
 
         try:
             result = subprocess.run(
-                cmd, cwd=cwd, capture_output=True, text=True, check=False
+                cmd,
+                cwd=cwd,
+                capture_output=True,
+                encoding="utf-8",
+                errors="ignore",
+                check=False,
             )
-            output = result.stdout + result.stderr
+            stdout = result.stdout if result.stdout is not None else ""
+            stderr = result.stderr if result.stderr is not None else ""
+            output = stdout + stderr
             self.logger.debug(f"命令输出: {output}")
 
             if not quiet:
@@ -208,6 +215,12 @@ class CICD:
                     print(output)
 
             return result.returncode == 0, output
+        except UnicodeDecodeError as e:
+            error_msg = f"命令执行失败（编码错误）: {e}"
+            self.logger.error(error_msg)
+            if not quiet:
+                print_color(error_msg, "red")
+            return False, str(e)
         except Exception as e:
             error_msg = f"命令执行失败: {e}"
             self.logger.error(error_msg)
@@ -729,11 +742,50 @@ class CICD:
             "-ll",
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
-        if not success:
-            self.logger.warning("安全检查发现问题")
-            print_color("⚠️ 安全检查发现问题，请查看报告", "yellow")
+
+        if os.path.exists(security_report_file):
+            with open(security_report_file, "r", encoding="utf-8") as f:
+                import json
+
+                report = json.load(f)
+
+            high_severity_count = (
+                report.get("metrics", {}).get("_totals", {}).get("SEVERITY.HIGH", 0)
+            )
+            medium_severity_count = (
+                report.get("metrics", {}).get("_totals", {}).get("SEVERITY.MEDIUM", 0)
+            )
+            low_severity_count = (
+                report.get("metrics", {}).get("_totals", {}).get("SEVERITY.LOW", 0)
+            )
+
+            if high_severity_count > 0:
+                self.logger.error(f"发现{high_severity_count}个高严重性安全问题")
+                print_color(
+                    f"❌ 发现{high_severity_count}个高严重性安全问题，请查看报告", "red"
+                )
+                return False
+            elif medium_severity_count > 0:
+                msg = (
+                    f"发现{medium_severity_count}个中等严重性问题"
+                    f"和{low_severity_count}个低严重性问题"
+                )
+                self.logger.warning(msg)
+                print_color(
+                    f"⚠️ {msg}",
+                    "yellow",
+                )
+            elif low_severity_count > 0:
+                self.logger.info(f"发现{low_severity_count}个低严重性问题")
+                print_color(f"ℹ️ 发现{low_severity_count}个低严重性问题", "blue")
+            else:
+                print_color("✅ 安全检查完成，未发现问题", "green")
         else:
-            print_color(f"✅ 安全检查完成: {security_report_file}", "green")
+            if not success:
+                self.logger.warning("安全检查失败")
+                print_color("⚠️ 安全检查失败", "yellow")
+            else:
+                print_color("✅ 安全检查完成", "green")
 
         return True
 

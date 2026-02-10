@@ -40,7 +40,7 @@ class TestTransactionManager:
         """测试关闭数据库连接"""
         manager = TransactionManager(":memory:")
 
-        conn = manager._get_connection()
+        manager._get_connection()
         manager.close()
 
         assert manager._conn is None
