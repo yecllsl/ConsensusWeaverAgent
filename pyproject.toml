@@ -2,7 +2,7 @@
 
 [project]
 name = "consensusweaveragent"
-version = "0.4.2.dev0"
+version = "0.4.2"
 description = "智能问答协调终端应用"
 authors = [
     { name = "Colin", email = "yecllsl@outlook.com" },
