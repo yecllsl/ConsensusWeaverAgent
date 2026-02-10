@@ -161,7 +161,7 @@ class LLMCache:
 
     def _generate_key(self, prompt: str, model: str = "default") -> str:
         key_data = f"llm:{model}:{prompt}"
-        hash_value = hashlib.md5(key_data.encode()).hexdigest()
+        hash_value = hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
         key = f"llm:{model}:{hash_value}"
         self._prompt_keys[(prompt, model)] = key
         return key
@@ -207,7 +207,7 @@ class ToolCache:
 
     def _generate_key(self, tool_name: str, question: str) -> str:
         key_data = f"tool:{tool_name}:{question}"
-        hash_value = hashlib.md5(key_data.encode()).hexdigest()
+        hash_value = hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
         key = f"tool:{tool_name}:{hash_value}"
         self._tool_keys[(tool_name, question)] = key
         return key

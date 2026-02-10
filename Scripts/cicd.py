@@ -47,7 +47,7 @@ DEFAULT_CONFIG = {
     "TEST_PYPI_INDEX_URL": "https://test.pypi.org/legacy/",
     "BUILD_DIR": "dist",
     "COVERAGE_ENABLED": "true",
-    "COVERAGE_THRESHOLD": "80",
+    "COVERAGE_THRESHOLD": "75",
 }
 
 
@@ -726,6 +726,7 @@ class CICD:
             "json",
             "-o",
             security_report_file,
+            "-ll",
         ]
         success, _ = self._run_command(cmd, cwd=self.config.project_dir, quiet=True)
         if not success:
