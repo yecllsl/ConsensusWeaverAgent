@@ -1,6 +1,6 @@
 ---
-name: "ci-auto-fix"
-description: "Automates CI execution, error recording, and fixing issues until CI passes. Invoke when user wants to run CI and automatically fix any errors encountered."
+name: ci-auto-fix
+description: Automates CI execution, error recording, and fixing issues until CI passes. Invoke when user wants to run CI and automatically fix any errors encountered.
 ---
 
 # CI Auto-Fix
