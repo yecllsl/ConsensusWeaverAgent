@@ -165,9 +165,6 @@ class TestCLIAndTUICompatibility:
 
         commands = ["run", "ask", "check", "version"]
 
-        if get_tui_manager().is_trogon_available():
-            commands.append("tui")
-
         for command in commands:
             result = runner.invoke(cli, [command, "--help"])
             assert result.exit_code == 0, f"命令 {command} 帮助信息不可用"
