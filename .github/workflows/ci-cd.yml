@@ -2,9 +2,11 @@ name: CI/CD - ConsensusWeaverAgent
 
 # 工作流触发条件
 on:
-  # 代码推送到main或develop分支
+  # 代码推送到main分支或推送标签（用于发布）
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   # Pull Request到main分支
   pull_request:
     branches: [ main ]
@@ -199,3 +201,85 @@ jobs:
         with:
           name: build-artifacts
           path: dist/
+
+  # 4. 发布作业（标签触发）
+  release:
+    # 运行环境
+    runs-on: ubuntu-latest
+    
+    # 依赖关系
+    needs: build-verify
+    
+    # 触发条件
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    # 步骤定义
+    steps:
+      # 4.1 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 4.2 设置Python环境
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      # 4.3 安装uv依赖管理工具
+      - name: Install uv dependency manager
+        run: |
+          python -m pip install uv==${{ env.UV_VERSION }}
+
+      # 4.4 创建虚拟环境
+      - name: Create virtual environment
+        run: |
+          uv venv
+
+      # 4.5 安装项目依赖和构建工具
+      - name: Install project dependencies and build tools
+        run: |
+          uv pip install -e . --group dev
+          uv pip install build==1.2.0
+
+      # 4.6 构建发布包
+      - name: Build distribution packages
+        run: |
+          uv run python -m build
+
+      # 4.7 验证构建产物
+      - name: Verify release artifacts
+        run: |
+          # 检查构建产物
+          if [ ! -f dist/*.whl ] || [ ! -f dist/*.tar.gz ]; then
+            echo "Error: Release packages not found!"
+            exit 1
+          fi
+          echo "Release verification passed: Packages generated successfully!"
+          ls -la dist/
+
+      # 4.8 上传构建产物
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/
+
+      # 4.9 创建GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            ## 发布说明
+            
+            查看详细变更日志：[CHANGELOG.md](https://github.com/yecllsl/ConsensusWeaverAgent/blob/main/CHANGELOG.md)
+            
+            ### 安装
+            
+            ```bash
+            pip install consensusweaveragent==${{ github.ref_name }}
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
