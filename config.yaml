@@ -1,0 +1,41 @@
+# 浏览器配置
+browser:
+  headless: true
+  viewport_width: 1280
+  viewport_height: 800
+  slow_mo: 0
+  user_data_base_dir: "./data/user_data"
+
+# 平台配置
+platforms:
+  doubao:
+    enabled: true
+    name: "豆包"
+    base_url: "https://www.doubao.com"
+  chatglm:
+    enabled: true
+    name: "智谱清言"
+    base_url: "https://chatglm.cn"
+  deepseek:
+    enabled: true
+    name: "DeepSeek"
+    base_url: "https://chat.deepseek.com"
+  qianwen:
+    enabled: true
+    name: "千问"
+    base_url: "https://qianwen.com/chat"
+  yuanbao:
+    enabled: true
+    name: "元宝"
+    base_url: "https://yuanbao.tencent.com/chat"
+
+# 默认参数
+defaults:
+  timeout: 120
+  min_success: 3
+  max_concurrent: 5
+
+# 路径配置
+paths:
+  screenshot_dir: "./data/screenshots"
+  log_dir: "./data/logs"
