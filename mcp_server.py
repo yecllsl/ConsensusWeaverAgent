@@ -139,5 +139,13 @@ async def capture_screenshot(platform: str) -> dict:
     return await manager.capture_screenshot(platform)
 
 
+# 为工具函数附加 .fn 属性（指向函数自身），兼容 FunctionTool 风格的外部调用
+# fastmcp 3.x 的 @mcp.tool() 返回原始函数而非 FunctionTool 对象，此处补齐 .fn
+ask_ai.fn = ask_ai
+list_platforms.fn = list_platforms
+check_login.fn = check_login
+capture_screenshot.fn = capture_screenshot
+
+
 if __name__ == "__main__":
     mcp.run()
