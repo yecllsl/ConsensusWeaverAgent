@@ -75,7 +75,7 @@ class BaseAdapter(ABC):
     async def ask(self, question: str, timeout: int = 120) -> AdapterResult:
         """完整提问流程封装
 
-        依次执行：导航 → 登录检查 → 新对话 → 发送 → 等待 → 提取 → 截图
+        依次执行：导航 → 登录检查 → 发送 → 等待 → 提取 → 截图
         """
         start_time = datetime.now()
         screenshot_path = None
@@ -87,7 +87,6 @@ class BaseAdapter(ABC):
             is_logged_in = await self.check_login_status()
             if not is_logged_in:
                 raise RuntimeError(f"未登录: 请先调用 check_login 登录 {self.platform_name}")
-            await self.new_chat()
             await self.send_question(question)
             answer = await self.wait_for_answer(timeout)
             screenshot_path = await self._save_screenshot()

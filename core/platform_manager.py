@@ -120,11 +120,22 @@ class PlatformManager:
             )
 
     async def check_login(self, platform_id: str, headless: bool = False) -> dict:
-        """检查指定平台的登录状态"""
+        """检查指定平台的登录状态
+
+        先导航到聊天页，再检查登录状态。未登录时页面会停留在登录页供用户手动登录。
+        """
         adapter = await self._create_adapter(platform_id)
-        is_logged_in = await adapter.check_login_status()
         platform_name = self.config.platforms.get(platform_id)
         platform_name = platform_name.name if platform_name else platform_id
+
+        try:
+            await adapter.navigate_to_chat()
+        except Exception:
+            # 导航失败（可能是未登录跳转到登录页），继续检查状态
+            pass
+
+        is_logged_in = await adapter.check_login_status()
+
         return {
             "platform": platform_id,
             "is_logged_in": is_logged_in,

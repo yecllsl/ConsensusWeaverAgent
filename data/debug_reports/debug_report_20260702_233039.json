@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-07-02T23:30:39.165688",
+  "playwright_browsers_path": "D:\\playwright\\browsers",
+  "total": 5,
+  "success_count": 5,
+  "results": [
+    {
+      "platform": "doubao",
+      "success": true,
+      "url": "https://www.doubao.com/chat",
+      "login_status": "logged_in",
+      "answer_length": 39,
+      "answer_preview": "我是字节跳动自研的 AI 豆包，能陪你聊天、解答各类问题并提供创作与实用协助。",
+      "screenshot": "d:\\yecll\\Documents\\LocalCode\\ConsensusWeaverAgent\\data\\screenshots\\debug_doubao_result.png",
+      "error": null,
+      "started_at": "2026-07-02T23:29:24.302465"
+    },
+    {
+      "platform": "deepseek",
+      "success": true,
+      "url": "https://chat.deepseek.com/",
+      "login_status": "logged_in",
+      "answer_length": 49,
+      "answer_preview": "你好！我是DeepSeek，由深度求索公司打造的AI助手，乐于为你解答问题、提供建议或陪你聊天。😊",
+      "screenshot": "d:\\yecll\\Documents\\LocalCode\\ConsensusWeaverAgent\\data\\screenshots\\debug_deepseek_result.png",
+      "error": null,
+      "started_at": "2026-07-02T23:29:41.600179"
+    },
+    {
+      "platform": "chatglm",
+      "success": true,
+      "url": "https://chatglm.cn/main/alltoolsdetail?lang=zh",
+      "login_status": "logged_in",
+      "answer_length": 35,
+      "answer_preview": "你好，我是智谱清言，由智谱AI基于GLM-5大语言模型开发的AI助手。",
+      "screenshot": "d:\\yecll\\Documents\\LocalCode\\ConsensusWeaverAgent\\data\\screenshots\\debug_chatglm_result.png",
+      "error": null,
+      "started_at": "2026-07-02T23:29:54.880545"
+    },
+    {
+      "platform": "qianwen",
+      "success": true,
+      "url": "https://qianwen.com/chat",
+      "login_status": "logged_in",
+      "answer_length": 37,
+      "answer_preview": "我是千问，来自阿里巴巴，一个既能陪你深度思考，也能和你轻松闲聊的AI朋友。",
+      "screenshot": "d:\\yecll\\Documents\\LocalCode\\ConsensusWeaverAgent\\data\\screenshots\\debug_qianwen_result.png",
+      "error": null,
+      "started_at": "2026-07-02T23:30:09.766183"
+    },
+    {
+      "platform": "yuanbao",
+      "success": true,
+      "url": "https://yuanbao.tencent.com/chat/naQivTmsDa",
+      "login_status": "logged_in",
+      "answer_length": 48,
+      "answer_preview": "你好，请用一句话介绍你自己\n我是混元，是由腾讯开发的大模型。\n随时随地，想问就问 立即下载App",
+      "screenshot": "d:\\yecll\\Documents\\LocalCode\\ConsensusWeaverAgent\\data\\screenshots\\debug_yuanbao_result.png",
+      "error": null,
+      "started_at": "2026-07-02T23:30:25.115813"
+    }
+  ]
+}

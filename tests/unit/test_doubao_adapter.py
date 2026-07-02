@@ -38,9 +38,12 @@ async def test_doubao_navigate_to_chat(adapter, mock_page):
 
 @pytest.mark.asyncio
 async def test_doubao_check_login_status_logged_in(adapter, mock_page):
-    """测试已登录状态检测"""
+    """测试已登录状态检测：无登录按钮且输入框可见"""
     mock_page.url = "https://www.doubao.com/chat/123"
-    mock_page.query_selector = AsyncMock(return_value=MagicMock())
+    textarea_mock = MagicMock()
+    textarea_mock.is_visible = AsyncMock(return_value=True)
+    # 前 3 次为登录按钮选择器（均未找到），第 4 次为 textarea
+    mock_page.query_selector = AsyncMock(side_effect=[None, None, None, textarea_mock])
 
     result = await adapter.check_login_status()
     assert result is True

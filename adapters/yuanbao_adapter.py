@@ -11,8 +11,10 @@ class YuanbaoAdapter(BaseAdapter):
     """元宝 (yuanbao.tencent.com) 适配器
 
     注意：腾讯系产品可能有额外验证（如二维码登录确认），
-    登录态检查需更严格。
+    登录态检查需更严格。元宝输入框为 contenteditable div。
     """
+
+    INPUT_SELECTOR = "[contenteditable='true'].ql-editor, textarea"
 
     def __init__(self, page: Page):
         super().__init__(
@@ -25,7 +27,7 @@ class YuanbaoAdapter(BaseAdapter):
     async def navigate_to_chat(self) -> None:
         """导航到元宝聊天页面"""
         await self.page.goto("https://yuanbao.tencent.com/chat", wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=30000)
+        await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=30000)
         self.logger.info("已导航到元宝聊天页")
 
     async def check_login_status(self) -> bool:
@@ -33,18 +35,19 @@ class YuanbaoAdapter(BaseAdapter):
         checks_passed = 0
         if "chat" in self.page.url and "login" not in self.page.url:
             checks_passed += 1
-        textarea = await self.page.query_selector("textarea")
-        if textarea:
+        input_el = await self.page.query_selector(self.INPUT_SELECTOR)
+        if input_el:
             checks_passed += 1
         self.logger.debug(f"元宝登录检测: {checks_passed}/2 项通过")
         return checks_passed >= 2
 
     async def send_question(self, question: str) -> None:
         """在元宝输入框中输入问题并发送"""
-        textarea = await self.page.wait_for_selector("textarea", timeout=10000)
-        await textarea.click()
-        await self.page.fill("textarea", question)
+        input_el = await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=10000)
+        await input_el.click()
+        await self.page.fill(self.INPUT_SELECTOR, question)
         await self.page.keyboard.press("Enter")
+        self._last_question = question  # 记录问题文本，供答案提取时过滤
         self.logger.info(f"已发送问题: {question[:50]}...")
 
     async def wait_for_answer(self, timeout: int = 120) -> str:
@@ -54,12 +57,19 @@ class YuanbaoAdapter(BaseAdapter):
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
-            textarea = await self.page.query_selector("textarea")
-            if textarea:
-                is_disabled = await textarea.get_attribute("disabled")
-                if is_disabled is None:
-                    await asyncio.sleep(2)
-                    break
+            input_el = await self.page.query_selector(self.INPUT_SELECTOR)
+            if input_el:
+                tag = await input_el.evaluate("el => el.tagName")
+                if tag.lower() == "textarea":
+                    is_disabled = await input_el.get_attribute("disabled")
+                    if is_disabled is None:
+                        await asyncio.sleep(2)
+                        break
+                else:
+                    editable = await input_el.get_attribute("contenteditable")
+                    if editable is not None and editable.lower() != "false":
+                        await asyncio.sleep(2)
+                        break
         answer = await self._extract_last_answer()
         if not answer:
             raise RuntimeError("未能提取到元宝的回答内容")
@@ -67,26 +77,60 @@ class YuanbaoAdapter(BaseAdapter):
         return answer
 
     async def _extract_last_answer(self) -> Optional[str]:
-        """提取最后一条 AI 回答文本"""
+        """提取最后一条 AI 回答文本
+
+        策略：
+        1. 优先尝试 AI 消息专用选择器
+        2. 从后往前遍历，过滤掉包含用户问题原文的元素
+        3. 兜底使用通用 message/chat 元素
+        """
         selectors = [
-            "[class*='answer']",
+            # 元宝 AI 消息专用 class（按匹配精度排序）
+            ".agent-chat__list__item--ai .agent-chat__bubble__content",
+            ".agent-chat__list__item--ai",
+            ".agent-chat__bubble--ai",
+            ".agent-chat__bubble__content",
+            ".hyc-content-md",
+            # 通用兜底
             "[class*='ai-message']",
+            "[class*='answer-content']",
+            "[class*='agent-dialogue__content--common__content']",
+            "[class*='agent-dialogue__content']",
             "[class*='markdown-body']",
             "[class*='message-content']",
+            "[class*='answer']",
             "[class*='response']",
             "[class*='chat-content']",
         ]
+        last_question = getattr(self, "_last_question", "")
+
         for selector in selectors:
             elements = await self.page.query_selector_all(selector)
-            if elements:
-                text = await elements[-1].inner_text()
-                if text and len(text.strip()) > 0:
-                    return text.strip()
-        all_text = await self.page.evaluate("""() => {
-            const messages = document.querySelectorAll('[class*="message"], [class*="chat"]');
-            if (messages.length > 0) return messages[messages.length - 1].innerText;
-            return '';
-        }""")
+            for el in reversed(elements):
+                try:
+                    text = await el.inner_text()
+                    text = text.strip()
+                    if not text:
+                        continue
+                    # 跳过包含用户问题的元素，避免把问题文本当答案
+                    if last_question and last_question in text:
+                        continue
+                    return text
+                except Exception:
+                    continue
+
+        # 兜底：从通用消息元素中从后往前找第一条不含问题的文本
+        all_text = await self.page.evaluate(
+            """(question) => {
+                const messages = document.querySelectorAll('[class*="message"], [class*="chat"]');
+                for (let i = messages.length - 1; i >= 0; i--) {
+                    const text = messages[i].innerText?.trim() || '';
+                    if (text && (!question || !text.includes(question))) return text;
+                }
+                return '';
+            }""",
+            last_question,
+        )
         return all_text.strip() if all_text else None
 
     async def capture_screenshot(self, save_path: str) -> str:
@@ -107,5 +151,5 @@ class YuanbaoAdapter(BaseAdapter):
         except Exception:
             pass
         await self.page.reload(wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=15000)
+        await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=15000)
         self.logger.info("已通过刷新页面开启新对话")

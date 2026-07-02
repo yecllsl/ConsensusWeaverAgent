@@ -8,7 +8,13 @@ from adapters.base_adapter import BaseAdapter
 
 
 class QianwenAdapter(BaseAdapter):
-    """千问 (qianwen.com) 适配器"""
+    """千问 (qianwen.com) 适配器
+
+    千问使用 contenteditable div 作为输入框，而不是 textarea，
+    因此输入元素选择器需要同时兼容 textarea 和 contenteditable。
+    """
+
+    INPUT_SELECTOR = "textarea, [contenteditable='true'], [role='textbox']"
 
     def __init__(self, page: Page):
         super().__init__(
@@ -21,7 +27,7 @@ class QianwenAdapter(BaseAdapter):
     async def navigate_to_chat(self) -> None:
         """导航到千问聊天页面"""
         await self.page.goto("https://qianwen.com/chat", wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=30000)
+        await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=30000)
         self.logger.info("已导航到千问聊天页")
 
     async def check_login_status(self) -> bool:
@@ -29,17 +35,17 @@ class QianwenAdapter(BaseAdapter):
         checks_passed = 0
         if "chat" in self.page.url and "login" not in self.page.url:
             checks_passed += 1
-        textarea = await self.page.query_selector("textarea")
-        if textarea:
+        input_el = await self.page.query_selector(self.INPUT_SELECTOR)
+        if input_el:
             checks_passed += 1
         self.logger.debug(f"千问登录检测: {checks_passed}/2 项通过")
         return checks_passed >= 2
 
     async def send_question(self, question: str) -> None:
         """在千问输入框中输入问题并发送"""
-        textarea = await self.page.wait_for_selector("textarea", timeout=10000)
-        await textarea.click()
-        await self.page.fill("textarea", question)
+        input_el = await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=10000)
+        await input_el.click()
+        await self.page.fill(self.INPUT_SELECTOR, question)
         await self.page.keyboard.press("Enter")
         self.logger.info(f"已发送问题: {question[:50]}...")
 
@@ -50,12 +56,20 @@ class QianwenAdapter(BaseAdapter):
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
-            textarea = await self.page.query_selector("textarea")
-            if textarea:
-                is_disabled = await textarea.get_attribute("disabled")
-                if is_disabled is None:
-                    await asyncio.sleep(2)
-                    break
+            input_el = await self.page.query_selector(self.INPUT_SELECTOR)
+            if input_el:
+                tag = await input_el.evaluate("el => el.tagName")
+                if tag.lower() == "textarea":
+                    is_disabled = await input_el.get_attribute("disabled")
+                    if is_disabled is None:
+                        await asyncio.sleep(2)
+                        break
+                else:
+                    # contenteditable 在生成过程中可能变为 false
+                    editable = await input_el.get_attribute("contenteditable")
+                    if editable is not None and editable.lower() != "false":
+                        await asyncio.sleep(2)
+                        break
         answer = await self._extract_last_answer()
         if not answer:
             raise RuntimeError("未能提取到千问的回答内容")
@@ -70,6 +84,7 @@ class QianwenAdapter(BaseAdapter):
             "[class*='markdown-body']",
             "[class*='message-content']",
             "[class*='response']",
+            "[class*='chatRoom']",
         ]
         for selector in selectors:
             elements = await self.page.query_selector_all(selector)
@@ -102,5 +117,5 @@ class QianwenAdapter(BaseAdapter):
         except Exception:
             pass
         await self.page.reload(wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=15000)
+        await self.page.wait_for_selector(self.INPUT_SELECTOR, timeout=15000)
         self.logger.info("已通过刷新页面开启新对话")

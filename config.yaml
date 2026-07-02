@@ -1,6 +1,6 @@
 # 浏览器配置
 browser:
-  headless: true
+  headless: false
   viewport_width: 1280
   viewport_height: 800
   slow_mo: 0
