@@ -1,5 +1,6 @@
 """DeepSeek 平台适配器"""
 import asyncio
+import re
 from typing import Optional
 
 from playwright.async_api import Page
@@ -104,6 +105,11 @@ class DeepSeekAdapter(BaseAdapter):
         self.logger.info(f"DeepSeek 回答已提取，长度: {len(answer)} 字符")
         return answer
 
+    def _strip_citation_marks(self, text: str) -> str:
+        """移除 DeepSeek 答案中的引用/脚注标记，如 '-1-4-7'"""
+        # 匹配跟在中文/英文/标点后的 -数字 序列，避免误删正常范围写法
+        return re.sub(r"(?<=[\u4e00-\u9fa5a-zA-Z，。！？、；：])-(?:\d+-)*\d+(?=[\s，。！？、；：]|$)", "", text)
+
     async def _extract_last_answer(self) -> Optional[str]:
         """提取最后一条 AI 回答文本，跳过思考过程
 
@@ -122,7 +128,7 @@ class DeepSeekAdapter(BaseAdapter):
                 except Exception:
                     continue
             if parts:
-                return "\n\n".join(parts)
+                return self._strip_citation_marks("\n\n".join(parts))
 
         # 2. 兜底选择器
         selectors = [
@@ -136,13 +142,13 @@ class DeepSeekAdapter(BaseAdapter):
             if elements:
                 text = await elements[-1].inner_text()
                 if text and len(text.strip()) > 0:
-                    return text.strip()
+                    return self._strip_citation_marks(text.strip())
         all_text = await self.page.evaluate("""() => {
             const messages = document.querySelectorAll('[class*="message"], [class*="chat"]');
             if (messages.length > 0) return messages[messages.length - 1].innerText;
             return '';
         }""")
-        return all_text.strip() if all_text else None
+        return self._strip_citation_marks(all_text.strip()) if all_text else None
 
     async def capture_screenshot(self, save_path: str) -> str:
         """截取 DeepSeek 当前页面"""

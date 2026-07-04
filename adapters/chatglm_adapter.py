@@ -72,6 +72,10 @@ class ChatGLMAdapter(BaseAdapter):
         await self.page.keyboard.press("Enter")
         self.logger.info(f"已发送问题: {question[:50]}...")
 
+    def _is_incomplete_text(self, text: str) -> bool:
+        """判断文本是否包含智谱流式输出未结束标记"""
+        return "【turn" in text or text.rstrip().endswith("sear")
+
     async def wait_for_answer(self, timeout: int = 120) -> str:
         """等待智谱清言回答完成并提取答案"""
         elapsed = 0
@@ -81,15 +85,20 @@ class ChatGLMAdapter(BaseAdapter):
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
-            # 输入框可用且答案长度稳定、非搜索状态，认为回答完成
+            # 输入框可用且答案长度稳定、非搜索状态、非流式标记，认为回答完成
             textarea = await self._get_input_element()
             if textarea:
                 is_disabled = await textarea.get_attribute("disabled")
                 if is_disabled is None:
                     current_answer = await self._extract_last_answer() or ""
                     current_len = len(current_answer)
-                    # 搜索中/过短的内容不算有效完成
-                    if current_len > 30 and current_len == last_len:
+                    # 搜索中/过短/流式标记/推理文本未消失的内容不算有效完成
+                    if (
+                        current_len > 30
+                        and current_len == last_len
+                        and not self._is_incomplete_text(current_answer)
+                        and not self._is_reasoning_text(current_answer)
+                    ):
                         stable_count += 1
                         if stable_count >= 3:
                             await asyncio.sleep(2)
@@ -107,8 +116,63 @@ class ChatGLMAdapter(BaseAdapter):
         """判断文本是否为智谱搜索状态提示"""
         return "搜索中" in text or "个来源" in text
 
+    def _is_reasoning_text(self, text: str) -> bool:
+        """判断文本是否为智谱的搜索推理/意图说明文本"""
+        # 这类文本以模型自身行为描述为主，不是给用户的最终答案
+        reasoning_phrases = (
+            "用户询问", "用户要求", "我将搜索", "以便提炼",
+            "我已经收集到", "现在来组织答案", "我将引用", "现在开始构建",
+            "收集到的关键信息", "现在开始构建答案", "用户问的是",
+        )
+        return text.startswith(reasoning_phrases) or any(p in text for p in reasoning_phrases)
+
+    def _strip_source_references(self, text: str) -> str:
+        """移除智谱答案中混入的来源引用短行（如 51cto.com、+2），包括内联和末尾"""
+        lines = text.split("\n")
+        cleaned = []
+        skip_next = False
+        for i, line in enumerate(lines):
+            if skip_next:
+                skip_next = False
+                continue
+            stripped = line.strip()
+            # 移除单独出现的域名/来源行
+            if 3 < len(stripped) < 40 and any(suffix in stripped.lower() for suffix in (".com", ".cn", ".net", ".org")):
+                # 如果下一行是 +N 引用标记，也一并跳过
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].strip()
+                    if next_stripped.startswith("+") and next_stripped[1:].isdigit():
+                        skip_next = True
+                continue
+            # 移除 +N 引用标记行
+            if stripped.startswith("+") and stripped[1:].isdigit():
+                continue
+            cleaned.append(line)
+
+        # 合并因删除引用而产生的孤立标点到前一段，避免留下 "引擎\n\n。"
+        merged = []
+        sentence_puncts = "。，！？；：、.!?;:,"
+        for line in cleaned:
+            stripped = line.strip()
+            if (
+                stripped
+                and stripped[0] in sentence_puncts
+                and merged
+                and merged[-1].strip() != ""
+                and merged[-1].strip()[-1] not in sentence_puncts
+            ):
+                merged[-1] = merged[-1].rstrip() + stripped
+                continue
+            merged.append(line)
+
+        # 二次清理末尾可能残留的孤立标点或空行
+        while merged and merged[-1].strip() in ("", "。", "．", ".", "!", "?", "！", "？"):
+            merged.pop()
+
+        return "\n".join(merged).rstrip()
+
     async def _extract_last_answer(self) -> Optional[str]:
-        """提取最后一条 AI 回答文本，过滤平台名/短文本/搜索状态"""
+        """提取最后一条 AI 回答文本，过滤平台名/短文本/搜索状态/流式标记/推理文本"""
         selectors = [
             # 优先使用聊天消息专用容器，避免匹配到设置/表单中的 answer/content-area
             "[class*='message-content']",
@@ -119,24 +183,53 @@ class ChatGLMAdapter(BaseAdapter):
         ]
         for selector in selectors:
             elements = await self.page.query_selector_all(selector)
+            best_text = ""
             for el in reversed(elements):
                 try:
                     text = await el.inner_text()
                     text = text.strip()
-                    # 过滤过短、平台名、搜索中的无效文本
-                    if len(text) > 30 and text.lower() != "chatglm" and not self._is_searching_text(text):
-                        return text
+                    # 过滤过短、平台名、搜索中、流式标记、推理文本，保留最长匹配
+                    if (
+                        len(text) > 30
+                        and text.lower() != "chatglm"
+                        and not self._is_searching_text(text)
+                        and not self._is_incomplete_text(text)
+                        and not self._is_reasoning_text(text)
+                        and len(text) > len(best_text)
+                    ):
+                        best_text = text
                 except Exception:
                     continue
+            if best_text:
+                return self._strip_source_references(best_text)
         all_text = await self.page.evaluate("""() => {
             const messages = document.querySelectorAll('[class*="message-content"], [class*="markdown-body"], [class*="chat-message"]');
+            let bestText = '';
             for (let i = messages.length - 1; i >= 0; i--) {
                 const text = messages[i].innerText?.trim() || '';
-                if (text.length > 30 && text.toLowerCase() !== 'chatglm' && !text.includes('搜索中') && !text.includes('个来源')) return text;
+                if (
+                    text.length > 30
+                    && text.toLowerCase() !== 'chatglm'
+                    && !text.includes('搜索中')
+                    && !text.includes('个来源')
+                    && !text.includes('【turn')
+                    && !text.startsWith('用户询问')
+                    && !text.startsWith('用户要求')
+                    && !text.includes('我将搜索')
+                    && !text.includes('以便提炼')
+                    && !text.includes('我已经收集到')
+                    && !text.includes('现在来组织答案')
+                    && !text.includes('我将引用')
+                    && !text.includes('现在开始构建')
+                    && !text.includes('收集到的关键信息')
+                    && !text.includes('用户问的是')
+                    && text.length > bestText.length
+                ) bestText = text;
             }
-            return '';
+            return bestText;
         }""")
-        return all_text.strip() if all_text else None
+        text = all_text.strip() if all_text else None
+        return self._strip_source_references(text) if text else None
 
     async def capture_screenshot(self, save_path: str) -> str:
         """截取智谱清言当前页面"""

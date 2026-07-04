@@ -64,6 +64,7 @@ class DoubaoAdapter(BaseAdapter):
 
     async def send_question(self, question: str) -> None:
         """在豆包输入框中输入问题并发送"""
+        self._last_question = question
         textarea = await self.page.wait_for_selector("textarea", timeout=10000)
         await textarea.click()
         await self.page.fill("textarea", question)
@@ -125,17 +126,31 @@ class DoubaoAdapter(BaseAdapter):
 
         if not last_answer:
             raise RuntimeError("未能提取到豆包的回答内容")
+        if self._is_error_text(last_answer):
+            raise RuntimeError("豆包返回错误提示，视为失败")
         self.logger.info(f"豆包回答已提取，长度: {len(last_answer)} 字符")
         return last_answer
+
+    def _is_sidebar_or_ui_text(self, text: str) -> bool:
+        """判断文本是否为豆包侧边栏/UI 标签而非真实回答"""
+        ui_labels = ["PPT 生成", "图像生成", "帮我写作", "视频生成", "深入研究", "更多", "快速"]
+        matched = sum(1 for label in ui_labels if label in text)
+        # 命中多个常见 UI 标签，或文本主要由短标签组成
+        return matched >= 2 or (len(text) < 80 and matched >= 1)
+
+    def _is_error_text(self, text: str) -> bool:
+        """判断文本是否为豆包平台错误提示"""
+        return "出了点问题" in text or "请稍后重试" in text or "服务繁忙" in text
 
     async def _extract_last_answer(self) -> Optional[str]:
         """提取最后一条 AI 回答文本
 
         策略：
-        1. 先尝试常见的 data-testid / class 选择器
-        2. 如果都失败，用问题文本作为锚点：找到用户问题在页面中的位置，
-           然后找它后面最近的长文本元素（就是 AI 回答）
+        1. 先尝试常见的 data-testid / class 选择器，过滤掉 UI 标签
+        2. 如果都失败，用问题文本作为锚点：找到用户问题之后的最近长文本
         """
+        last_question = getattr(self, "_last_question", "")
+
         # 常见选择器尝试
         selectors = [
             "[data-testid='receive_message']",
@@ -148,7 +163,6 @@ class DoubaoAdapter(BaseAdapter):
             "article",
             "[data-streaming='false']",
             "[class*='md-box-root']",
-            "[class*='container-']",
         ]
         for selector in selectors:
             elements = await self.page.query_selector_all(selector)
@@ -156,23 +170,40 @@ class DoubaoAdapter(BaseAdapter):
                 for el in reversed(elements):
                     try:
                         text = await el.inner_text()
-                        if text and len(text.strip()) > 10:
-                            return text.strip()
+                        text = text.strip()
+                        if (
+                            text
+                            and len(text) > 10
+                            and not self._is_sidebar_or_ui_text(text)
+                            and not self._is_error_text(text)
+                        ):
+                            return text
                     except Exception:
                         continue
 
-        # 兜底：豆包新版 DOM 中回答外层容器 class 形如 container-xxxxxx
-        answer_text = await self.page.evaluate("""() => {
-            const elements = document.querySelectorAll('[class*="container-"]');
-            let lastText = '';
-            for (let el of elements) {
-                const text = el.innerText?.trim() || '';
-                if (text.length > lastText.length && text.length > 15) {
-                    lastText = text;
+        # 兜底：以问题为锚点，找问题之后最长且非 UI/非错误的文本
+        answer_text = await self.page.evaluate(
+            """(question) => {
+                const allElements = document.querySelectorAll('[class*="container-"], [class*="message-"]');
+                let bestText = '';
+                for (const el of allElements) {
+                    const text = el.innerText?.trim() || '';
+                    // 跳过包含问题的元素
+                    if (question && text.includes(question)) continue;
+                    // 跳过明显 UI 标签
+                    const uiLabels = ['PPT 生成', '图像生成', '帮我写作', '视频生成', '深入研究', '更多', '快速'];
+                    const uiMatched = uiLabels.filter(l => text.includes(l)).length;
+                    if (uiMatched >= 2) continue;
+                    // 跳过平台错误提示
+                    if (text.includes('出了点问题') || text.includes('请稍后重试') || text.includes('服务繁忙')) continue;
+                    if (text.length > bestText.length && text.length > 30) {
+                        bestText = text;
+                    }
                 }
-            }
-            return lastText || null;
-        }""")
+                return bestText || null;
+            }""",
+            last_question,
+        )
 
         return answer_text.strip() if answer_text else None
 

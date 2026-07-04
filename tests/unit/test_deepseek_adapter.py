@@ -70,3 +70,15 @@ async def test_deepseek_capture_screenshot(adapter, mock_page):
     mock_page.screenshot = AsyncMock(return_value=None)
     result = await adapter.capture_screenshot("/tmp/test.png")
     assert result == "/tmp/test.png"
+
+
+def test_deepseek_strip_citation_marks(adapter):
+    """测试能移除 DeepSeek 答案中的引用/脚注标记"""
+    text = "强化学习通过试错学习最优策略-1-4-7。其他应用包括机器人控制-2-5。"
+    result = adapter._strip_citation_marks(text)
+    assert "-1-4-7" not in result
+    assert "-2-5" not in result
+    assert "强化学习通过试错学习最优策略" in result
+    assert "其他应用包括机器人控制" in result
+    # 不应误删正常范围写法
+    assert adapter._strip_citation_marks("范围 2023-2024 年") == "范围 2023-2024 年"
