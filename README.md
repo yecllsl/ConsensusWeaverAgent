@@ -109,7 +109,7 @@ MCP Server 启动后会暴露 `ask_ai`、`list_platforms`、`check_login`、`cap
     "ConsensusWeaver": {
       "command": "python",
       "args": [
-        "D:/yecll/Documents/LocalCode/ConsensusWeaverAgent/mcp_server.py"
+        "%项目所在目录%/ConsensusWeaverAgent/mcp_server.py"
       ],
       "env": {}
     }
