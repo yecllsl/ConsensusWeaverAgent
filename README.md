@@ -87,6 +87,63 @@ defaults:
   max_concurrent: 5
 ```
 
+## 在 Trae 中使用
+
+本项目既可以通过 **MCP Server** 被任意 Agent 调用，也提供了 **ConsensusWeaver Skill** 供 TRAE 直接触发，实现“用户提问 → 并行询问多个 AI → TRAE 合成共识答案”的完整工作流。
+
+### 1. 启动 MCP Server
+
+```powershell
+python mcp_server.py
+```
+
+MCP Server 启动后会暴露 `ask_ai`、`list_platforms`、`check_login`、`capture_screenshot` 四个工具。
+
+### 2. 在 Trae 中注册 MCP Server
+
+在 Trae 的 MCP 配置中添加 ConsensusWeaver，例如：
+
+```json
+{
+  "mcpServers": {
+    "ConsensusWeaver": {
+      "command": "python",
+      "args": [
+        "D:/yecll/Documents/LocalCode/ConsensusWeaverAgent/mcp_server.py"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+路径请替换为你本地克隆后的实际位置。
+
+### 3. 安装 ConsensusWeaver Skill
+
+将本仓库中的 Skill 文件：
+
+```
+.trae/skills/consensusweaver/SKILL.md
+```
+
+复制到 Trae 的 skills 目录下（如 `.trae/skills/consensusweaver/SKILL.md`），使 TRAE 能够识别并触发该 skill。
+
+### 4. 使用工作流
+
+当用户在 Trae 中提出需要多角度参考的问题时：
+
+1. TRAE 自动触发 `ConsensusWeaver` skill。
+2. Skill 调用 MCP 的 `ask_ai`，默认同时向 5 个平台提问，最少 3 个成功即进入汇总。
+3. TRAE 读取 `results` 中 `status` 为 `success` 的答案。
+4. TRAE 提炼共识、保留互补观点、标注分歧，并说明失败平台原因。
+
+典型触发问题：
+
+- “如何学习 Python？请给出不同角度的建议。”
+- “比较 Vue 和 React 的适用场景。”
+- “用 ConsensusWeaver 问一下：未来火星移民最先要解决哪些问题？”
+
 ## 目录结构
 
 ```
@@ -95,6 +152,7 @@ defaults:
 ├── core/               # 浏览器池、平台管理器、配置
 ├── tests/              # 单元/集成/E2E 测试
 ├── scripts/            # 调试与测试脚本
+├── .trae/skills/       # Trae Skill 定义
 ├── data/               # 用户数据、截图、日志、测试报告
 ├── mcp_server.py       # MCP 入口
 ├── config.yaml         # 配置文件
