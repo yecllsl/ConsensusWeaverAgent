@@ -20,10 +20,11 @@ env/
 *.swo
 
 # 运行数据
+data/
 data/user_data/
 data/screenshots/
 data/logs/
-data/playwright_browsers/
+data/test_reports/
 
 # 测试
 .pytest_cache/

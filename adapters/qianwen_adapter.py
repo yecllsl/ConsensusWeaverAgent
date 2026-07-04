@@ -53,23 +53,34 @@ class QianwenAdapter(BaseAdapter):
         """等待千问回答完成并提取答案"""
         elapsed = 0
         poll_interval = 1
+        last_len = -1
+        stable_count = 0
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
             input_el = await self.page.query_selector(self.INPUT_SELECTOR)
             if input_el:
                 tag = await input_el.evaluate("el => el.tagName")
+                input_ready = False
                 if tag.lower() == "textarea":
                     is_disabled = await input_el.get_attribute("disabled")
-                    if is_disabled is None:
-                        await asyncio.sleep(2)
-                        break
+                    input_ready = is_disabled is None
                 else:
-                    # contenteditable 在生成过程中可能变为 false
                     editable = await input_el.get_attribute("contenteditable")
-                    if editable is not None and editable.lower() != "false":
-                        await asyncio.sleep(2)
-                        break
+                    input_ready = editable is not None and editable.lower() != "false"
+
+                # 输入框可用且答案长度稳定，才认为回答完成
+                if input_ready:
+                    current_answer = await self._extract_last_answer() or ""
+                    current_len = len(current_answer)
+                    if current_len > 0 and current_len == last_len:
+                        stable_count += 1
+                        if stable_count >= 3:
+                            await asyncio.sleep(2)
+                            break
+                    else:
+                        last_len = current_len
+                        stable_count = 0
         answer = await self._extract_last_answer()
         if not answer:
             raise RuntimeError("未能提取到千问的回答内容")
@@ -85,16 +96,25 @@ class QianwenAdapter(BaseAdapter):
             "[class*='message-content']",
             "[class*='response']",
             "[class*='chatRoom']",
+            "[class*='bot']",
+            "[class*='assistant']",
         ]
         for selector in selectors:
             elements = await self.page.query_selector_all(selector)
-            if elements:
-                text = await elements[-1].inner_text()
-                if text and len(text.strip()) > 0:
-                    return text.strip()
+            for el in reversed(elements):
+                try:
+                    text = await el.inner_text()
+                    text = text.strip()
+                    if len(text) > 10:
+                        return text
+                except Exception:
+                    continue
         all_text = await self.page.evaluate("""() => {
             const messages = document.querySelectorAll('[class*="message"], [class*="chat"]');
-            if (messages.length > 0) return messages[messages.length - 1].innerText;
+            for (let i = messages.length - 1; i >= 0; i--) {
+                const text = messages[i].innerText?.trim() || '';
+                if (text.length > 10) return text;
+            }
             return '';
         }""")
         return all_text.strip() if all_text else None

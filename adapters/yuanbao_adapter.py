@@ -54,34 +54,67 @@ class YuanbaoAdapter(BaseAdapter):
         """等待元宝回答完成并提取答案"""
         elapsed = 0
         poll_interval = 1
+        last_len = -1
+        stable_count = 0
+        last_question = getattr(self, "_last_question", "")
+
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
             input_el = await self.page.query_selector(self.INPUT_SELECTOR)
             if input_el:
                 tag = await input_el.evaluate("el => el.tagName")
+                input_ready = False
                 if tag.lower() == "textarea":
                     is_disabled = await input_el.get_attribute("disabled")
-                    if is_disabled is None:
-                        await asyncio.sleep(2)
-                        break
+                    input_ready = is_disabled is None
                 else:
                     editable = await input_el.get_attribute("contenteditable")
-                    if editable is not None and editable.lower() != "false":
-                        await asyncio.sleep(2)
-                        break
+                    input_ready = editable is not None and editable.lower() != "false"
+
+                # 输入框可用且答案长度稳定，且不是欢迎语，才认为回答完成
+                if input_ready:
+                    current_answer = await self._extract_last_answer() or ""
+                    current_len = len(current_answer)
+                    if current_len > 0 and current_len == last_len:
+                        stable_count += 1
+                        if stable_count >= 3:
+                            await asyncio.sleep(2)
+                            break
+                    else:
+                        last_len = current_len
+                        stable_count = 0
         answer = await self._extract_last_answer()
         if not answer:
             raise RuntimeError("未能提取到元宝的回答内容")
         self.logger.info(f"元宝回答已提取，长度: {len(answer)} 字符")
         return answer
 
+    def _is_welcome_text(self, text: str) -> bool:
+        """判断文本是否为元宝欢迎语/引导语/侧边栏推荐
+
+        注意：只过滤明确的欢迎面板或推荐列表，不拦截正常回答中
+        出现的“我是元宝”等自我介绍。
+        """
+        # 明确的欢迎面板开头
+        if text.startswith("Hi~ 我是元宝"):
+            return True
+        # 推荐/引导语特征：同时包含多个无关主题卡片
+        suggestion_markers = ["元宝高考通", "下载元宝电脑版", "部分功能服务", "今天从哪里开始"]
+        matched = sum(1 for m in suggestion_markers if m in text)
+        if matched >= 2:
+            return True
+        # 典型引导语组合
+        if "快来点击以下任一功能" in text or "你可以这样问" in text:
+            return True
+        return False
+
     async def _extract_last_answer(self) -> Optional[str]:
         """提取最后一条 AI 回答文本
 
         策略：
         1. 优先尝试 AI 消息专用选择器
-        2. 从后往前遍历，过滤掉包含用户问题原文的元素
+        2. 从后往前遍历，过滤掉包含用户问题原文和欢迎语的元素
         3. 兜底使用通用 message/chat 元素
         """
         selectors = [
@@ -112,20 +145,29 @@ class YuanbaoAdapter(BaseAdapter):
                     text = text.strip()
                     if not text:
                         continue
-                    # 跳过包含用户问题的元素，避免把问题文本当答案
+                    # 跳过包含用户问题的元素
                     if last_question and last_question in text:
+                        continue
+                    # 跳过欢迎语
+                    if self._is_welcome_text(text):
                         continue
                     return text
                 except Exception:
                     continue
 
-        # 兜底：从通用消息元素中从后往前找第一条不含问题的文本
+        # 兜底：从通用消息元素中从后往前找第一条不含问题且非欢迎语的文本
         all_text = await self.page.evaluate(
             """(question) => {
                 const messages = document.querySelectorAll('[class*="message"], [class*="chat"]');
                 for (let i = messages.length - 1; i >= 0; i--) {
                     const text = messages[i].innerText?.trim() || '';
-                    if (text && (!question || !text.includes(question))) return text;
+                    if (!text) continue;
+                    if (question && text.includes(question)) continue;
+                    if (text.startsWith('Hi~ 我是元宝')) continue;
+                    const suggestionMarkers = ['元宝高考通', '下载元宝电脑版', '部分功能服务', '今天从哪里开始'];
+                    if (suggestionMarkers.filter(m => text.includes(m)).length >= 2) continue;
+                    if (text.includes('快来点击以下任一功能') || text.includes('你可以这样问')) continue;
+                    return text;
                 }
                 return '';
             }""",

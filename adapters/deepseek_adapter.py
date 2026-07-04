@@ -22,10 +22,30 @@ class DeepSeekAdapter(BaseAdapter):
         )
         self.page = page
 
+    async def _get_input_element(self):
+        """获取可用的输入框元素（过滤掉隐藏/只读的 WAF/配置 textarea）"""
+        # DeepSeek 在 headless 下可能渲染多个 textarea，取最后一个可见且可编辑的
+        textareas = await self.page.query_selector_all("textarea")
+        for textarea in reversed(textareas):
+            try:
+                readonly = await textarea.get_attribute("readonly")
+                disabled = await textarea.get_attribute("disabled")
+                visible = await textarea.is_visible()
+                if visible and not readonly and disabled is None:
+                    return textarea
+            except Exception:
+                continue
+        return None
+
     async def navigate_to_chat(self) -> None:
         """导航到 DeepSeek 聊天页面"""
         await self.page.goto("https://chat.deepseek.com/chat", wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=30000)
+        # 等待真实输入框出现
+        for _ in range(30):
+            el = await self._get_input_element()
+            if el:
+                break
+            await asyncio.sleep(1)
         self.logger.info("已导航到 DeepSeek 聊天页")
 
     async def check_login_status(self) -> bool:
@@ -33,7 +53,7 @@ class DeepSeekAdapter(BaseAdapter):
         checks_passed = 0
         if "chat" in self.page.url and "sign_in" not in self.page.url:
             checks_passed += 1
-        textarea = await self.page.query_selector("textarea")
+        textarea = await self._get_input_element()
         if textarea:
             checks_passed += 1
         self.logger.debug(f"DeepSeek 登录检测: {checks_passed}/2 项通过")
@@ -41,9 +61,11 @@ class DeepSeekAdapter(BaseAdapter):
 
     async def send_question(self, question: str) -> None:
         """在 DeepSeek 输入框中输入问题并发送"""
-        textarea = await self.page.wait_for_selector("textarea", timeout=10000)
+        textarea = await self._get_input_element()
+        if not textarea:
+            raise RuntimeError("DeepSeek 未找到可用的输入框")
         await textarea.click()
-        await self.page.fill("textarea", question)
+        await textarea.fill(question)
         await self.page.keyboard.press("Enter")
         self.logger.info(f"已发送问题: {question[:50]}...")
 
@@ -51,14 +73,31 @@ class DeepSeekAdapter(BaseAdapter):
         """等待 DeepSeek 回答完成并提取答案"""
         elapsed = 0
         poll_interval = 1
+        stop_btn_gone = False
+        last_len = -1
+        stable_count = 0
+
         while elapsed < timeout:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
+
             # DeepSeek 用停止按钮检测回答是否完成
             stop_btn = await self.page.query_selector("[class*='stop'], [aria-label='Stop']")
             if not stop_btn:
-                await asyncio.sleep(2)
-                break
+                if not stop_btn_gone:
+                    stop_btn_gone = True
+                    continue
+                # 停止按钮消失后，再检查答案长度是否稳定
+                current_answer = await self._extract_last_answer() or ""
+                current_len = len(current_answer)
+                if current_len > 0 and current_len == last_len:
+                    stable_count += 1
+                    if stable_count >= 3:
+                        await asyncio.sleep(2)
+                        break
+                else:
+                    last_len = current_len
+                    stable_count = 0
         answer = await self._extract_last_answer()
         if not answer:
             raise RuntimeError("未能提取到 DeepSeek 的回答内容")
@@ -66,9 +105,27 @@ class DeepSeekAdapter(BaseAdapter):
         return answer
 
     async def _extract_last_answer(self) -> Optional[str]:
-        """提取最后一条 AI 回答文本，跳过思考过程"""
+        """提取最后一条 AI 回答文本，跳过思考过程
+
+        DeepSeek 的长回答通常被拆成多个 markdown 块，需要拼接完整内容。
+        """
+        # 1. 尝试拼接所有非思考 markdown 块
+        markdown_elements = await self.page.query_selector_all("div[class*='markdown']:not([class*='think'])")
+        if markdown_elements:
+            parts = []
+            for el in markdown_elements:
+                try:
+                    text = await el.inner_text()
+                    text = text.strip()
+                    if text and text not in parts:
+                        parts.append(text)
+                except Exception:
+                    continue
+            if parts:
+                return "\n\n".join(parts)
+
+        # 2. 兜底选择器
         selectors = [
-            "div[class*='markdown']:not([class*='think'])",
             "[class*='answer-content']",
             "[class*='message-content']",
             "[class*='ai-message']",
@@ -105,5 +162,9 @@ class DeepSeekAdapter(BaseAdapter):
         except Exception:
             pass
         await self.page.reload(wait_until="domcontentloaded")
-        await self.page.wait_for_selector("textarea", timeout=15000)
+        for _ in range(15):
+            el = await self._get_input_element()
+            if el:
+                break
+            await asyncio.sleep(1)
         self.logger.info("已通过刷新页面开启新对话")

@@ -30,10 +30,20 @@ async def test_chatglm_navigate_to_chat(adapter, mock_page):
     mock_page.goto.assert_called_once()
 
 
+def _make_visible_textarea():
+    el = MagicMock()
+    el.get_attribute = AsyncMock(return_value=None)
+    el.is_visible = AsyncMock(return_value=True)
+    el.click = AsyncMock()
+    el.fill = AsyncMock()
+    return el
+
+
 @pytest.mark.asyncio
 async def test_chatglm_check_login_status_logged_in(adapter, mock_page):
     mock_page.url = "https://chatglm.cn/main/alltoolsdetail"
-    mock_page.query_selector = AsyncMock(return_value=MagicMock())
+    mock_page.query_selector_all = AsyncMock(return_value=[_make_visible_textarea()])
+    mock_page.query_selector = AsyncMock(return_value=None)
     result = await adapter.check_login_status()
     assert result is True
 
@@ -41,18 +51,19 @@ async def test_chatglm_check_login_status_logged_in(adapter, mock_page):
 @pytest.mark.asyncio
 async def test_chatglm_check_login_status_not_logged_in(adapter, mock_page):
     mock_page.url = "https://chatglm.cn/login"
-    mock_page.query_selector = AsyncMock(return_value=None)
+    mock_page.query_selector_all = AsyncMock(return_value=[])
     result = await adapter.check_login_status()
     assert result is False
 
 
 @pytest.mark.asyncio
 async def test_chatglm_send_question(adapter, mock_page):
-    mock_page.wait_for_selector = AsyncMock(return_value=AsyncMock())
-    mock_page.fill = AsyncMock()
+    textarea = _make_visible_textarea()
+    mock_page.query_selector_all = AsyncMock(return_value=[textarea])
     mock_page.keyboard = AsyncMock()
     await adapter.send_question("测试问题")
-    mock_page.wait_for_selector.assert_called()
+    textarea.click.assert_called_once()
+    textarea.fill.assert_called_once_with("测试问题")
 
 
 @pytest.mark.asyncio
