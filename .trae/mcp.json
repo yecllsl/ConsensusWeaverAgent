@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "ConsensusWeaver": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${workspaceFolder}",
+        "python",
+        "mcp_server.py"
+      ],
+      "description": "ConsensusWeaver MCP Server - 并行向豆包、智谱清言、DeepSeek、千问、元宝提问并聚合答案"
+    }
+  }
+}
